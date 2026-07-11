@@ -1,0 +1,185 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum RoleName {
+  SUPER_ADMIN
+  STORE_MANAGER
+  CASHIER
+  WAITER
+  KITCHEN_CHEF
+}
+
+enum OrderStatus {
+  DRAFT
+  KITCHEN_PENDING
+  PREPARING
+  READY
+  BILL_REQUESTED
+  PAID
+  CANCELLED
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  INVITED
+}
+
+model User {
+  id           String       @id @default(uuid())
+  name         String
+  email        String?      @unique
+  passwordHash String?      // For email/password logins (Super Admin, Store Manager)
+  pin          String?      // Hashed 4-digit PIN for tablet quick-login (Waiters, Cashiers, Chefs)
+  status       UserStatus   @default(INVITED)
+  roleId       String
+  role         Role         @relation(fields: [roleId], references: [id])
+  
+  restaurantId String?
+  restaurant   Restaurant?  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  
+  // Orders taken by this user (typically as waiter)
+  waiterOrders Order[]      @relation("WaiterOrders")
+  
+  // Orders paid/processed by this user (typically as cashier)
+  cashierOrders Order[]     @relation("CashierOrders")
+  
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model Role {
+  id          String           @id @default(uuid())
+  name        RoleName         @unique
+  permissions RolePermission[]
+  users       User[]
+  invitations Invitation[]
+}
+
+model Permission {
+  id           String           @id @default(uuid())
+  name         String           @unique // e.g. "create:kot", "pay:order", "view:reports", "manage:staff"
+  description  String?
+  roles        RolePermission[]
+  sidebarItems SidebarItem[]
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model SidebarItem {
+  id           String        @id @default(uuid())
+  label        String        // Display name in sidebar (e.g. "Dashboard", "Orders")
+  icon         String?       // Lucide icon identifier (e.g. "LayoutDashboard")
+  path         String        // Frontend client route (e.g. "/dashboard")
+  order        Int           @default(0) // Order for rendering
+  permissionId String?       // Optional: Permission required to view this item
+  permission   Permission?   @relation(fields: [permissionId], references: [id], onDelete: SetNull)
+  
+  // Support nested sub-menu items
+  parentId     String?
+  parent       SidebarItem?  @relation("SubItems", fields: [parentId], references: [id], onDelete: Cascade)
+  subItems     SidebarItem[] @relation("SubItems")
+}
+
+model Invitation {
+  id           String      @id @default(uuid())
+  email        String      @unique
+  roleId       String
+  role         Role        @relation(fields: [roleId], references: [id])
+  restaurantId String?
+  restaurant   Restaurant? @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  token        String      @unique
+  isUsed       Boolean     @default(false)
+  expiresAt    DateTime
+  createdAt    DateTime    @default(now())
+}
+
+model Order {
+  id            String      @id @default(uuid())
+  orderNumber   Int         @default(autoincrement())
+  status        OrderStatus @default(KITCHEN_PENDING)
+  subtotal      Float
+  taxTotal      Float
+  grandTotal    Float
+  paymentMethod String?
+  
+  restaurantId  String?
+  restaurant    Restaurant? @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  
+  // Waiter who took the order
+  waiterId      String
+  waiter        User        @relation("WaiterOrders", fields: [waiterId], references: [id])
+  
+  // Cashier who processed the payment
+  cashierId     String?
+  cashier       User?       @relation("CashierOrders", fields: [cashierId], references: [id])
+  
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  items         OrderItem[]
+}
+
+model OrderItem {
+  id         String @id @default(uuid())
+  menuItemId String
+  name       String
+  quantity   Int
+  price      Float
+  orderId    String
+  order      Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Restaurant {
+  id          String         @id @default(uuid())
+  name        String
+  users       User[]
+  invitations Invitation[]
+  categories  MenuCategory[]
+  menuItems   MenuItem[]
+  orders      Order[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model MenuCategory {
+  id           String     @id @default(uuid())
+  name         String
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  menuItems    MenuItem[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([name, restaurantId])
+}
+
+model MenuItem {
+  id           String       @id @default(uuid())
+  name         String
+  description  String?
+  price        Float
+  image        String?      // E.g. emoji or image path
+  code         String       // Short code
+  isAvailable  Boolean      @default(true)
+  categoryId   String
+  category     MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  restaurantId String
+  restaurant   Restaurant   @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  
+  @@unique([code, restaurantId])
+}

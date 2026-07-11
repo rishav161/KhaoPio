@@ -1,0 +1,30 @@
+# Ignore node_modules in both sub-folders
+backend/node_modules/
+frontend/node_modules/
+
+# Ignore production builds
+backend/dist/
+frontend/.next/
+frontend/out/
+frontend/build/
+
+# Ignore TypeScript build information
+backend/*.tsbuildinfo
+frontend/*.tsbuildinfo
+
+# Ignore environment config files
+backend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# System/IDE files
+.DS_Store
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

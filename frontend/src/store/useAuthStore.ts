@@ -1,0 +1,65 @@
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+export interface User {
+  id: string;
+  name: string;
+  email: string | null;
+  role: string;
+}
+
+export interface SidebarItem {
+  id: string;
+  label: string;
+  icon: string | null;
+  path: string;
+  order: number;
+  subItems?: SidebarItem[];
+}
+
+interface AuthState {
+  user: User | null;
+  token: string | null;
+  permissions: string[];
+  sidebarItems: SidebarItem[];
+  
+  // Actions
+  setAuth: (user: User, token: string, permissions: string[]) => void;
+  setSidebarItems: (items: SidebarItem[]) => void;
+  logout: () => void;
+}
+
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      user: null,
+      token: null,
+      permissions: [],
+      sidebarItems: [],
+      
+      setAuth: (user, token, permissions) => set({
+        user,
+        token,
+        permissions,
+      }),
+      
+      setSidebarItems: (sidebarItems) => set({ sidebarItems }),
+      
+      logout: () => {
+        set({
+          user: null,
+          token: null,
+          permissions: [],
+          sidebarItems: [],
+        });
+        // Remove token from potential storage/headers
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('pos-auth-storage');
+        }
+      },
+    }),
+    {
+      name: 'pos-auth-storage', // Key for localStorage persistence
+    }
+  )
+);
