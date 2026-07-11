@@ -150,18 +150,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        {/* Manual Lock/Exit Shift button */}
-        <button
-          onClick={() => {
-            logout();
-            router.push('/login');
-          }}
-          className="w-full flex flex-col items-center justify-center py-3 text-zinc-450 dark:text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-red-600 dark:hover:text-red-400 transition-colors border-t border-zinc-200 dark:border-zinc-800 cursor-pointer"
-          title="Exit Session"
-        >
-          <LucideIcons.LogOut className="h-5 w-5" />
-          <span className="mt-0.5 text-[8px] font-black uppercase tracking-wider">Lock / Exit</span>
-        </button>
+
 
         {/* Footer info in sidebar */}
         <div className="flex flex-col items-center gap-1 border-t border-zinc-200 dark:border-zinc-800 py-3 text-zinc-400 w-full">
@@ -207,6 +196,18 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
               ) : (
                 <LucideIcons.Moon className="h-4.5 w-4.5 text-zinc-500" />
               )}
+            </button>
+
+            {/* Logout/Exit Button */}
+            <button
+              onClick={() => {
+                logout();
+                router.push('/login');
+              }}
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-500 dark:text-zinc-400 hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-600 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-900 active:scale-95 transition-all cursor-pointer"
+              title="Exit Session"
+            >
+              <LucideIcons.LogOut className="h-4 w-4" />
             </button>
           </div>
         </header>

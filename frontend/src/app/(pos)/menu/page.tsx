@@ -476,10 +476,10 @@ export default function MenuManagement() {
                 {filteredItems.map((item) => (
                   <div 
                     key={item.id}
-                    className={`flex gap-3 p-3 rounded-xl border bg-white dark:bg-zinc-900 shadow-sm relative transition-all ${
+                    className={`flex items-start gap-3 p-3 rounded-xl border bg-white dark:bg-zinc-900 shadow-sm transition-all ${
                       item.isAvailable 
                         ? 'border-zinc-200 dark:border-zinc-800' 
-                        : 'border-red-200 dark:border-red-950 opacity-70 bg-zinc-50/50 dark:bg-zinc-950/20'
+                        : 'border-red-200 dark:border-red-955 opacity-70 bg-zinc-50/50 dark:bg-zinc-950/20'
                     }`}
                   >
                     {/* Item Image / Emoji */}
@@ -488,7 +488,7 @@ export default function MenuManagement() {
                     </div>
 
                     {/* Details */}
-                    <div className="flex-1 min-w-0 pr-12">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="text-xs font-black text-zinc-950 dark:text-zinc-50 truncate leading-tight">
                           {item.name}
@@ -517,8 +517,8 @@ export default function MenuManagement() {
                       </div>
                     </div>
 
-                    {/* Action Float buttons */}
-                    <div className="absolute right-2.5 top-2.5 flex flex-col gap-1.5">
+                    {/* Action buttons (flex aligned) */}
+                    <div className="flex flex-col gap-1.5 shrink-0 self-stretch justify-center items-center border-l border-zinc-100 dark:border-zinc-800 pl-2.5">
                       <button
                         onClick={() => toggleItemAvailability(item)}
                         className={`p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer ${

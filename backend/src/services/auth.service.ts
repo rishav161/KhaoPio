@@ -203,6 +203,11 @@ export class AuthService {
             },
           },
         },
+        restaurant: {
+          select: {
+            name: true
+          }
+        }
       },
     });
 
@@ -367,6 +372,11 @@ export class AuthService {
             },
           },
         },
+        restaurant: {
+          select: {
+            name: true
+          }
+        }
       },
     });
 
@@ -489,6 +499,37 @@ export class AuthService {
       permissions,
       token,
     };
+  }
+
+  /**
+   * Updates user name.
+   */
+  async updateProfile(userId: string, name: string) {
+    return prisma.user.update({
+      where: { id: userId },
+      data: { name },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        restaurantId: true,
+        role: {
+          select: {
+            name: true
+          }
+        }
+      }
+    });
+  }
+
+  /**
+   * Updates restaurant details.
+   */
+  async updateRestaurant(restaurantId: string, name: string) {
+    return prisma.restaurant.update({
+      where: { id: restaurantId },
+      data: { name }
+    });
   }
 }
 

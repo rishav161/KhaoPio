@@ -12,6 +12,12 @@ export class OrderService {
     const taxTotal = Math.round(subtotal * 0.1 * 100) / 100; // 10% tax rate, rounded to 2 decimal places
     const grandTotal = Math.round((subtotal + taxTotal) * 100) / 100;
 
+    // Fetch waiter's restaurantId to link the order context
+    const waiter = await prisma.user.findUnique({
+      where: { id: waiterId },
+      select: { restaurantId: true }
+    });
+
     const newOrder = await prisma.order.create({
       data: {
         status: 'KITCHEN_PENDING',
@@ -19,6 +25,7 @@ export class OrderService {
         taxTotal,
         grandTotal,
         waiterId,
+        restaurantId: waiter?.restaurantId,
         items: {
           create: payload.items.map(item => ({
             menuItemId: item.menuItemId,
@@ -37,15 +44,40 @@ export class OrderService {
   }
 
   /**
-   * Returns orders where status is NOT 'PAID' or 'CANCELLED'.
+   * Returns active orders, optionally including today's completed/paid orders, scoped to the restaurant context.
    */
-  async getActiveOrders(): Promise<Order[]> {
-    const activeOrders = await prisma.order.findMany({
-      where: {
-        status: {
-          notIn: ['PAID', 'CANCELLED']
+  async getActiveOrders(restaurantId?: string, includePaid = false): Promise<Order[]> {
+    const whereClause: any = {};
+    
+    if (restaurantId) {
+      whereClause.restaurantId = restaurantId;
+    }
+
+    if (includePaid) {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+
+      whereClause.OR = [
+        {
+          status: {
+            notIn: ['PAID', 'CANCELLED']
+          }
+        },
+        {
+          status: 'PAID',
+          createdAt: {
+            gte: todayStart
+          }
         }
-      },
+      ];
+    } else {
+      whereClause.status = {
+        notIn: ['PAID', 'CANCELLED']
+      };
+    }
+
+    const activeOrders = await prisma.order.findMany({
+      where: whereClause,
       include: {
         items: true
       },

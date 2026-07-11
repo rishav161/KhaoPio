@@ -12,9 +12,9 @@ export default function CheckoutPage() {
 
   React.useEffect(() => {
     fetchMenuItems().then(() => {
-      fetchActiveOrders();
+      fetchActiveOrders(true);
     });
-    const interval = setInterval(fetchActiveOrders, 5000);
+    const interval = setInterval(() => fetchActiveOrders(true), 5000);
     return () => clearInterval(interval);
   }, [fetchActiveOrders, fetchMenuItems]);
 
@@ -98,13 +98,20 @@ export default function CheckoutPage() {
               >
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-2 mb-2">
-                  <div>
+                  <div className="flex items-center gap-2">
                     <span className="text-xs font-black text-zinc-950 dark:text-zinc-100">
                       Order {order.orderNumber}
                     </span>
-                    <span className="ml-2 text-[10px] text-zinc-400 dark:text-zinc-500 font-bold">
+                    <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-bold">
                       {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
+                    <button
+                      onClick={() => setSelectedOrderForBill(order)}
+                      className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 hover:text-coral-500 transition-colors cursor-pointer"
+                      title="Print Pre-Bill"
+                    >
+                      <Printer className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                   <span className="text-sm font-black text-coral-500">
                     ${order.totals.total}
@@ -233,11 +240,18 @@ export default function CheckoutPage() {
                     123 Agentic Way, Silicon Valley
                   </p>
                   <p className="text-[10px] text-zinc-600">
-                    GSTIN: 27AAAAA1111A1Z1
-                  </p>
-                  <p className="text-[10px] text-zinc-600">
                     PH: +1 (555) 019-9000
                   </p>
+                  
+                  {selectedOrderForBill.status === 'PAID' ? (
+                    <div className="inline-block font-extrabold text-[9px] bg-zinc-100 text-zinc-800 px-2 py-0.5 rounded border border-zinc-300 uppercase tracking-widest mt-1">
+                      TAX INVOICE
+                    </div>
+                  ) : (
+                    <div className="inline-block font-extrabold text-[9px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded border border-amber-300 uppercase tracking-widest mt-1">
+                      ESTIMATE / PRE-BILL
+                    </div>
+                  )}
                 </div>
 
                 {/* Dashed line separator */}
@@ -250,8 +264,10 @@ export default function CheckoutPage() {
                     <span>TIME: {new Date(selectedOrderForBill.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                   <div>ORDER NO: {selectedOrderForBill.orderNumber}</div>
-                  <div>INVOICE ID: INV-{selectedOrderForBill.id.split('_')[1]?.toUpperCase()}</div>
-                  <div className="capitalize">METHOD: {selectedOrderForBill.paymentMethod?.replace('_', ' ')}</div>
+                  <div>INVOICE ID: INV-{selectedOrderForBill.id.split('-')[0]?.toUpperCase()}</div>
+                  <div className="capitalize">
+                    METHOD: {selectedOrderForBill.paymentMethod ? selectedOrderForBill.paymentMethod.replace('_', ' ') : 'UNPAID'}
+                  </div>
                 </div>
 
                 {/* Dashed line separator */}

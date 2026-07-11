@@ -14,28 +14,11 @@ interface POSState {
   updateCartQuantity: (itemId: string, change: number) => void;
   removeFromCart: (itemId: string) => void;
   clearCart: () => void;
-  fetchActiveOrders: () => Promise<void>;
+  fetchActiveOrders: (includePaid?: boolean) => Promise<void>;
   sendOrderToKitchen: () => Promise<void>;
   updateOrderStatus: (orderId: string, newStatus: Order['status']) => Promise<void>;
   completePayment: (orderId: string, paymentMethod: 'CASH' | 'CARD_UPI') => Promise<void>;
 }
-
-const SEED_MENU_ITEMS: MenuItem[] = [
-  { id: 'm1', name: 'Classic Cheese Burger', price: 6.99, category: 'Burgers', image: '🍔', description: 'Flame-grilled beef patty, melted cheddar, lettuce, tomato, house sauce', code: 'B01', isAvailable: true },
-  { id: 'm2', name: 'Double BBQ Bacon Burger', price: 8.99, category: 'Burgers', image: '🥓', description: 'Double beef patty, crispy bacon, cheddar, crispy onions, smoky BBQ sauce', code: 'B02', isAvailable: true },
-  { id: 'm3', name: 'Spicy Crispy Chicken Burger', price: 7.49, category: 'Burgers', image: '🍗', description: 'Crispy fried chicken breast, spicy mayo, pickles, shredded lettuce', code: 'B03', isAvailable: true },
-  { id: 'm4', name: 'Classic Margherita Pizza', price: 10.99, category: 'Pizzas', image: '🍕', description: 'San Marzano tomato sauce, fresh mozzarella, fresh basil, olive oil', code: 'P01', isAvailable: true },
-  { id: 'm5', name: 'Pepperoni Supreme Pizza', price: 12.99, category: 'Pizzas', image: '🍕', description: 'Double pepperoni, mozzarella cheese, spicy marinara sauce', code: 'P02', isAvailable: true },
-  { id: 'm6', name: 'Truffle Mushroom Pizza', price: 13.49, category: 'Pizzas', image: '🍄', description: 'Cremini mushrooms, white truffle oil, fontina, fresh arugula', code: 'P03', isAvailable: true },
-  { id: 'm7', name: 'Golden French Fries', price: 3.49, category: 'Sides', image: '🍟', description: 'Crispy golden fries, sea salt, served with ketchup', code: 'S01', isAvailable: true },
-  { id: 'm8', name: 'Garlic Bread with Cheese', price: 4.99, category: 'Sides', image: '🥖', description: 'Toasted baguette with garlic butter, mozzarella, herbs', code: 'S02', isAvailable: true },
-  { id: 'm9', name: 'Mozzarella Sticks', price: 5.49, category: 'Sides', image: '🧀', description: 'Crispy breaded mozzarella cheese sticks, marinara dipping sauce', code: 'S03', isAvailable: true },
-  { id: 'm10', name: 'Iced Caramel Macchiato', price: 4.49, category: 'Drinks', image: '☕', description: 'Espresso, vanilla syrup, cold milk, caramel drizzle', code: 'D01', isAvailable: true },
-  { id: 'm11', name: 'Lemon Mint Cooler', price: 3.29, category: 'Drinks', image: '🥤', description: 'Freshly squeezed lemon juice, crushed mint leaves, club soda', code: 'D02', isAvailable: true },
-  { id: 'm12', name: 'Coca Cola Zero', price: 1.99, category: 'Drinks', image: '🥤', description: 'Chilled canned Coca-Cola Zero Sugar', code: 'D03', isAvailable: true },
-  { id: 'm13', name: 'Chocolate Fudge Brownie', price: 5.49, category: 'Desserts', image: '🍫', description: 'Warm, gooey chocolate fudge brownie with chocolate drizzle', code: 'E01', isAvailable: true },
-  { id: 'm14', name: 'New York Blueberry Cheesecake', price: 6.99, category: 'Desserts', image: '🍰', description: 'Rich, creamy classic cheesecake topped with sweet blueberry compote', code: 'E02', isAvailable: true },
-];
 
 export const usePOSStore = create<POSState>((set, get) => ({
   menuItems: [],
@@ -47,8 +30,7 @@ export const usePOSStore = create<POSState>((set, get) => ({
     try {
       const categories = await apiFetch<any[]>('/menu');
       if (!categories || categories.length === 0) {
-        // Fallback to static seeds if database returns nothing
-        set({ menuItems: SEED_MENU_ITEMS });
+        set({ menuItems: [] });
         return;
       }
       
@@ -72,8 +54,7 @@ export const usePOSStore = create<POSState>((set, get) => ({
       set({ menuItems: flatMenuItems });
     } catch (error) {
       console.error('Error fetching dynamic menu items:', error);
-      // Fail-safe: load seeds if database call errors out (e.g. initial setup)
-      set({ menuItems: SEED_MENU_ITEMS });
+      set({ menuItems: [] });
     }
   },
 
@@ -126,9 +107,10 @@ export const usePOSStore = create<POSState>((set, get) => ({
   },
 
   // 2. Fetch active orders from backend KOT queues
-  fetchActiveOrders: async () => {
+  fetchActiveOrders: async (includePaid = false) => {
     try {
-      const orders = await apiFetch<any[]>('/orders/active');
+      const url = includePaid ? '/orders/active?includePaid=true' : '/orders/active';
+      const orders = await apiFetch<any[]>(url);
       const mappedOrders: Order[] = orders.map((order) => {
         const items: CartItem[] = order.items.map((dbItem: any) => {
           const localMenuItem = get().menuItems.find((mi) => mi.id === dbItem.menuItemId) || {
@@ -226,7 +208,7 @@ export const usePOSStore = create<POSState>((set, get) => ({
         },
       });
 
-      await get().fetchActiveOrders();
+      await get().fetchActiveOrders(true);
     } catch (error) {
       console.error(`Error completing payment for order ${orderId}:`, error);
     }

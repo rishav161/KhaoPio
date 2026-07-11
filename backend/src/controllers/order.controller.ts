@@ -26,7 +26,9 @@ export const sendToKitchen = async (req: Request, res: Response): Promise<void> 
 
 export const getActiveOrders = async (req: Request, res: Response): Promise<void> => {
   try {
-    const activeOrders = await orderService.getActiveOrders();
+    const restaurantId = (req as any).user?.restaurantId;
+    const includePaid = req.query.includePaid === 'true';
+    const activeOrders = await orderService.getActiveOrders(restaurantId, includePaid);
     res.status(200).json(activeOrders);
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Internal Server Error' });
