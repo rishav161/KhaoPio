@@ -131,7 +131,7 @@ async function main() {
     { label: 'Checkout', icon: 'CreditCard', path: '/checkout', order: 3, permissionName: 'pay:order' },
     { label: 'Kitchen (KDS)', icon: 'ChefHat', path: '/kitchen', order: 4, permissionName: 'update:order-status' },
     { label: 'Staff Management', icon: 'Users', path: '/staff', order: 5, permissionName: 'view:staff' },
-    { label: 'Menu Settings', icon: 'Layers', path: '/menu', order: 6, permissionName: 'view:staff' },
+    { label: 'Set Menu', icon: 'Layers', path: '/menu', order: 6, permissionName: 'view:staff' },
     { label: 'Reports', icon: 'BarChart3', path: '/reports', order: 7, permissionName: 'view:sales-reports' },
   ];
 

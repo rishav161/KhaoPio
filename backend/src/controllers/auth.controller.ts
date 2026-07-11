@@ -190,3 +190,37 @@ export const deleteUserByAdmin = async (req: Request, res: Response): Promise<vo
   }
 };
 
+export const initRegister = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      res.status(400).json({ error: 'Field "email" is required.' });
+      return;
+    }
+
+    const result = await authService.initializeAdminRegistration(email);
+    res.status(200).json({
+      message: 'OTP verification code generated and dispatched.',
+      otp: result.otp,
+    });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message || 'Error sending verification code.' });
+  }
+};
+
+export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) {
+      res.status(400).json({ error: 'Fields "email" and "otp" are required.' });
+      return;
+    }
+
+    await authService.verifyAdminOtp(email, otp);
+    res.status(200).json({ message: 'Email address verified successfully.' });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message || 'Error verifying OTP.' });
+  }
+};
+
+

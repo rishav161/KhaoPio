@@ -181,6 +181,13 @@ export default function MenuManagement() {
       return;
     }
 
+    const selectedCatId = itemForm.categoryId || (categories.length > 0 ? categories[0].id : '');
+    if (!selectedCatId) {
+      setErrorMsg('Please create at least one category before adding items.');
+      setItemLoading(false);
+      return;
+    }
+
     try {
       if (editingItem) {
         // Edit Item
@@ -188,6 +195,7 @@ export default function MenuManagement() {
           method: 'PATCH',
           body: {
             ...itemForm,
+            categoryId: selectedCatId,
             price: priceNum
           }
         });
@@ -198,6 +206,7 @@ export default function MenuManagement() {
           method: 'POST',
           body: {
             ...itemForm,
+            categoryId: selectedCatId,
             price: priceNum
           }
         });
@@ -634,7 +643,7 @@ export default function MenuManagement() {
                   Menu Category
                 </label>
                 <select
-                  value={itemForm.categoryId}
+                  value={itemForm.categoryId || (categories.length > 0 ? categories[0].id : '')}
                   onChange={(e) => setItemForm({ ...itemForm, categoryId: e.target.value })}
                   className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-coral-500"
                   required

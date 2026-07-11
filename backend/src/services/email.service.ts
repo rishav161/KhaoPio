@@ -74,7 +74,68 @@ export class EmailService {
       return false;
     }
   }
+
+  /**
+   * Sends an OTP verification email using Mailgun.
+   */
+  async sendOtpEmail(email: string, otp: string): Promise<boolean> {
+    if (!EMAIL_API_KEY) {
+      console.warn('WARNING: EMAIL_API_KEY is not defined. Skipping OTP email dispatch.');
+      return false;
+    }
+
+    const mailgunEndpoint = `${MAILGUN_API_URL}/v3/${MAILGUN_DOMAIN}/messages`;
+    const authHeader = 'Basic ' + Buffer.from(`api:${EMAIL_API_KEY}`).toString('base64');
+
+    const formData = new URLSearchParams();
+    formData.append('from', `Restaurant POS <no-reply@${MAILGUN_DOMAIN}>`);
+    formData.append('to', email);
+    formData.append('subject', 'Verification Code for Restaurant POS');
+    formData.append('html', `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+        <h2 style="color: #333333; text-align: center;">Verify Your Email Address</h2>
+        <p style="font-size: 16px; color: #555555; line-height: 1.5;">
+          Thank you for signing up as a Super Admin on KhaoPio. Please verify your email address by entering the following 6-digit verification code:
+        </p>
+        <div style="text-align: center; margin: 30px 0;">
+          <span style="display: inline-block; background-color: #ff542d; color: white; padding: 12px 30px; border-radius: 8px; font-weight: 900; font-size: 28px; letter-spacing: 0.15em;">
+            \${otp}
+          </span>
+        </div>
+        <p style="font-size: 14px; color: #777777; line-height: 1.5; text-align: center;">
+          This verification code is valid for 10 minutes. If you did not sign up for an account, please ignore this email.
+        </p>
+        <hr style="border: 0; border-top: 1px solid #eeeeee; margin: 20px 0;">
+        <p style="font-size: 12px; color: #999999; text-align: center;">
+          KhaoPio POS System &copy; \${new Date().getFullYear()}
+        </p>
+      </div>
+    `);
+
+    try {
+      const response = await fetch(mailgunEndpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': authHeader,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData.toString(),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Mailgun Error (\${response.status}): \${errorText}`);
+      }
+
+      console.log(`OTP verification email successfully dispatched to \${email} via Mailgun.`);
+      return true;
+    } catch (error: any) {
+      console.warn(`[Email Service Warning] Failed to send OTP verification email to \${email} (Mailgun returned: \${error.message || error}).`);
+      return false;
+    }
+  }
 }
 
 export const emailService = new EmailService();
 export default emailService;
+

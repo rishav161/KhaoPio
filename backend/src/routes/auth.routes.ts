@@ -10,12 +10,16 @@ import {
   getAllUsers,
   updateUserByAdmin,
   deleteUserByAdmin,
+  initRegister,
+  verifyOtp,
 } from '../controllers/auth.controller';
 import { authenticateJWT, requirePermission } from '../middlewares/auth.middleware';
 
 const router = Router();
 
 // Public onboarding / auth routes
+router.post('/register-init', initRegister);
+router.post('/register-verify-otp', verifyOtp);
 router.post('/register-admin', registerAdmin);
 router.post('/login', loginEmail);
 router.get('/invitation/:token', verifyInvitation);

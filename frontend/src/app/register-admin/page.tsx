@@ -4,8 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
-  KeyRound, Mail, User, ShieldAlert, Sparkles, CheckCircle2, 
-  Eye, EyeOff, UtensilsCrossed, ChevronRight, ChevronLeft, Check, Plus
+  KeyRound, Mail, User, ShieldAlert, CheckCircle2, 
+  Eye, EyeOff, UtensilsCrossed, ChevronRight, ChevronLeft, Check
 } from 'lucide-react';
 import { apiFetch } from '@/utils/api';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -40,11 +40,13 @@ export default function RegisterAdmin() {
   }, [token, router]);
 
   // Setup step
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
 
   // Form fields
   const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [restaurantName, setRestaurantName] = useState('');
+  const [otpInput, setOtpInput] = useState('');
+  const [debugOtp, setDebugOtp] = useState('');
   
   // Selected seed template codes
   const [selectedCodes, setSelectedCodes] = useState<string[]>(
@@ -66,8 +68,8 @@ export default function RegisterAdmin() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Validate Step 1 credentials
-  const handleNextStep = (e: React.FormEvent) => {
+  // Validate Step 1 credentials & request OTP
+  const handleNextStep = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -86,7 +88,47 @@ export default function RegisterAdmin() {
       return;
     }
 
-    setStep(2);
+    setLoading(true);
+    try {
+      const response = await apiFetch('/auth/register-init', {
+        method: 'POST',
+        body: { email: form.email },
+      });
+
+      setDebugOtp(response.otp || '');
+      setStep(2);
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      setError(error.message || 'Error sending verification code.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Validate Step 2 OTP verification code
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (!otpInput || otpInput.length !== 6) {
+      setError('Please enter the 6-digit verification code.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await apiFetch('/auth/register-verify-otp', {
+        method: 'POST',
+        body: { email: form.email, otp: otpInput },
+      });
+
+      setStep(3);
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      setError(error.message || 'Incorrect verification code. Please check and try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Toggle template item select state
@@ -147,8 +189,9 @@ export default function RegisterAdmin() {
       setTimeout(() => {
         router.push('/billing');
       }, 1500);
-    } catch (err: any) {
-      setError(err.message || 'Super Admin already registered or database is inaccessible.');
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      setError(error.message || 'Super Admin already registered or database is inaccessible.');
     } finally {
       setLoading(false);
     }
@@ -168,34 +211,7 @@ export default function RegisterAdmin() {
         {/* Glow Line effect */}
         <div className="absolute top-0 left-0 right-0 h-[4px] bg-gradient-to-r from-coral-500 via-amber-500 to-yellow-400"></div>
 
-        {/* Wizard Progress Steps */}
-        <div className="mb-6 flex items-center justify-center gap-4">
-          <div className="flex items-center gap-2">
-            <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-black transition-colors ${
-              step === 1 
-                ? 'bg-coral-500 text-white' 
-                : 'bg-emerald-500 text-white'
-            }`}>
-              {step > 1 ? <Check className="h-3.5 w-3.5" /> : '1'}
-            </span>
-            <span className={`text-xs font-black uppercase tracking-wider ${step === 1 ? 'text-coral-500' : 'text-zinc-400 dark:text-zinc-500'}`}>
-              Account Details
-            </span>
-          </div>
-          <ChevronRight className="h-4 w-4 text-zinc-300" />
-          <div className="flex items-center gap-2">
-            <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-black transition-colors ${
-              step === 2 
-                ? 'bg-coral-500 text-white' 
-                : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-500'
-            }`}>
-              2
-            </span>
-            <span className={`text-xs font-black uppercase tracking-wider ${step === 2 ? 'text-coral-500' : 'text-zinc-400 dark:text-zinc-500'}`}>
-              Restaurant & Menu
-            </span>
-          </div>
-        </div>
+
 
         <div className="mb-6 text-center">
           <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-coral-50 dark:bg-coral-950/30 text-coral-500 mb-3">
@@ -311,14 +327,73 @@ export default function RegisterAdmin() {
 
             <button
               type="submit"
+              disabled={loading}
               className="w-full flex items-center justify-center gap-1.5 cursor-pointer rounded-lg bg-coral-500 py-3 text-xs font-black uppercase tracking-wider text-white transition-all hover:bg-coral-600 active:scale-[0.98] shadow-md shadow-coral-100 dark:shadow-none mt-4"
             >
-              <span>Continue to Setup Menu</span>
+              <span>{loading ? 'Sending Code...' : 'Continue to OTP Verification'}</span>
               <ChevronRight className="h-4 w-4" />
             </button>
           </form>
+        ) : step === 2 ? (
+          /* STEP 2: OTP Verification Code */
+          <form onSubmit={handleVerifyOtp} className="space-y-4">
+            <div className="text-center py-2">
+              <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-400">
+                A 6-digit verification code has been dispatched to
+              </p>
+              <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mt-1">
+                {form.email}
+              </p>
+            </div>
+
+            {debugOtp && (
+              <div className="bg-coral-50/30 dark:bg-coral-950/20 border border-coral-200 dark:border-coral-900 rounded-lg p-3 text-center mb-4">
+                <span className="text-[10px] font-black uppercase tracking-wider text-coral-500 block mb-1">
+                  Debug OTP Code (Copy/Paste)
+                </span>
+                <span className="text-2xl font-black tracking-widest text-coral-600 dark:text-coral-400 font-mono">
+                  {debugOtp}
+                </span>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5 text-center">
+                Enter 6-Digit OTP Code
+              </label>
+              <input
+                type="text"
+                placeholder="••••••"
+                maxLength={6}
+                value={otpInput}
+                onChange={(e) => setOtpInput(e.target.value.replace(/[^0-9]/g, ''))}
+                className="w-full text-center tracking-[0.75em] font-mono text-xl rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-3 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-1 focus:ring-coral-500"
+                required
+              />
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="flex items-center justify-center gap-1 px-4 py-3 rounded-lg border border-zinc-300 dark:border-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100/50 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                <span>Back</span>
+              </button>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-1 flex items-center justify-center gap-1.5 cursor-pointer rounded-lg bg-coral-500 hover:bg-coral-600 py-3 text-xs font-black uppercase tracking-wider text-white transition-all active:scale-[0.98] disabled:opacity-50 shadow-md shadow-coral-100 dark:shadow-none"
+              >
+                <span>{loading ? 'Verifying OTP...' : 'Verify Code'}</span>
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </form>
         ) : (
-          /* STEP 2: Restaurant Name & Menu bootstrapping template selection */
+          /* STEP 3: Restaurant Name & Menu bootstrapping template selection */
           <div className="space-y-6">
             <div>
               <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
@@ -344,7 +419,7 @@ export default function RegisterAdmin() {
                   {selectedCodes.length} of {SEED_TEMPLATE_ITEMS.length} selected
                 </span>
               </div>
-              <p className="text-[11px] text-zinc-505 dark:text-zinc-400 mb-4 font-semibold">
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mb-4 font-semibold">
                 Pick food items to populate your restaurant menu immediately. You can modify prices below or toggle item imports.
               </p>
 
@@ -419,7 +494,7 @@ export default function RegisterAdmin() {
             <div className="flex gap-3 border-t border-zinc-200 dark:border-zinc-800 pt-4 mt-6">
               <button
                 type="button"
-                onClick={() => setStep(1)}
+                onClick={() => setStep(2)}
                 className="flex items-center justify-center gap-1 px-4 py-3 rounded-lg border border-zinc-300 dark:border-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100/50 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -439,14 +514,16 @@ export default function RegisterAdmin() {
           </div>
         )}
 
-        <div className="mt-6 border-t border-zinc-200 dark:border-zinc-800 pt-5 text-center">
-          <Link
-            href="/login"
-            className="text-xs font-bold text-coral-500 hover:text-coral-600 transition-colors"
-          >
-            System already active? Log In
-          </Link>
-        </div>
+        {step < 3 && (
+          <div className="mt-6 border-t border-zinc-200 dark:border-zinc-800 pt-5 text-center">
+            <Link
+              href="/login"
+              className="text-xs font-bold text-coral-500 hover:text-coral-600 transition-colors"
+            >
+              System already active? Log In
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );

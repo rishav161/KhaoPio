@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import prisma from '../prisma';
 import { RoleName } from '@prisma/client';
+import { emailService } from './email.service';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretposkey';
 
@@ -11,6 +12,15 @@ export class AuthService {
    * Registers the very first SUPER_ADMIN in the system.
    */
   async registerFirstAdmin(data: { name: string; email: string; passwordHash: string; restaurantName?: string; menuItems?: any[] }) {
+    // Verify that the email was verified with OTP first
+    const verification = await prisma.otpVerification.findUnique({
+      where: { email: data.email.toLowerCase() },
+    });
+
+    if (!verification || !verification.isVerified) {
+      throw new Error('Email address has not been verified with OTP.');
+    }
+
     // Check if any SUPER_ADMIN already exists
     const superAdminRole = await prisma.role.findUnique({
       where: { name: RoleName.SUPER_ADMIN },
@@ -88,8 +98,94 @@ export class AuthService {
       }
     }
 
+    // Cleanup OTP Verification
+    await prisma.otpVerification.delete({
+      where: { email: data.email.toLowerCase() },
+    }).catch(() => {});
+
     return this.generateUserResponse(newAdmin, ['view:dashboard', 'view:sales-reports', 'view:staff-reports', 'view:staff', 'invite:staff', 'update:staff', 'delete:staff', 'view:orders', 'create:kot', 'request:bill', 'update:order-status', 'pay:order']);
   }
+
+  /**
+   * Initializes Super Admin registration by generating and sending an OTP verification email.
+   */
+  async initializeAdminRegistration(email: string): Promise<{ otp: string }> {
+    const superAdminRole = await prisma.role.findUnique({
+      where: { name: RoleName.SUPER_ADMIN },
+    });
+
+    if (!superAdminRole) {
+      throw new Error('SUPER_ADMIN role not found in database. Run seed first.');
+    }
+
+    const adminExists = await prisma.user.findFirst({
+      where: { roleId: superAdminRole.id },
+    });
+
+    if (adminExists) {
+      throw new Error('A Super Admin is already registered. Registration is locked.');
+    }
+
+    const emailExists = await prisma.user.findFirst({
+      where: { email: email.toLowerCase() },
+    });
+
+    if (emailExists) {
+      throw new Error('A user with this email address is already registered.');
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+
+    await prisma.otpVerification.upsert({
+      where: { email: email.toLowerCase() },
+      create: {
+        email: email.toLowerCase(),
+        otp,
+        isVerified: false,
+        expiresAt,
+      },
+      update: {
+        otp,
+        isVerified: false,
+        expiresAt,
+      },
+    });
+
+    // Send the OTP via email
+    await emailService.sendOtpEmail(email.toLowerCase(), otp);
+
+    return { otp };
+  }
+
+  /**
+   * Verifies the OTP code for Super Admin email verification.
+   */
+  async verifyAdminOtp(email: string, otp: string): Promise<boolean> {
+    const record = await prisma.otpVerification.findUnique({
+      where: { email: email.toLowerCase() },
+    });
+
+    if (!record) {
+      throw new Error('No verification code request found for this email address.');
+    }
+
+    if (record.otp !== otp) {
+      throw new Error('Invalid verification code.');
+    }
+
+    if (record.expiresAt < new Date()) {
+      throw new Error('Verification code has expired. Please request a new one.');
+    }
+
+    await prisma.otpVerification.update({
+      where: { email: email.toLowerCase() },
+      data: { isVerified: true },
+    });
+
+    return true;
+  }
+
 
   /**
    * Logs in a user using Email and Password.
