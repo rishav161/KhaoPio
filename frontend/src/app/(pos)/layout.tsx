@@ -17,6 +17,7 @@ const DynamicIcon = ({ name, className }: { name: string; className?: string }) 
 export default function POSLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   // Zustand Store States
   const activeOrders = usePOSStore((state) => state.activeOrders);
@@ -150,8 +151,28 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-zinc-50 dark:bg-zinc-950 font-sans text-zinc-900 dark:text-zinc-100 antialiased transition-colors duration-200">
       
+      {/* Sidebar mobile backdrop overlay */}
+      {isSidebarOpen && (
+        <div 
+          onClick={() => setIsSidebarOpen(false)}
+          className="fixed inset-0 z-40 bg-black/45 backdrop-blur-xs md:hidden"
+        />
+      )}
+
       {/* Dynamic left sidebar */}
-      <aside className="flex w-24 flex-col items-center border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm transition-colors duration-200">
+      <aside className={`fixed inset-y-0 left-0 z-50 flex w-24 flex-col items-center border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-md transition-transform duration-300 md:static md:translate-x-0 shrink-0 ${
+        isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+        {/* Mobile Close Button */}
+        <div className="md:hidden flex w-full justify-end p-2 border-b border-zinc-150 dark:border-zinc-800">
+          <button 
+            onClick={() => setIsSidebarOpen(false)}
+            className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+          >
+            <LucideIcons.X className="h-4 w-4" />
+          </button>
+        </div>
+
         {/* Logo / Brand */}
         <div className="flex h-16 w-full items-center justify-center border-b border-zinc-250 dark:border-zinc-800 bg-coral-500 text-white shadow-inner">
           <div className="flex flex-col items-center">
@@ -180,11 +201,14 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
             return (
               <button
                 key={item.id}
-                onClick={() => router.push(item.path)}
+                onClick={() => {
+                  router.push(item.path);
+                  setIsSidebarOpen(false);
+                }}
                 className={`relative flex flex-col items-center justify-center rounded-xl py-3 text-center transition-all duration-150 cursor-pointer ${
                   isActive
                     ? 'bg-coral-500 text-white shadow-md shadow-coral-100 dark:shadow-none'
-                    : 'text-zinc-550 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100'
+                    : 'text-zinc-550 dark:text-zinc-405 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100'
                 }`}
               >
                 <DynamicIcon name={item.icon || 'HelpCircle'} className={`h-5.5 w-5.5 ${isActive ? 'scale-110' : ''}`} />
@@ -222,28 +246,36 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Dynamic Header */}
         <header className="flex h-12 w-full items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2 shadow-sm transition-colors duration-200">
-          <div className="flex items-center gap-2.5">
-            <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-            <span className="text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-200">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="md:hidden flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 active:scale-95 transition-all cursor-pointer"
+            >
+              <LucideIcons.Menu className="h-4.5 w-4.5" />
+            </button>
+            <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0"></span>
+            <span className="text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-200 truncate max-w-[80px] sm:max-w-none">
               {user?.restaurantName || 'KhaoPio'}
             </span>
-            <span className="text-zinc-300 dark:text-zinc-850 font-normal">|</span>
-            <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-450">
+            <span className="hidden sm:inline text-zinc-300 dark:text-zinc-850 font-normal">|</span>
+            <span className="hidden sm:inline text-xs font-semibold text-zinc-500 dark:text-zinc-450">
               Staff: {user ? `${user.name} (${user.role.replace('_', ' ')})` : 'Terminal #01'}
             </span>
           </div>
           
-          <div className="flex items-center gap-4 text-xs font-bold text-zinc-700 dark:text-zinc-300">
+          <div className="flex items-center gap-2.5 sm:gap-4 text-xs font-bold text-zinc-700 dark:text-zinc-300">
             {/* Clock */}
-            <div className="flex items-center gap-1 border-r border-zinc-200 dark:border-zinc-800 pr-4">
+            <div className="hidden sm:flex items-center gap-1 border-r border-zinc-200 dark:border-zinc-800 pr-4">
               <LucideIcons.Clock className="h-3.5 w-3.5 text-zinc-400" />
               <span className="font-mono">{time}</span>
             </div>
             
             {/* Orders Badge */}
-            <div className="border-r border-zinc-200 dark:border-zinc-800 pr-4">
-              <span className="text-zinc-400 dark:text-zinc-500">Orders: </span>
-              <span className="font-extrabold text-coral-500">{activeOrders.length}</span>
+            <div className="border-r border-zinc-200 dark:border-zinc-800 pr-2.5 sm:pr-4 flex items-center">
+              <span className="hidden sm:inline text-zinc-400 dark:text-zinc-500 mr-1">Orders: </span>
+              <span className="font-extrabold text-coral-500 bg-coral-50 dark:bg-coral-950/20 border border-coral-200 dark:border-coral-900 rounded-md px-1.5 py-0.5 text-[10px]">
+                {activeOrders.length}
+              </span>
             </div>
 
             {/* Profile Settings Button */}

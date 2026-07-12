@@ -88,14 +88,14 @@ export default function KitchenPage() {
   return (
     <div className="flex h-full w-full flex-col overflow-hidden bg-zinc-100 dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
       {/* KDS Header & Filter bar */}
-      <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3">
+        <div className="flex items-center gap-2 flex-wrap">
           <ChefHat className="h-5 w-5 text-coral-500" />
-          <h1 className="text-sm font-black uppercase tracking-wider text-zinc-800 dark:text-zinc-100">
+          <h1 className="text-xs sm:text-sm font-black uppercase tracking-wider text-zinc-800 dark:text-zinc-100">
             Kitchen Display System (KDS)
           </h1>
-          <span className="ml-2 rounded-full bg-zinc-900 dark:bg-zinc-100 px-2.5 py-0.5 text-xs font-extrabold text-white dark:text-zinc-950">
-            {kitchenOrders.length} Active Tickets
+          <span className="rounded-full bg-zinc-900 dark:bg-zinc-100 px-2 py-0.5 text-[10px] font-black text-white dark:text-zinc-950">
+            {kitchenOrders.length} <span className="hidden sm:inline">Active Tickets</span><span className="sm:hidden inline">Active</span>
           </span>
         </div>
 

@@ -68,7 +68,7 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="flex h-full w-full gap-3 overflow-hidden">
+    <div className="flex flex-col lg:flex-row h-full w-full gap-3 overflow-y-auto lg:overflow-hidden">
       {/* Print-only CSS style injection */}
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
@@ -129,7 +129,7 @@ export default function CheckoutPage() {
       `}} />
 
       {/* LEFT COLUMN: Ready Orders (55% width) */}
-      <div className="flex w-[55%] flex-col border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-xl shadow-sm overflow-hidden">
+      <div className="flex w-full lg:w-[55%] flex-col border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-xl shadow-sm overflow-hidden shrink-0">
         <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-3">
           <div className="flex items-center gap-2">
             <ShoppingBag className="h-5 w-5 text-coral-500" />
@@ -230,7 +230,7 @@ export default function CheckoutPage() {
       </div>
 
       {/* RIGHT COLUMN: Completed Orders (45% width) */}
-      <div className="flex w-[45%] flex-col border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-xl shadow-sm overflow-hidden">
+      <div className="flex w-full lg:w-[45%] flex-col border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-xl shadow-sm overflow-hidden shrink-0">
         <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-3">
           <div className="flex items-center gap-2">
             <CheckCircle className="h-5 w-5 text-emerald-600" />
@@ -317,11 +317,11 @@ export default function CheckoutPage() {
             </div>
 
             {/* Receipt Content Scroll Area */}
-            <div className="flex-1 overflow-y-auto p-6 bg-zinc-100 flex justify-center print-modal-content">
+            <div className="flex-1 overflow-y-auto p-3 sm:p-6 bg-zinc-100 flex justify-center print-modal-content">
               {/* Thermal Printer Layout (80mm width simulation, monospace, center-aligned top) */}
               <div
                 id="thermal-receipt-print-area"
-                className="w-[80mm] bg-white border border-zinc-300 shadow-sm p-4 text-zinc-950 font-mono text-[11px] leading-relaxed"
+                className="w-full max-w-[80mm] sm:w-[80mm] bg-white border border-zinc-300 shadow-sm p-4 text-zinc-950 font-mono text-[11px] leading-relaxed"
                 style={{ fontFamily: 'Courier New, Courier, monospace' }}
               >
                 {/* Header Info */}
@@ -352,7 +352,7 @@ export default function CheckoutPage() {
 
                 {/* Transaction Metadata */}
                 <div className="space-y-0.5">
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-[10px]">
                     <span>DATE: {new Date(selectedOrderForBill.createdAt).toLocaleDateString()}</span>
                     <span>TIME: {new Date(selectedOrderForBill.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
@@ -429,10 +429,17 @@ export default function CheckoutPage() {
                   </p>
                   {/* Mock Barcode / QR Code */}
                   <div className="flex flex-col items-center pt-2">
-                    <div className="flex gap-[1px] h-6 bg-zinc-950 w-24">
-                      {/* Barcode styling helper lines */}
+                    <div className="flex h-7 bg-zinc-950 w-32 items-stretch justify-around px-2.5">
                       <span className="w-[1px] bg-white"></span>
                       <span className="w-[2px] bg-white"></span>
+                      <span className="w-[1px] bg-white"></span>
+                      <span className="w-[3px] bg-white"></span>
+                      <span className="w-[1px] bg-white"></span>
+                      <span className="w-[2px] bg-white"></span>
+                      <span className="w-[1px] bg-white"></span>
+                      <span className="w-[4px] bg-white"></span>
+                      <span className="w-[2px] bg-white"></span>
+                      <span className="w-[1px] bg-white"></span>
                       <span className="w-[3px] bg-white"></span>
                     </div>
                     <span className="text-[7px] text-zinc-500 tracking-[0.2em] mt-0.5">

@@ -2,9 +2,10 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { usePOSStore } from '@/store/usePOSStore';
-import { MenuItem } from '@/types/pos';
+import { CartItem } from '@/types/pos';
 import { Search, Plus, Minus, Trash2, Soup, ShoppingCart, Send } from 'lucide-react';
 import { Loader } from '@/components/Loader';
+import Big from 'big.js';
 
 export default function BillingPage() {
   const {
@@ -23,7 +24,6 @@ export default function BillingPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
     fetchMenuItems().finally(() => setLoading(false));
   }, [fetchMenuItems]);
 
@@ -66,9 +66,8 @@ export default function BillingPage() {
     // or just let it match the store logic. We will write it cleanly using simple math,
     // or import big.js directly since we have it.
     // Let's import Big to be 100% precise!
-    const Big = require('big.js');
     let subtotal = new Big(0);
-    cartItems.forEach((item: any) => {
+    cartItems.forEach((item: CartItem) => {
       subtotal = subtotal.plus(new Big(item.menuItem.price).times(item.quantity));
     });
     const tax = subtotal.times(0.05); // 5% GST
@@ -108,14 +107,15 @@ export default function BillingPage() {
           alertEl.classList.add('opacity-0');
         }, 2000);
       }
-    } catch (err: any) {
-      setSendError(err.message || 'Failed to send KOT order to kitchen.');
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to send KOT order to kitchen.';
+      setSendError(errorMsg);
       setTimeout(() => setSendError(''), 4000);
     }
   };
 
   return (
-    <div className="flex h-full w-full gap-3 overflow-hidden">
+    <div className="flex flex-col lg:flex-row h-full w-full gap-3 overflow-y-auto lg:overflow-hidden">
       {/* SUCCESS POPUP ALERT */}
       <div
         id="kitchen-alert"
@@ -134,7 +134,7 @@ export default function BillingPage() {
       )}
 
       {/* LEFT COLUMN: Categories (20% width) */}
-      <div className="flex w-[20%] flex-col border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-xl shadow-sm overflow-hidden">
+      <div className="flex w-full lg:w-[20%] flex-col border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-xl shadow-sm overflow-hidden shrink-0">
         <div className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-3">
           <h2 className="text-xs font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Categories</h2>
         </div>
@@ -166,7 +166,7 @@ export default function BillingPage() {
       </div>
 
       {/* CENTER COLUMN: Menu Grid (50% width) */}
-      <div className="flex flex-1 flex-col border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-xl shadow-sm overflow-hidden">
+      <div className="flex w-full lg:flex-1 flex-col border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-xl shadow-sm overflow-hidden shrink-0 lg:shrink">
         {/* Search Header */}
         <div className="flex items-center gap-3 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-955 p-2.5">
           <div className="relative flex-1">
@@ -253,7 +253,7 @@ export default function BillingPage() {
       </div>
 
       {/* RIGHT COLUMN: Active Cart (30% width) */}
-      <div className="flex w-[30%] flex-col border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-xl shadow-sm overflow-hidden">
+      <div className="flex w-full lg:w-[30%] flex-col border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-xl shadow-sm overflow-hidden shrink-0">
         {/* Cart Header */}
         <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-3">
           <div className="flex items-center gap-1.5">
