@@ -12,6 +12,8 @@ import {
   deleteUserByAdmin,
   initRegister,
   verifyOtp,
+  updateProfile,
+  updateRestaurantDetails,
 } from '../controllers/auth.controller';
 import { authenticateJWT, requirePermission } from '../middlewares/auth.middleware';
 
@@ -34,5 +36,9 @@ router.post('/invite', authenticateJWT, requirePermission('invite:staff'), invit
 router.get('/admin/users', authenticateJWT, requirePermission('view:staff'), getAllUsers);
 router.patch('/admin/users/:id', authenticateJWT, requirePermission('update:staff'), updateUserByAdmin);
 router.delete('/admin/users/:id', authenticateJWT, requirePermission('delete:staff'), deleteUserByAdmin);
+
+// Profile and Restaurant settings routes
+router.patch('/profile', authenticateJWT, updateProfile);
+router.patch('/restaurant', authenticateJWT, updateRestaurantDetails);
 
 export default router;

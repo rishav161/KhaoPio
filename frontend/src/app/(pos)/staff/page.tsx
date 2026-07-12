@@ -118,6 +118,7 @@ export default function StaffManagement() {
 
       setInviteForm({ email: '', role: 'WAITER' });
       fetchStaff();
+      setIsInviteOpen(false);
     } catch (err: any) {
       setErrorMsg(err.message || 'Error sending invitation.');
     } finally {

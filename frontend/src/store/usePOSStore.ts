@@ -14,7 +14,7 @@ interface POSState {
   updateCartQuantity: (itemId: string, change: number) => void;
   removeFromCart: (itemId: string) => void;
   clearCart: () => void;
-  fetchActiveOrders: (includePaid?: boolean) => Promise<void>;
+  fetchActiveOrders: (includePaid?: boolean, paidDays?: string) => Promise<void>;
   sendOrderToKitchen: () => Promise<void>;
   updateOrderStatus: (orderId: string, newStatus: Order['status']) => Promise<void>;
   completePayment: (orderId: string, paymentMethod: 'CASH' | 'CARD_UPI') => Promise<void>;
@@ -107,9 +107,11 @@ export const usePOSStore = create<POSState>((set, get) => ({
   },
 
   // 2. Fetch active orders from backend KOT queues
-  fetchActiveOrders: async (includePaid = false) => {
+  fetchActiveOrders: async (includePaid = false, paidDays = 'today') => {
     try {
-      const url = includePaid ? '/orders/active?includePaid=true' : '/orders/active';
+      const url = includePaid 
+        ? `/orders/active?includePaid=true&paidDays=${paidDays}` 
+        : '/orders/active';
       const orders = await apiFetch<any[]>(url);
       const mappedOrders: Order[] = orders.map((order) => {
         const items: CartItem[] = order.items.map((dbItem: any) => {

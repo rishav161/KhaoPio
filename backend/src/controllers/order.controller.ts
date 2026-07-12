@@ -28,7 +28,8 @@ export const getActiveOrders = async (req: Request, res: Response): Promise<void
   try {
     const restaurantId = (req as any).user?.restaurantId;
     const includePaid = req.query.includePaid === 'true';
-    const activeOrders = await orderService.getActiveOrders(restaurantId, includePaid);
+    const paidDays = (req.query.paidDays as string) || 'today';
+    const activeOrders = await orderService.getActiveOrders(restaurantId, includePaid, paidDays);
     res.status(200).json(activeOrders);
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Internal Server Error' });

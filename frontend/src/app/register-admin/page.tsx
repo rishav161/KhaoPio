@@ -187,7 +187,7 @@ export default function RegisterAdmin() {
       useAuthStore.getState().setSidebarItems(sidebarItems);
 
       setTimeout(() => {
-        router.push('/billing');
+        router.push('/dashboard');
       }, 1500);
     } catch (err: unknown) {
       const error = err as { message?: string };

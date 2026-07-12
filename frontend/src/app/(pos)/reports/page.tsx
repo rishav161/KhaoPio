@@ -8,6 +8,7 @@ import {
 import { apiFetch } from '@/utils/api';
 import { Table } from '@/components/Table';
 import { Pagination } from '@/components/Pagination';
+import { Loader } from '@/components/Loader';
 
 interface ReportResponse {
   summary: {
@@ -155,6 +156,16 @@ export default function Reports() {
         return <span className="inline-flex items-center rounded-md bg-amber-50 dark:bg-amber-950/20 px-2 py-1 text-[10px] font-black text-amber-700 dark:text-amber-450">{status}</span>;
     }
   };
+
+  if (loading && !reportData) {
+    return (
+      <Loader
+        size="lg"
+        text="Synchronizing transaction reports..."
+        className="h-full w-full bg-zinc-50 dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800"
+      />
+    );
+  }
 
   return (
     <div className="flex h-full flex-col overflow-y-auto bg-zinc-50 dark:bg-zinc-950 p-4 transition-colors duration-250">

@@ -223,4 +223,54 @@ export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+export const updateProfile = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = (req as any).user?.id;
+    const { name } = req.body;
+
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized. User context missing.' });
+      return;
+    }
+
+    if (!name) {
+      res.status(400).json({ error: 'Field "name" is required.' });
+      return;
+    }
+
+    const updatedUser = await authService.updateProfile(userId, name);
+    res.status(200).json(updatedUser);
+  } catch (error: any) {
+    res.status(550).json({ error: error.message || 'Error updating profile.' });
+  }
+};
+
+export const updateRestaurantDetails = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const restaurantId = (req as any).user?.restaurantId;
+    const userRole = (req as any).user?.role;
+    const { name } = req.body;
+
+    if (userRole !== 'SUPER_ADMIN') {
+      res.status(403).json({ error: 'Forbidden. Only SUPER_ADMIN can update restaurant details.' });
+      return;
+    }
+
+    if (!restaurantId) {
+      res.status(401).json({ error: 'Unauthorized. Restaurant context missing.' });
+      return;
+    }
+
+    if (!name) {
+      res.status(400).json({ error: 'Field "name" is required.' });
+      return;
+    }
+
+    const updatedRestaurant = await authService.updateRestaurant(restaurantId, name);
+    res.status(200).json(updatedRestaurant);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Error updating restaurant.' });
+  }
+};
+
 

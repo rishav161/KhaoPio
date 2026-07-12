@@ -4,6 +4,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { usePOSStore } from '@/store/usePOSStore';
 import { MenuItem } from '@/types/pos';
 import { Search, Plus, Minus, Trash2, Soup, ShoppingCart, Send } from 'lucide-react';
+import { Loader } from '@/components/Loader';
 
 export default function BillingPage() {
   const {
@@ -19,9 +20,11 @@ export default function BillingPage() {
 
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchMenuItems();
+    setLoading(true);
+    fetchMenuItems().finally(() => setLoading(false));
   }, [fetchMenuItems]);
 
   // Get list of categories dynamically from menuItems
@@ -79,6 +82,16 @@ export default function BillingPage() {
   }, [cartItems]);
 
   const [sendError, setSendError] = useState('');
+
+  if (loading && menuItems.length === 0) {
+    return (
+      <Loader 
+        size="md" 
+        text="Loading billing interface..." 
+        className="h-full w-full bg-zinc-50 dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800" 
+      />
+    );
+  }
 
   const handleSendToKitchen = async () => {
     if (cartItems.length === 0) return;

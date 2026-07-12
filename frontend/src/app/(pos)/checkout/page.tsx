@@ -2,21 +2,34 @@
 
 import React, { useState, useMemo } from 'react';
 import { usePOSStore } from '@/store/usePOSStore';
+import { useAuthStore } from '@/store/useAuthStore';
 import { Order } from '@/types/pos';
 import { Banknote, CreditCard, Receipt, CheckCircle, Printer, X, ShoppingBag } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { Loader } from '@/components/Loader';
 
 export default function CheckoutPage() {
   const { activeOrders, completePayment, fetchActiveOrders, fetchMenuItems } = usePOSStore();
+  const { user } = useAuthStore();
   const [selectedOrderForBill, setSelectedOrderForBill] = useState<Order | null>(null);
+  const [completedFilter, setCompletedFilter] = useState<'today' | 'yesterday' | '7days' | 'all'>('today');
+  const [loadingCompleted, setLoadingCompleted] = useState(false);
+  const [loadingActive, setLoadingActive] = useState(false);
 
   React.useEffect(() => {
+    setLoadingActive(true);
+    setLoadingCompleted(true);
     fetchMenuItems().then(() => {
-      fetchActiveOrders(true);
+      fetchActiveOrders(true, completedFilter).finally(() => {
+        setLoadingActive(false);
+        setLoadingCompleted(false);
+      });
     });
-    const interval = setInterval(() => fetchActiveOrders(true), 5000);
+    const interval = setInterval(() => {
+      fetchActiveOrders(true, completedFilter);
+    }, 5000);
     return () => clearInterval(interval);
-  }, [fetchActiveOrders, fetchMenuItems]);
+  }, [fetchActiveOrders, fetchMenuItems, completedFilter]);
 
   // Filter orders with READY status
   const readyOrders = useMemo(() => {
@@ -28,16 +41,25 @@ export default function CheckoutPage() {
     return activeOrders.filter((order) => order.status === 'PAID');
   }, [activeOrders]);
 
-  const handlePayment = (orderId: string, method: 'CASH' | 'CARD_UPI') => {
-    completePayment(orderId, method);
-    
-    // Play confetti explosion!
-    confetti({
-      particleCount: 80,
-      spread: 60,
-      origin: { y: 0.7 },
-      colors: ['#f97316', '#10b981', '#3b82f6', '#f59e0b'],
-    });
+  const [payingOrderId, setPayingOrderId] = useState<string | null>(null);
+
+  const handlePayment = async (orderId: string, method: 'CASH' | 'CARD_UPI') => {
+    setPayingOrderId(orderId);
+    try {
+      await completePayment(orderId, method);
+      
+      // Play confetti explosion!
+      confetti({
+        particleCount: 80,
+        spread: 60,
+        origin: { y: 0.7 },
+        colors: ['#f97316', '#10b981', '#3b82f6', '#f59e0b'],
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setPayingOrderId(null);
+    }
   };
 
   const handlePrintAction = () => {
@@ -50,19 +72,58 @@ export default function CheckoutPage() {
       {/* Print-only CSS style injection */}
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
-          body * {
-            visibility: hidden;
+          /* Hide all other elements in the body */
+          body > :not(.print-modal-container) {
+            display: none !important;
           }
-          #thermal-receipt-print-area, #thermal-receipt-print-area * {
-            visibility: visible;
+          /* Reset parent modal structures so they don't constrain the receipt */
+          .print-modal-container {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 80mm !important;
+            height: auto !important;
+            background: white !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            display: block !important;
+            overflow: visible !important;
           }
+          .print-modal-dialog {
+            width: 80mm !important;
+            max-width: none !important;
+            max-height: none !important;
+            height: auto !important;
+            border: none !important;
+            box-shadow: none !important;
+            display: block !important;
+            overflow: visible !important;
+            background: white !important;
+          }
+          .print-modal-content {
+            padding: 0 !important;
+            margin: 0 !important;
+            display: block !important;
+            overflow: visible !important;
+            background: white !important;
+          }
+          .print-exclude {
+            display: none !important;
+          }
+          /* Thermal print content formatting */
           #thermal-receipt-print-area {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 80mm;
-            padding: 0;
-            margin: 0;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 80mm !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 10px !important;
+            margin: 0 !important;
+          }
+          @page {
+            size: auto;
+            margin: 0mm;
           }
         }
       `}} />
@@ -81,7 +142,12 @@ export default function CheckoutPage() {
           </span>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-3 space-y-2.5 bg-zinc-50/50 dark:bg-zinc-950/20">
+        <div className="relative flex-1 overflow-y-auto p-3 space-y-2.5 bg-zinc-50/50 dark:bg-zinc-950/20">
+          {loadingActive && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xs">
+              <Loader size="md" text="Syncing checkout queue..." />
+            </div>
+          )}
           {readyOrders.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center text-zinc-400 p-8 text-center bg-white dark:bg-zinc-900 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800">
               <CheckCircle className="h-10 w-10 stroke-[1.2] text-zinc-300 mb-2" />
@@ -134,17 +200,27 @@ export default function CheckoutPage() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => handlePayment(order.id, 'CASH')}
-                    className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 py-2 text-xs font-black text-white transition-colors shadow-sm"
+                    disabled={payingOrderId !== null}
+                    className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 py-2 text-xs font-black text-white transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
                   >
-                    <Banknote className="h-4 w-4" />
-                    COLLECT CASH
+                    {payingOrderId === order.id ? (
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                    ) : (
+                      <Banknote className="h-4 w-4" />
+                    )}
+                    {payingOrderId === order.id ? 'PROCESSING...' : 'COLLECT CASH'}
                   </button>
                   <button
                     onClick={() => handlePayment(order.id, 'CARD_UPI')}
-                    className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-zinc-900 dark:bg-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-850 py-2 text-xs font-black text-white transition-colors shadow-sm"
+                    disabled={payingOrderId !== null}
+                    className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-zinc-900 dark:bg-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-850 py-2 text-xs font-black text-white transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
                   >
-                    <CreditCard className="h-4 w-4" />
-                    CARD / UPI
+                    {payingOrderId === order.id ? (
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                    ) : (
+                      <CreditCard className="h-4 w-4" />
+                    )}
+                    {payingOrderId === order.id ? 'PROCESSING...' : 'CARD / UPI'}
                   </button>
                 </div>
               </div>
@@ -162,12 +238,29 @@ export default function CheckoutPage() {
               Completed Orders (Paid)
             </h2>
           </div>
-          <span className="rounded bg-emerald-100 dark:bg-emerald-950/20 border border-emerald-250 dark:border-emerald-900 px-2 py-0.5 text-[10px] font-black text-emerald-600 dark:text-emerald-450">
-            {completedOrders.length} Paid
-          </span>
+          <div className="flex items-center gap-2">
+            <select
+              value={completedFilter}
+              onChange={(e) => setCompletedFilter(e.target.value as any)}
+              className="rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-[9px] font-black uppercase py-1 px-1.5 outline-none focus:border-coral-500 cursor-pointer text-zinc-700 dark:text-zinc-350"
+            >
+              <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
+              <option value="7days">Last 7 Days</option>
+              <option value="all">All Time</option>
+            </select>
+            <span className="rounded bg-emerald-100 dark:bg-emerald-950/20 border border-emerald-250 dark:border-emerald-900 px-2 py-0.5 text-[10px] font-black text-emerald-600 dark:text-emerald-450">
+              {completedOrders.length} Paid
+            </span>
+          </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-zinc-50/30">
+        <div className="relative flex-1 overflow-y-auto p-3 space-y-2 bg-zinc-50/30">
+          {loadingCompleted && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xs">
+              <Loader size="md" text="Syncing history..." />
+            </div>
+          )}
           {completedOrders.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center text-zinc-400 text-center">
               <Receipt className="h-10 w-10 stroke-[1.2] text-zinc-300 mb-2" />
@@ -208,10 +301,10 @@ export default function CheckoutPage() {
 
       {/* SHADCN-STYLE THERMAL PRINTER INVOICE DIALOG */}
       {selectedOrderForBill && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
-          <div className="relative flex flex-col bg-white dark:bg-zinc-900 rounded-xl shadow-2xl border border-zinc-200 dark:border-zinc-800 w-full max-w-sm max-h-[90vh] overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in print-modal-container">
+          <div className="relative flex flex-col bg-white dark:bg-zinc-900 rounded-xl shadow-2xl border border-zinc-200 dark:border-zinc-800 w-full max-w-sm max-h-[90vh] overflow-hidden print-modal-dialog">
             {/* Modal Header */}
-            <div className="flex justify-between items-center bg-zinc-50 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 px-4 py-3">
+            <div className="flex justify-between items-center bg-zinc-50 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 px-4 py-3 print-exclude">
               <span className="text-xs font-black uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
                 Invoice Print Preview
               </span>
@@ -224,7 +317,7 @@ export default function CheckoutPage() {
             </div>
 
             {/* Receipt Content Scroll Area */}
-            <div className="flex-1 overflow-y-auto p-6 bg-zinc-100 flex justify-center">
+            <div className="flex-1 overflow-y-auto p-6 bg-zinc-100 flex justify-center print-modal-content">
               {/* Thermal Printer Layout (80mm width simulation, monospace, center-aligned top) */}
               <div
                 id="thermal-receipt-print-area"
@@ -234,7 +327,7 @@ export default function CheckoutPage() {
                 {/* Header Info */}
                 <div className="text-center space-y-1">
                   <h3 className="text-sm font-extrabold tracking-wide uppercase">
-                    KHAOPIO RESTAURANT
+                    {user?.restaurantName || 'KHAOPIO RESTAURANT'}
                   </h3>
                   <p className="text-[10px] text-zinc-600">
                     123 Agentic Way, Silicon Valley
@@ -351,7 +444,7 @@ export default function CheckoutPage() {
             </div>
 
             {/* Modal Actions */}
-            <div className="flex gap-2 bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 px-4 py-3">
+            <div className="flex gap-2 bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 px-4 py-3 print-exclude">
               <button
                 onClick={() => setSelectedOrderForBill(null)}
                 className="flex-1 py-2 text-xs font-black text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer"

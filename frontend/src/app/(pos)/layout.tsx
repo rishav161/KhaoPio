@@ -5,6 +5,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import * as LucideIcons from 'lucide-react';
 import { usePOSStore } from '@/store/usePOSStore';
 import { useAuthStore } from '@/store/useAuthStore';
+import { apiFetch } from '@/utils/api';
+import { Loader } from '@/components/Loader';
 
 // Dynamic Icon Renderer for database-seeded navigation menus
 const DynamicIcon = ({ name, className }: { name: string; className?: string }) => {
@@ -20,15 +22,71 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
   const activeOrders = usePOSStore((state) => state.activeOrders);
   const { user, token, sidebarItems, logout } = useAuthStore();
   
+  // Profile settings states
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [profileName, setProfileName] = useState(user?.name || '');
+  const [profileRestaurant, setProfileRestaurant] = useState(user?.restaurantName || '');
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState('');
+  const [profileSuccess, setProfileSuccess] = useState(false);
+
+  const updateUserStore = useAuthStore((state) => state.updateUser);
+
+  useEffect(() => {
+    if (user) {
+      setProfileName(user.name);
+      setProfileRestaurant(user.restaurantName || '');
+    }
+  }, [user]);
+
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setProfileLoading(true);
+    setProfileError('');
+    setProfileSuccess(false);
+
+    try {
+      if (profileName.trim() !== user?.name) {
+        await apiFetch('/auth/profile', {
+          method: 'PATCH',
+          body: { name: profileName.trim() },
+        });
+      }
+
+      if (profileRestaurant.trim() !== user?.restaurantName) {
+        await apiFetch('/auth/restaurant', {
+          method: 'PATCH',
+          body: { name: profileRestaurant.trim() },
+        });
+      }
+
+      updateUserStore(profileName.trim(), profileRestaurant.trim());
+      setProfileSuccess(true);
+      setTimeout(() => {
+        setProfileSuccess(false);
+        setIsProfileOpen(false);
+      }, 1000);
+    } catch (err: any) {
+      setProfileError(err.message || 'Failed to update settings.');
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+  
   // Theme state
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Guard the routes: Redirect to login if token is missing
   useEffect(() => {
-    if (!token) {
+    if (isMounted && !token) {
       router.push('/login');
     }
-  }, [token, router]);
+  }, [token, router, isMounted]);
 
   // Load and apply theme on mount
   useEffect(() => {
@@ -78,15 +136,14 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
   
   const readyCount = activeOrders.filter((o) => o.status === 'READY').length;
 
-  // Don't render layout if not authenticated to prevent flickering
-  if (!token) {
+  // Don't render layout if not authenticated or if sidebar navigation is still loading
+  if (!isMounted || !token || sidebarItems.length === 0) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-zinc-950 text-white font-sans">
-        <div className="flex flex-col items-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-3 border-coral-500 border-t-transparent"></div>
-          <p className="mt-3 text-xs font-bold text-zinc-400">Verifying session...</p>
-        </div>
-      </div>
+      <Loader 
+        size="lg" 
+        text="Loading store interface..." 
+        className="h-screen w-screen bg-zinc-50 dark:bg-zinc-950" 
+      />
     );
   }
 
@@ -165,9 +222,13 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Dynamic Header */}
         <header className="flex h-12 w-full items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2 shadow-sm transition-colors duration-200">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-            <span className="text-xs font-black uppercase tracking-wider text-zinc-600 dark:text-zinc-350">
+            <span className="text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-200">
+              {user?.restaurantName || 'KhaoPio'}
+            </span>
+            <span className="text-zinc-300 dark:text-zinc-850 font-normal">|</span>
+            <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-450">
               Staff: {user ? `${user.name} (${user.role.replace('_', ' ')})` : 'Terminal #01'}
             </span>
           </div>
@@ -184,6 +245,15 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
               <span className="text-zinc-400 dark:text-zinc-500">Orders: </span>
               <span className="font-extrabold text-coral-500">{activeOrders.length}</span>
             </div>
+
+            {/* Profile Settings Button */}
+            <button
+              onClick={() => setIsProfileOpen(true)}
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-coral-500 active:scale-95 transition-all cursor-pointer"
+              title="Profile Settings"
+            >
+              <LucideIcons.User className="h-4.5 w-4.5" />
+            </button>
 
             {/* Light/Dark Toggle */}
             <button
@@ -204,7 +274,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
                 logout();
                 router.push('/login');
               }}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-500 dark:text-zinc-400 hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-600 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-900 active:scale-95 transition-all cursor-pointer"
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-500 dark:text-zinc-400 hover:bg-red-50 dark:hover:bg-red-955 hover:text-red-600 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-900 active:scale-95 transition-all cursor-pointer"
               title="Exit Session"
             >
               <LucideIcons.LogOut className="h-4 w-4" />
@@ -217,6 +287,83 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
+
+      {/* PROFILE & RESTAURANT SETTINGS MODAL */}
+      {isProfileOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="w-full max-w-sm rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-2xl transition-all duration-200">
+            <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3 mb-4">
+              <h3 className="text-sm font-black uppercase tracking-wider text-zinc-900 dark:text-zinc-50 flex items-center gap-1.5">
+                <LucideIcons.Settings className="h-4.5 w-4.5 text-coral-500" />
+                <span>Profile Settings</span>
+              </h3>
+              <button 
+                onClick={() => setIsProfileOpen(false)}
+                className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-150 dark:hover:bg-zinc-800 hover:text-zinc-650 dark:hover:text-zinc-100 transition-colors cursor-pointer"
+              >
+                <LucideIcons.X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveSettings} className="space-y-4">
+              {profileError && (
+                <div className="rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 p-2.5 text-[10px] font-semibold text-red-600 dark:text-red-400 flex items-center gap-1.5">
+                  <LucideIcons.AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                  <span>{profileError}</span>
+                </div>
+              )}
+              {profileSuccess && (
+                <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-250 dark:border-emerald-900 p-2.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-450 flex items-center gap-1.5">
+                  <LucideIcons.Check className="h-3.5 w-3.5 shrink-0" />
+                  <span>Settings updated successfully!</span>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">Staff Member Name</label>
+                <input 
+                  type="text" 
+                  value={profileName}
+                  onChange={(e) => setProfileName(e.target.value)}
+                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-xs font-semibold outline-none focus:border-coral-500 text-zinc-900 dark:text-zinc-100"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">Restaurant Name</label>
+                <input 
+                  type="text" 
+                  value={profileRestaurant}
+                  onChange={(e) => setProfileRestaurant(e.target.value)}
+                  disabled={user?.role !== 'SUPER_ADMIN'}
+                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-xs font-semibold outline-none focus:border-coral-500 text-zinc-900 dark:text-zinc-100 disabled:opacity-60 disabled:cursor-not-allowed"
+                  required
+                />
+              </div>
+
+              <div className="flex gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsProfileOpen(false)}
+                  className="flex-1 rounded-lg border border-zinc-250 dark:border-zinc-850 bg-white dark:bg-zinc-900 py-2.5 text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={profileLoading}
+                  className="flex-1 rounded-lg bg-coral-500 hover:bg-coral-600 text-white py-2.5 text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50 flex items-center justify-center gap-1 cursor-pointer"
+                >
+                  {profileLoading ? (
+                    <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                  ) : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

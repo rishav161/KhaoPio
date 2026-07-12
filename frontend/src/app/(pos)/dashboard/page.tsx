@@ -8,6 +8,7 @@ import {
 import { apiFetch } from '@/utils/api';
 import { Table } from '@/components/Table';
 import { Pagination } from '@/components/Pagination';
+import { Loader } from '@/components/Loader';
 
 interface DashboardStats {
   metrics: {
@@ -133,12 +134,11 @@ export default function Dashboard() {
 
   if (loading && !stats) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-zinc-50 dark:bg-zinc-950">
-        <div className="flex flex-col items-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-3 border-coral-500 border-t-transparent"></div>
-          <span className="mt-3 text-xs font-bold text-zinc-400">Compiling store analytics...</span>
-        </div>
-      </div>
+      <Loader
+        size="lg"
+        text="Compiling store analytics..."
+        className="h-full w-full bg-zinc-50 dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800"
+      />
     );
   }
 
@@ -334,7 +334,12 @@ export default function Dashboard() {
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* CHART 1: Sales Trend (Line Chart) */}
-        <div className="lg:col-span-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-sm">
+        <div className="relative lg:col-span-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-sm">
+          {loading && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xs rounded-xl">
+              <Loader size="md" text="Syncing trend..." />
+            </div>
+          )}
           <h3 className="text-xs font-black uppercase tracking-wider text-zinc-400 mb-4 flex items-center gap-1.5">
             <Clock className="h-4.5 w-4.5 text-coral-500" />
             <span>Sales Trend (Date Filtered)</span>
@@ -392,7 +397,12 @@ export default function Dashboard() {
         </div>
 
         {/* CHART 2: Top Selling Items (Bar Chart) */}
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-sm flex flex-col">
+        <div className="relative rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-sm flex flex-col">
+          {loading && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xs rounded-xl">
+              <Loader size="md" text="Syncing dishes..." />
+            </div>
+          )}
           <h3 className="text-xs font-black uppercase tracking-wider text-zinc-400 mb-4 flex items-center gap-1.5">
             <ArrowUpRight className="h-4.5 w-4.5 text-coral-500" />
             <span>Top Dishes (Units Sold)</span>

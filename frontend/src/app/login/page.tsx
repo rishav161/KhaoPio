@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Mail, KeyRound, Lock, AlertTriangle, Shield, Users, Smartphone, Eye, EyeOff } from 'lucide-react';
 import { apiFetch } from '@/utils/api';
 import { useAuthStore } from '@/store/useAuthStore';
+import { Loader } from '@/components/Loader';
 
 export default function Login() {
   const router = useRouter();
@@ -13,12 +14,22 @@ export default function Login() {
   const setSidebarItems = useAuthStore((state) => state.setSidebarItems);
   const token = useAuthStore((state) => state.token);
 
-  // If already authenticated, redirect to billing immediately
+  const [isMounted, setIsMounted] = useState(false);
+
   useEffect(() => {
-    if (token) {
-      router.push('/billing');
+    setIsMounted(true);
+  }, []);
+
+  // If already authenticated, redirect to starting dashboard/billing immediately
+  useEffect(() => {
+    if (isMounted && token) {
+      if (useAuthStore.getState().user?.role === 'SUPER_ADMIN') {
+        router.push('/dashboard');
+      } else {
+        router.push('/billing');
+      }
     }
-  }, [token, router]);
+  }, [token, router, isMounted]);
 
   // Tab state: 'pin' (staff email + PIN quick login) or 'email' (admin password login)
   const [tab, setTab] = useState<'pin' | 'email'>('pin');
@@ -68,7 +79,11 @@ export default function Login() {
       setSidebarItems(sidebarItems);
 
       // Redirect
-      router.push('/billing');
+      if (response.user.role === 'SUPER_ADMIN') {
+        router.push('/dashboard');
+      } else {
+        router.push('/billing');
+      }
     } catch (err: any) {
       setEmailError(err.message || 'Login failed. Please check credentials.');
     } finally {
@@ -120,7 +135,7 @@ export default function Login() {
           setSidebarItems(sidebarItems);
 
           // Determine starting page based on role/permissions
-          const startPath = sidebarItems.length > 0 ? sidebarItems[0].path : '/billing';
+          const startPath = response.user.role === 'SUPER_ADMIN' ? '/dashboard' : (sidebarItems.length > 0 ? sidebarItems[0].path : '/billing');
           router.push(startPath);
         } catch (err: any) {
           setStaffError(err.message || 'Invalid email or PIN.');
@@ -132,6 +147,16 @@ export default function Login() {
       submitPinLogin();
     }
   }, [pin, staffEmail, router, setAuth, setSidebarItems]);
+
+  if (!isMounted || token) {
+    return (
+      <Loader
+        size="lg"
+        text="Verifying session..."
+        className="h-screen w-screen bg-zinc-50 dark:bg-zinc-950"
+      />
+    );
+  }
 
   return (
     <div className="relative flex min-h-screen w-screen items-center justify-center overflow-hidden bg-zinc-100 dark:bg-zinc-950 px-4 font-sans antialiased text-zinc-900 dark:text-zinc-100 transition-colors duration-200">

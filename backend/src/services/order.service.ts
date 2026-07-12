@@ -44,9 +44,9 @@ export class OrderService {
   }
 
   /**
-   * Returns active orders, optionally including today's completed/paid orders, scoped to the restaurant context.
+   * Returns active orders, optionally including completed/paid orders within a date window, scoped to the restaurant context.
    */
-  async getActiveOrders(restaurantId?: string, includePaid = false): Promise<Order[]> {
+  async getActiveOrders(restaurantId?: string, includePaid = false, paidDays = 'today'): Promise<Order[]> {
     const whereClause: any = {};
     
     if (restaurantId) {
@@ -57,6 +57,22 @@ export class OrderService {
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
 
+      let dateFilter: Date | null = todayStart;
+
+      if (paidDays === 'yesterday') {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        yesterday.setHours(0, 0, 0, 0);
+        dateFilter = yesterday;
+      } else if (paidDays === '7days') {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        sevenDaysAgo.setHours(0, 0, 0, 0);
+        dateFilter = sevenDaysAgo;
+      } else if (paidDays === 'all') {
+        dateFilter = null; // No date filter
+      }
+
       whereClause.OR = [
         {
           status: {
@@ -65,9 +81,11 @@ export class OrderService {
         },
         {
           status: 'PAID',
-          createdAt: {
-            gte: todayStart
-          }
+          ...(dateFilter ? {
+            updatedAt: {
+              gte: dateFilter
+            }
+          } : {})
         }
       ];
     } else {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader } from './Loader';
 
 interface TableProps<T> {
   headers: string[];
@@ -36,10 +36,7 @@ export function Table<T>({
             {loading ? (
               <tr>
                 <td colSpan={headers.length} className="py-12 text-center">
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <Loader2 className="h-6 w-6 animate-spin text-coral-500" />
-                    <span className="text-xs font-semibold text-zinc-400">Loading data...</span>
-                  </div>
+                  <Loader size="sm" text="Loading data..." />
                 </td>
               </tr>
             ) : data.length === 0 ? (

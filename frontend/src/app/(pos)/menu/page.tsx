@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { apiFetch } from '@/utils/api';
 import { useAuthStore } from '@/store/useAuthStore';
+import { Loader } from '@/components/Loader';
 
 interface MenuItem {
   id: string;
@@ -457,10 +458,7 @@ export default function MenuManagement() {
           {/* Grid listing */}
           <div className="flex-1 overflow-y-auto p-4 bg-zinc-50/20 dark:bg-zinc-900/10">
             {loading ? (
-              <div className="flex h-full w-full flex-col items-center justify-center py-10">
-                <div className="h-8 w-8 animate-spin rounded-full border-3 border-coral-500 border-t-transparent"></div>
-                <p className="mt-3 text-xs font-bold text-zinc-500">Querying active menu items...</p>
-              </div>
+              <Loader size="md" text="Querying active menu items..." className="h-full w-full py-10" />
             ) : filteredItems.length === 0 ? (
               <div className="flex h-full w-full flex-col items-center justify-center p-8 text-center">
                 <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 mb-3">

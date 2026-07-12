@@ -6,6 +6,8 @@ export interface User {
   name: string;
   email: string | null;
   role: string;
+  restaurantId?: string | null;
+  restaurantName?: string | null;
 }
 
 export interface SidebarItem {
@@ -26,6 +28,7 @@ interface AuthState {
   // Actions
   setAuth: (user: User, token: string, permissions: string[]) => void;
   setSidebarItems: (items: SidebarItem[]) => void;
+  updateUser: (name: string, restaurantName?: string) => void;
   logout: () => void;
 }
 
@@ -44,6 +47,17 @@ export const useAuthStore = create<AuthState>()(
       }),
       
       setSidebarItems: (sidebarItems) => set({ sidebarItems }),
+      
+      updateUser: (name, restaurantName) => set((state) => {
+        if (!state.user) return {};
+        return {
+          user: {
+            ...state.user,
+            name,
+            ...(restaurantName !== undefined ? { restaurantName } : {}),
+          }
+        };
+      }),
       
       logout: () => {
         set({
