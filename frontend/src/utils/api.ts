@@ -1,6 +1,6 @@
 import { useAuthStore } from '../store/useAuthStore';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 interface FetchOptions extends RequestInit {
   body?: any;
@@ -10,6 +10,9 @@ interface FetchOptions extends RequestInit {
  * Centered API utility wrapper that injects authentication token dynamically
  */
 export async function apiFetch<T = any>(path: string, options: FetchOptions = {}): Promise<T> {
+  if (!API_BASE_URL) {
+    throw new Error('NEXT_PUBLIC_API_URL is not defined. Please check your frontend environment variables (.env file).');
+  }
   const url = `${API_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
   
   // Retrieve token from Zustand store state
