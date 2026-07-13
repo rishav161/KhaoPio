@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { apiFetch } from '@/utils/api';
 import { useAuthStore } from '@/store/useAuthStore';
+import { Loader } from '@/components/Loader';
 
 const SEED_TEMPLATE_ITEMS = [
   { name: 'Classic Cheese Burger', price: 6.99, category: 'Burgers', image: '🍔', description: 'Flame-grilled beef patty, melted cheddar, lettuce, tomato, house sauce', code: 'B01' },
@@ -31,13 +32,22 @@ export default function RegisterAdmin() {
   const router = useRouter();
   const setAuth = useAuthStore((state) => state.setAuth);
   const token = useAuthStore((state) => state.token);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Redirect if already logged in
   useEffect(() => {
-    if (token) {
-      router.push('/billing');
+    if (isMounted && token) {
+      if (useAuthStore.getState().user?.role === 'SUPER_ADMIN') {
+        router.push('/dashboard');
+      } else {
+        router.push('/billing');
+      }
     }
-  }, [token, router]);
+  }, [token, router, isMounted]);
 
   // Setup step
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -199,6 +209,16 @@ export default function RegisterAdmin() {
 
   // Group templates by category
   const categories = ['Burgers', 'Pizzas', 'Sides', 'Drinks', 'Desserts'];
+
+  if (!isMounted || token) {
+    return (
+      <Loader
+        size="lg"
+        text="Verifying session..."
+        className="h-screen w-screen bg-zinc-50 dark:bg-zinc-950"
+      />
+    );
+  }
 
   return (
     <div className="relative flex min-h-screen w-screen items-center justify-center overflow-y-auto bg-zinc-50 dark:bg-zinc-950 px-4 py-8 font-sans antialiased text-zinc-900 dark:text-zinc-150 transition-colors duration-200">

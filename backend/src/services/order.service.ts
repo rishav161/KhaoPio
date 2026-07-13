@@ -3,26 +3,43 @@ import { Order, OrderStatus, CreateOrderPayload } from '../types';
 
 export class OrderService {
   /**
-   * Generates a new order, calculates subtotal, taxTotal (10%), and grandTotal,
+   * Generates a new order, calculates subtotal, taxTotal, and grandTotal,
    * inserts the order and its items into the database associated with the waiterId,
    * and returns the order.
    */
   async createKitchenOrder(waiterId: string, payload: CreateOrderPayload): Promise<Order> {
     const subtotal = payload.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const taxTotal = Math.round(subtotal * 0.1 * 100) / 100; // 10% tax rate, rounded to 2 decimal places
-    const grandTotal = Math.round((subtotal + taxTotal) * 100) / 100;
 
-    // Fetch waiter's restaurantId to link the order context
+    // Fetch waiter's restaurantId and its default rates
     const waiter = await prisma.user.findUnique({
       where: { id: waiterId },
-      select: { restaurantId: true }
+      select: {
+        restaurantId: true,
+        restaurant: {
+          select: {
+            defaultTaxRate: true,
+            defaultServiceCharge: true,
+          }
+        }
+      }
     });
+
+    const taxRate = waiter?.restaurant?.defaultTaxRate ?? 5.0;
+    const serviceChargeRate = waiter?.restaurant?.defaultServiceCharge ?? 5.0;
+
+    const taxTotal = Math.round(subtotal * (taxRate / 100) * 100) / 100;
+    const serviceChargeTotal = Math.round(subtotal * (serviceChargeRate / 100) * 100) / 100;
+    const grandTotal = Math.round((subtotal + taxTotal + serviceChargeTotal) * 100) / 100;
 
     const newOrder = await prisma.order.create({
       data: {
         status: 'KITCHEN_PENDING',
         subtotal,
+        taxRate,
         taxTotal,
+        serviceChargeRate,
+        serviceChargeTotal,
+        discountTotal: 0.0,
         grandTotal,
         waiterId,
         restaurantId: waiter?.restaurantId,
@@ -36,7 +53,8 @@ export class OrderService {
         }
       },
       include: {
-        items: true
+        items: true,
+        payments: true
       }
     });
 
@@ -97,7 +115,8 @@ export class OrderService {
     const activeOrders = await prisma.order.findMany({
       where: whereClause,
       include: {
-        items: true
+        items: true,
+        payments: true
       },
       orderBy: {
         createdAt: 'desc'
@@ -116,7 +135,8 @@ export class OrderService {
         where: { id: orderId },
         data: { status: newStatus },
         include: {
-          items: true
+          items: true,
+          payments: true
         }
       });
       return updatedOrder as unknown as Order;
@@ -129,26 +149,120 @@ export class OrderService {
   }
 
   /**
-   * Updates the order status to 'PAID', sets the payment method, cashierId, and returns receipt data.
+   * Recalculates order totals with optional discounts/coupons and records split payments.
    */
-  async processPayment(orderId: string, paymentMethod: string, cashierId: string): Promise<Order> {
+  async processPayment(
+    orderId: string,
+    cashierId: string,
+    payload: {
+      couponCode?: string;
+      manualDiscount?: number;
+      payments?: { paymentMethod: 'CASH' | 'CARD' | 'UPI'; amount: number; transactionReference?: string }[];
+    }
+  ): Promise<Order> {
     try {
-      const paidOrder = await prisma.order.update({
+      // 1. Fetch existing order details
+      const order = await prisma.order.findUnique({
         where: { id: orderId },
-        data: {
-          status: 'PAID',
-          paymentMethod: paymentMethod,
-          cashierId: cashierId
-        },
         include: {
-          items: true
+          payments: true
         }
       });
-      return paidOrder as unknown as Order;
-    } catch (error: any) {
-      if (error.code === 'P2025') {
+
+      if (!order) {
         throw new Error(`Order with ID ${orderId} not found`);
       }
+
+      let discountTotal = payload.manualDiscount || 0;
+      let couponId: string | null = null;
+      let couponCodeSnapshot: string | null = null;
+
+      // 2. Validate and apply coupon if provided
+      if (payload.couponCode) {
+        const coupon = await prisma.coupon.findFirst({
+          where: {
+            code: { equals: payload.couponCode.trim(), mode: 'insensitive' },
+            restaurantId: order.restaurantId || undefined,
+            isActive: true,
+            startDate: { lte: new Date() },
+            endDate: { gte: new Date() }
+          }
+        });
+
+        if (!coupon) {
+          throw new Error(`Coupon "${payload.couponCode}" is invalid or expired.`);
+        }
+
+        if (order.subtotal < coupon.minSubtotal) {
+          throw new Error(`Order subtotal (${order.subtotal}) does not meet the minimum subtotal (${coupon.minSubtotal}) for coupon.`);
+        }
+
+        let couponDiscount = 0;
+        if (coupon.discountType === 'PERCENTAGE') {
+          couponDiscount = order.subtotal * (coupon.discountValue / 100);
+          if (coupon.maxDiscount && couponDiscount > coupon.maxDiscount) {
+            couponDiscount = coupon.maxDiscount;
+          }
+        } else {
+          couponDiscount = coupon.discountValue;
+        }
+
+        discountTotal += couponDiscount;
+        couponId = coupon.id;
+        couponCodeSnapshot = coupon.code;
+      }
+
+      // Cap discountTotal to subtotal
+      if (discountTotal > order.subtotal) {
+        discountTotal = order.subtotal;
+      }
+
+      // 3. Recalculate totals
+      const taxableAmount = order.subtotal - discountTotal;
+      const serviceChargeTotal = Math.round(taxableAmount * (order.serviceChargeRate / 100) * 100) / 100;
+      const taxTotal = Math.round(taxableAmount * (order.taxRate / 100) * 100) / 100;
+      const grandTotal = Math.round((taxableAmount + serviceChargeTotal + taxTotal) * 100) / 100;
+
+      // 4. Record new payments and determine new status
+      const totalPaidBefore = order.payments.reduce((sum, p) => sum + p.amount, 0);
+      const newPaymentsAmount = payload.payments?.reduce((sum, p) => sum + p.amount, 0) || 0;
+      const totalPaidAfter = totalPaidBefore + newPaymentsAmount;
+
+      let newStatus: OrderStatus = order.status;
+      if (totalPaidAfter >= grandTotal) {
+        newStatus = 'PAID';
+      } else if (totalPaidAfter > 0) {
+        newStatus = 'PARTIALLY_PAID';
+      }
+
+      // 5. Update database in a transactional way
+      const updatedOrder = await prisma.order.update({
+        where: { id: orderId },
+        data: {
+          discountTotal,
+          couponId,
+          couponCode: couponCodeSnapshot,
+          serviceChargeTotal,
+          taxTotal,
+          grandTotal,
+          status: newStatus,
+          payments: payload.payments && payload.payments.length > 0 ? {
+            create: payload.payments.map(p => ({
+              amount: p.amount,
+              paymentMethod: p.paymentMethod,
+              transactionReference: p.transactionReference,
+              cashierId
+            }))
+          } : undefined
+        },
+        include: {
+          items: true,
+          payments: true
+        }
+      });
+
+      return updatedOrder as unknown as Order;
+    } catch (error: any) {
       throw error;
     }
   }

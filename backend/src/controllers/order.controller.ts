@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import orderService from '../services/order.service';
+import prisma from '../prisma';
 
 export const sendToKitchen = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -74,7 +75,7 @@ export const requestBill = async (req: Request, res: Response): Promise<void> =>
 export const payOrder = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { paymentMethod } = req.body;
+    const { paymentMethod, couponCode, manualDiscount, payments } = req.body;
     // Extract cashierId from authenticated user token (req.user) or fallback to request body for flexibility/testing
     const cashierId = (req as any).user?.id || req.body.cashierId;
 
@@ -83,12 +84,35 @@ export const payOrder = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    if (!paymentMethod) {
-      res.status(400).json({ error: 'Field "paymentMethod" is required in request body.' });
-      return;
+    let paymentsPayload = payments;
+
+    // Fallback: If no payments array is provided but a single paymentMethod is passed
+    if (!paymentsPayload && paymentMethod) {
+      const order = await prisma.order.findUnique({
+        where: { id },
+        include: { payments: true }
+      });
+      if (!order) {
+        res.status(404).json({ error: `Order with ID ${id} not found` });
+        return;
+      }
+      
+      // Calculate remaining amount to pay
+      const paidSoFar = order.payments.reduce((sum, p) => sum + p.amount, 0);
+      const remaining = Math.max(0, order.grandTotal - paidSoFar);
+
+      paymentsPayload = [{
+        paymentMethod: paymentMethod as 'CASH' | 'CARD' | 'UPI',
+        amount: remaining
+      }];
     }
 
-    const paidOrder = await orderService.processPayment(id, paymentMethod, cashierId);
+    const paidOrder = await orderService.processPayment(id, cashierId, {
+      couponCode,
+      manualDiscount: manualDiscount ? parseFloat(manualDiscount) : undefined,
+      payments: paymentsPayload
+    });
+    
     res.status(200).json(paidOrder);
   } catch (error: any) {
     if (error.message.includes('not found')) {
@@ -96,5 +120,51 @@ export const payOrder = async (req: Request, res: Response): Promise<void> => {
     } else {
       res.status(500).json({ error: error.message || 'Internal Server Error' });
     }
+  }
+};
+
+export const validateCoupon = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { code } = req.query;
+    const restaurantId = (req as any).user?.restaurantId;
+
+    if (!code || typeof code !== 'string') {
+      res.status(400).json({ error: 'Field "code" is required as a query parameter.' });
+      return;
+    }
+
+    if (!restaurantId) {
+      res.status(400).json({ error: 'restaurantId context is required. Please authenticate.' });
+      return;
+    }
+
+    const coupon = await prisma.coupon.findFirst({
+      where: {
+        code: { equals: code.trim(), mode: 'insensitive' },
+        restaurantId,
+        isActive: true,
+        startDate: { lte: new Date() },
+        endDate: { gte: new Date() }
+      }
+    });
+
+    if (!coupon) {
+      res.status(404).json({ error: `Coupon code "${code}" is invalid or expired.` });
+      return;
+    }
+
+    res.status(200).json({
+      valid: true,
+      coupon: {
+        id: coupon.id,
+        code: coupon.code,
+        discountType: coupon.discountType,
+        discountValue: coupon.discountValue,
+        minSubtotal: coupon.minSubtotal,
+        maxDiscount: coupon.maxDiscount
+      }
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Internal Server Error' });
   }
 };

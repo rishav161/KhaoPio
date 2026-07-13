@@ -21,21 +21,13 @@ export class AuthService {
       throw new Error('Email address has not been verified with OTP.');
     }
 
-    // Check if any SUPER_ADMIN already exists
+    // Check if SUPER_ADMIN role exists
     const superAdminRole = await prisma.role.findUnique({
       where: { name: RoleName.SUPER_ADMIN },
     });
 
     if (!superAdminRole) {
       throw new Error('SUPER_ADMIN role not found in database. Run seed first.');
-    }
-
-    const adminExists = await prisma.user.findFirst({
-      where: { roleId: superAdminRole.id },
-    });
-
-    if (adminExists) {
-      throw new Error('A Super Admin is already registered. Registration is locked.');
     }
 
     const hashed = await bcrypt.hash(data.passwordHash, 10);
@@ -118,13 +110,7 @@ export class AuthService {
       throw new Error('SUPER_ADMIN role not found in database. Run seed first.');
     }
 
-    const adminExists = await prisma.user.findFirst({
-      where: { roleId: superAdminRole.id },
-    });
 
-    if (adminExists) {
-      throw new Error('A Super Admin is already registered. Registration is locked.');
-    }
 
     const emailExists = await prisma.user.findFirst({
       where: { email: email.toLowerCase() },
@@ -450,7 +436,7 @@ export class AuthService {
         _count: {
           select: {
             waiterOrders: true,
-            cashierOrders: true,
+            payments: true,
           },
         },
       },
@@ -460,7 +446,7 @@ export class AuthService {
       throw new Error('User not found.');
     }
 
-    const orderCount = userWithOrders._count.waiterOrders + userWithOrders._count.cashierOrders;
+    const orderCount = userWithOrders._count.waiterOrders + userWithOrders._count.payments;
     if (orderCount > 0) {
       throw new Error(`Cannot delete staff member. They have processed ${orderCount} order(s). Please set their status to INACTIVE instead.`);
     }

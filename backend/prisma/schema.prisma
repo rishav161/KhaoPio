@@ -21,6 +21,7 @@ enum OrderStatus {
   PREPARING
   READY
   BILL_REQUESTED
+  PARTIALLY_PAID
   PAID
   CANCELLED
 }
@@ -29,6 +30,17 @@ enum UserStatus {
   ACTIVE
   INACTIVE
   INVITED
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FLAT
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  UPI
 }
 
 model User {
@@ -47,8 +59,8 @@ model User {
   // Orders taken by this user (typically as waiter)
   waiterOrders Order[]      @relation("WaiterOrders")
   
-  // Orders paid/processed by this user (typically as cashier)
-  cashierOrders Order[]     @relation("CashierOrders")
+  // Payments processed by this user (typically as cashier)
+  payments     Payment[]
   
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
@@ -108,28 +120,36 @@ model Invitation {
 }
 
 model Order {
-  id            String      @id @default(uuid())
-  orderNumber   Int         @default(autoincrement())
-  status        OrderStatus @default(KITCHEN_PENDING)
-  subtotal      Float
-  taxTotal      Float
-  grandTotal    Float
-  paymentMethod String?
+  id                  String      @id @default(uuid())
+  orderNumber         Int         @default(autoincrement())
+  status              OrderStatus @default(KITCHEN_PENDING)
+  subtotal            Float
   
-  restaurantId  String?
-  restaurant    Restaurant? @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  // Snapshots of applied rates/charges
+  taxRate             Float       @default(5.0)
+  taxTotal            Float       @default(0.0)
+  serviceChargeRate   Float       @default(5.0)
+  serviceChargeTotal  Float       @default(0.0)
   
-  // Waiter who took the order
-  waiterId      String
-  waiter        User        @relation("WaiterOrders", fields: [waiterId], references: [id])
+  // Discount details
+  discountTotal       Float       @default(0.0)
+  couponId            String?
+  coupon              Coupon?     @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  couponCode          String?     // Text snapshot of coupon code
   
-  // Cashier who processed the payment
-  cashierId     String?
-  cashier       User?       @relation("CashierOrders", fields: [cashierId], references: [id])
+  grandTotal          Float
   
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  items         OrderItem[]
+  payments            Payment[]
+  
+  restaurantId        String?
+  restaurant          Restaurant? @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  
+  waiterId            String
+  waiter              User        @relation("WaiterOrders", fields: [waiterId], references: [id])
+  
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  items               OrderItem[]
 }
 
 model OrderItem {
@@ -143,15 +163,56 @@ model OrderItem {
 }
 
 model Restaurant {
-  id          String         @id @default(uuid())
-  name        String
-  users       User[]
-  invitations Invitation[]
-  categories  MenuCategory[]
-  menuItems   MenuItem[]
-  orders      Order[]
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  id                   String         @id @default(uuid())
+  name                 String
+  users                User[]
+  invitations          Invitation[]
+  categories           MenuCategory[]
+  menuItems            MenuItem[]
+  orders               Order[]
+  coupons              Coupon[]
+  defaultTaxRate       Float          @default(5.0)
+  defaultServiceCharge Float          @default(5.0)
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+}
+
+model Coupon {
+  id             String       @id @default(uuid())
+  code           String
+  description    String?
+  discountType   DiscountType @default(PERCENTAGE)
+  discountValue  Float
+  minSubtotal    Float        @default(0.0)
+  maxDiscount    Float?
+  startDate      DateTime
+  endDate        DateTime
+  isActive       Boolean      @default(true)
+  
+  restaurantId   String
+  restaurant     Restaurant   @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  
+  orders         Order[]
+  
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([code, restaurantId])
+}
+
+model Payment {
+  id                   String        @id @default(uuid())
+  amount               Float
+  paymentMethod        PaymentMethod
+  transactionReference String?
+  
+  orderId              String
+  order                Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  cashierId            String
+  cashier              User          @relation(fields: [cashierId], references: [id])
+  
+  createdAt            DateTime      @default(now())
 }
 
 model MenuCategory {

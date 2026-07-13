@@ -29,7 +29,7 @@ export class DashboardService {
       createdAt.setHours(Math.floor(Math.random() * 12) + 9, Math.floor(Math.random() * 60));
 
       const numItems = Math.floor(Math.random() * 3) + 1;
-      const orderItems = [];
+      const orderItems: { menuItemId: string; name: string; quantity: number; price: number }[] = [];
       let subtotal = 0;
 
       for (let j = 0; j < numItems; j++) {
@@ -60,16 +60,22 @@ export class DashboardService {
           subtotal,
           taxTotal,
           grandTotal,
-          paymentMethod: status === OrderStatus.PAID ? payMethod : null,
           status,
           restaurantId,
           waiterId: waiter.id,
-          cashierId: status === OrderStatus.PAID ? waiter.id : null,
           createdAt,
           updatedAt: createdAt,
           items: {
             create: orderItems,
           },
+          payments: status === OrderStatus.PAID ? {
+            create: {
+              amount: grandTotal,
+              paymentMethod: payMethod as any,
+              cashierId: waiter.id,
+              createdAt,
+            }
+          } : undefined,
         },
       });
     }
@@ -150,18 +156,23 @@ export class DashboardService {
       take: limit,
       include: {
         waiter: { select: { name: true } },
+        payments: { select: { paymentMethod: true } },
       },
     });
 
-    const recentOrders = recentOrdersRaw.map(o => ({
-      id: o.id,
-      orderNumber: o.orderNumber,
-      grandTotal: o.grandTotal,
-      status: o.status,
-      paymentMethod: o.paymentMethod || 'PENDING',
-      waiterName: o.waiter.name,
-      createdAt: o.createdAt,
-    }));
+    const recentOrders = recentOrdersRaw.map(o => {
+      const methods = o.payments?.map(p => p.paymentMethod) || [];
+      const paymentMethodStr = methods.length > 0 ? methods.join(', ') : 'PENDING';
+      return {
+        id: o.id,
+        orderNumber: o.orderNumber,
+        grandTotal: o.grandTotal,
+        status: o.status,
+        paymentMethod: paymentMethodStr,
+        waiterName: o.waiter.name,
+        createdAt: o.createdAt,
+      };
+    });
 
     // Dynamic Sales Trend based on date range (defaults to last 7 days)
     let daysDiff = 7;

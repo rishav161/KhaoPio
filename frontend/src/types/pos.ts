@@ -15,9 +15,21 @@ export interface CartItem {
 }
 
 export interface OrderTotals {
-  subtotal: string; // precise decimal representation from big.js
-  tax: string;      // precise decimal representation from big.js
-  total: string;    // precise decimal representation from big.js
+  subtotal: string;
+  taxRate: string;
+  tax: string;
+  serviceChargeRate: string;
+  serviceCharge: string;
+  discount: string;
+  total: string;
+}
+
+export interface Payment {
+  id: string;
+  amount: number;
+  paymentMethod: 'CASH' | 'CARD' | 'UPI';
+  transactionReference?: string | null;
+  createdAt: string;
 }
 
 export interface Order {
@@ -25,8 +37,8 @@ export interface Order {
   orderNumber: string;
   items: CartItem[];
   totals: OrderTotals;
-  status: 'DRAFT' | 'KITCHEN_PENDING' | 'PREPARING' | 'READY' | 'PAID';
+  status: 'DRAFT' | 'KITCHEN_PENDING' | 'PREPARING' | 'READY' | 'BILL_REQUESTED' | 'PARTIALLY_PAID' | 'PAID' | 'CANCELLED';
   createdAt: string;
-  paymentMethod?: 'CASH' | 'CARD_UPI';
-  completedAt?: string;
+  couponCode?: string | null;
+  payments?: Payment[];
 }

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   sendToKitchen,
   getActiveOrders,
+  validateCoupon,
   updateStatus,
   requestBill,
   payOrder,
@@ -13,6 +14,7 @@ const router = Router();
 // Routes mapped and guarded by authentication and granular permissions
 router.post('/kitchen', authenticateJWT, requirePermission('create:kot'), sendToKitchen);
 router.get('/active', authenticateJWT, requirePermission('view:orders'), getActiveOrders);
+router.get('/coupons/validate', authenticateJWT, validateCoupon);
 router.patch('/:id/status', authenticateJWT, requirePermission('update:order-status'), updateStatus);
 router.post('/:id/request-bill', authenticateJWT, requirePermission('request:bill'), requestBill);
 router.post('/:id/pay', authenticateJWT, requirePermission('pay:order'), payOrder);

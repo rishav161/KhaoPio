@@ -42,7 +42,11 @@ export class ReportsService {
 
     // Filter by payment method
     if (paymentMethod && paymentMethod !== 'ALL') {
-      whereClause.paymentMethod = paymentMethod;
+      whereClause.payments = {
+        some: {
+          paymentMethod: paymentMethod as any,
+        }
+      };
       whereClause.status = OrderStatus.PAID;
     }
 
@@ -75,7 +79,11 @@ export class ReportsService {
       take: limit,
       include: {
         waiter: { select: { name: true } },
-        cashier: { select: { name: true } },
+        payments: {
+          include: {
+            cashier: { select: { name: true } }
+          }
+        },
         items: true,
       },
     });
@@ -88,20 +96,28 @@ export class ReportsService {
         totalTax: parseFloat(totalTax.toFixed(2)),
         totalOrders,
       },
-      orders: orders.map(o => ({
-        id: o.id,
-        orderNumber: o.orderNumber,
-        grandTotal: o.grandTotal,
-        taxTotal: o.taxTotal,
-        subtotal: o.subtotal,
-        status: o.status,
-        paymentMethod: o.paymentMethod || 'N/A',
-        waiterName: o.waiter.name,
-        cashierName: o.cashier?.name || 'N/A',
-        createdAt: o.createdAt,
-        itemCount: o.items.reduce((sum, item) => sum + item.quantity, 0),
-        itemsSummary: o.items.map(item => `${item.name} (${item.quantity}x)`).join(', '),
-      })),
+      orders: orders.map(o => {
+        const cashiers = o.payments?.map(p => p.cashier?.name).filter(Boolean) || [];
+        const cashierNameStr = cashiers.length > 0 ? Array.from(new Set(cashiers)).join(', ') : 'N/A';
+
+        const methods = o.payments?.map(p => p.paymentMethod) || [];
+        const paymentMethodStr = methods.length > 0 ? methods.join(', ') : 'N/A';
+
+        return {
+          id: o.id,
+          orderNumber: o.orderNumber,
+          grandTotal: o.grandTotal,
+          taxTotal: o.taxTotal,
+          subtotal: o.subtotal,
+          status: o.status,
+          paymentMethod: paymentMethodStr,
+          waiterName: o.waiter.name,
+          cashierName: cashierNameStr,
+          createdAt: o.createdAt,
+          itemCount: o.items.reduce((sum, item) => sum + item.quantity, 0),
+          itemsSummary: o.items.map(item => `${item.name} (${item.quantity}x)`).join(', '),
+        };
+      }),
       pagination: {
         total: totalCount,
         page,

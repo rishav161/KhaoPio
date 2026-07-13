@@ -217,6 +217,40 @@ async function main() {
     });
   }
   console.log('Menu Items seeded successfully.');
+
+  // 6. Seed Coupons
+  const startDate = new Date();
+  const endDate = new Date();
+  endDate.setFullYear(startDate.getFullYear() + 1); // 1 year from now
+
+  await prisma.coupon.createMany({
+    data: [
+      {
+        code: 'WELCOME10',
+        description: 'Get 10% off on your order',
+        discountType: 'PERCENTAGE',
+        discountValue: 10.0,
+        minSubtotal: 10.0,
+        startDate,
+        endDate,
+        isActive: true,
+        restaurantId: restaurant.id,
+      },
+      {
+        code: 'FLAT50',
+        description: 'Get $50 off on orders above $100',
+        discountType: 'FLAT',
+        discountValue: 50.0,
+        minSubtotal: 100.0,
+        startDate,
+        endDate,
+        isActive: true,
+        restaurantId: restaurant.id,
+      }
+    ]
+  });
+  console.log('Coupons seeded successfully.');
+
   console.log('KhaoPio Database seeding finished successfully!');
 }
 

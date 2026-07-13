@@ -17,7 +17,14 @@ interface POSState {
   fetchActiveOrders: (includePaid?: boolean, paidDays?: string) => Promise<void>;
   sendOrderToKitchen: () => Promise<void>;
   updateOrderStatus: (orderId: string, newStatus: Order['status']) => Promise<void>;
-  completePayment: (orderId: string, paymentMethod: 'CASH' | 'CARD_UPI') => Promise<void>;
+  completePayment: (
+    orderId: string,
+    paymentPayload: {
+      couponCode?: string;
+      manualDiscount?: number;
+      payments?: { paymentMethod: 'CASH' | 'CARD' | 'UPI'; amount: number; transactionReference?: string }[];
+    }
+  ) => Promise<void>;
 }
 
 export const usePOSStore = create<POSState>((set, get) => ({
@@ -137,13 +144,17 @@ export const usePOSStore = create<POSState>((set, get) => ({
           items,
           totals: {
             subtotal: order.subtotal.toFixed(2),
+            taxRate: (order.taxRate ?? 5.0).toFixed(2),
             tax: order.taxTotal.toFixed(2),
+            serviceChargeRate: (order.serviceChargeRate ?? 5.0).toFixed(2),
+            serviceCharge: order.serviceChargeTotal.toFixed(2),
+            discount: (order.discountTotal ?? 0.0).toFixed(2),
             total: order.grandTotal.toFixed(2),
           },
           status: order.status,
           createdAt: order.createdAt,
-          paymentMethod: order.paymentMethod || undefined,
-          completedAt: order.completedAt || undefined,
+          couponCode: order.couponCode,
+          payments: order.payments,
         };
       });
 
@@ -201,13 +212,18 @@ export const usePOSStore = create<POSState>((set, get) => ({
   },
 
   // 5. Collect checkout payments on database
-  completePayment: async (orderId: string, paymentMethod: 'CASH' | 'CARD_UPI') => {
+  completePayment: async (
+    orderId: string,
+    paymentPayload: {
+      couponCode?: string;
+      manualDiscount?: number;
+      payments?: { paymentMethod: 'CASH' | 'CARD' | 'UPI'; amount: number; transactionReference?: string }[];
+    }
+  ) => {
     try {
       await apiFetch(`/orders/${orderId}/pay`, {
         method: 'POST',
-        body: {
-          paymentMethod,
-        },
+        body: paymentPayload,
       });
 
       await get().fetchActiveOrders(true);

@@ -61,21 +61,18 @@ export default function BillingPage() {
 
   // Calculate totals for active cart display using big.js (or fallback from store calculations)
   const cartTotals = useMemo(() => {
-    // We compute this on the fly for UI sync since cartItems is reactive
-    // Standard JS math can have floating errors, but let's replicate the big.js logic here
-    // or just let it match the store logic. We will write it cleanly using simple math,
-    // or import big.js directly since we have it.
-    // Let's import Big to be 100% precise!
     let subtotal = new Big(0);
     cartItems.forEach((item: CartItem) => {
       subtotal = subtotal.plus(new Big(item.menuItem.price).times(item.quantity));
     });
     const tax = subtotal.times(0.05); // 5% GST
-    const total = subtotal.plus(tax);
+    const serviceCharge = subtotal.times(0.05); // 5% Service Charge
+    const total = subtotal.plus(tax).plus(serviceCharge);
 
     return {
       subtotal: subtotal.toFixed(2),
       tax: tax.toFixed(2),
+      serviceCharge: serviceCharge.toFixed(2),
       total: total.toFixed(2),
     };
   }, [cartItems]);
@@ -338,6 +335,12 @@ export default function BillingPage() {
             <div className="flex justify-between">
               <span>Subtotal</span>
               <span className="text-zinc-900 dark:text-zinc-100">${cartTotals.subtotal}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="flex items-center gap-1">
+                Service Charge <span className="rounded bg-zinc-100 dark:bg-zinc-950 px-1 py-0.5 text-[9px] font-black text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800">5%</span>
+              </span>
+              <span className="text-zinc-900 dark:text-zinc-100">${cartTotals.serviceCharge}</span>
             </div>
             <div className="flex justify-between">
               <span className="flex items-center gap-1">
