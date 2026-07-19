@@ -17,6 +17,10 @@ export default function BillingPage() {
     clearCart,
     sendOrderToKitchen,
     fetchMenuItems,
+    tables,
+    selectedTableId,
+    setSelectedTableId,
+    fetchTables,
   } = usePOSStore();
 
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -24,8 +28,8 @@ export default function BillingPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchMenuItems().finally(() => setLoading(false));
-  }, [fetchMenuItems]);
+    Promise.all([fetchMenuItems(), fetchTables()]).finally(() => setLoading(false));
+  }, [fetchMenuItems, fetchTables]);
 
   // Get list of categories dynamically from menuItems
   const categories = useMemo(() => {
@@ -266,6 +270,38 @@ export default function BillingPage() {
               CLEAR
             </button>
           )}
+        </div>
+
+        {/* Table Selector */}
+        <div className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/20 p-2.5 space-y-1">
+          <label className="block text-[8px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400">
+            Dining Option / Table Selection
+          </label>
+          <select
+            value={selectedTableId || ''}
+            onChange={(e) => setSelectedTableId(e.target.value || null)}
+            className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-2.5 py-2 text-xs font-bold outline-none focus:border-coral-500 dark:text-zinc-100 cursor-pointer"
+          >
+            <option value="">Takeaway / Direct POS (No Table)</option>
+            {tables.map((table) => {
+              const isOccupied = table.status === 'OCCUPIED';
+              const isReserved = table.status === 'RESERVED';
+              let statusLabel = '';
+              if (isOccupied) statusLabel = ' (Occupied)';
+              else if (isReserved) statusLabel = ' (Reserved)';
+
+              return (
+                <option
+                  key={table.id}
+                  value={table.id}
+                  disabled={isOccupied}
+                  className={isOccupied ? 'text-zinc-400' : isReserved ? 'text-amber-600' : 'text-zinc-900'}
+                >
+                  {table.name} (Seats {table.capacity}){statusLabel}
+                </option>
+              );
+            })}
+          </select>
         </div>
 
         {/* Cart Items List */}

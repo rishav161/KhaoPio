@@ -43,6 +43,20 @@ enum PaymentMethod {
   UPI
 }
 
+enum TableStatus {
+  AVAILABLE
+  OCCUPIED
+  RESERVED
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  SEATED
+  CANCELLED
+}
+
+
 model User {
   id           String       @id @default(uuid())
   name         String
@@ -147,6 +161,9 @@ model Order {
   waiterId            String
   waiter              User        @relation("WaiterOrders", fields: [waiterId], references: [id])
   
+  tableId             String?
+  table               DiningTable? @relation(fields: [tableId], references: [id], onDelete: SetNull)
+
   createdAt           DateTime    @default(now())
   updatedAt           DateTime    @updatedAt
   items               OrderItem[]
@@ -171,6 +188,8 @@ model Restaurant {
   menuItems            MenuItem[]
   orders               Order[]
   coupons              Coupon[]
+  tables               DiningTable[]
+  bookings             Booking[]
   defaultTaxRate       Float          @default(5.0)
   defaultServiceCharge Float          @default(5.0)
   createdAt            DateTime       @default(now())
@@ -254,4 +273,35 @@ model OtpVerification {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }
+
+model DiningTable {
+  id           String      @id @default(uuid())
+  name         String
+  capacity     Int
+  status       TableStatus @default(AVAILABLE)
+  restaurantId String
+  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  orders       Order[]
+  bookings     Booking[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@unique([name, restaurantId])
+}
+
+model Booking {
+  id           String        @id @default(uuid())
+  customerName String
+  customerPhone String?
+  bookingTime  DateTime
+  guestsCount  Int
+  status       BookingStatus @default(CONFIRMED)
+  tableId      String
+  table        DiningTable   @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  restaurantId String
+  restaurant   Restaurant    @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
 

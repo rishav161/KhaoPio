@@ -137,7 +137,8 @@ export const acceptInvitation = async (req: Request, res: Response): Promise<voi
 
 export const getStaff = async (req: Request, res: Response): Promise<void> => {
   try {
-    const staffList = await authService.getStaffList();
+    const restaurantId = req.query.restaurantId as string | undefined;
+    const staffList = await authService.getStaffList(restaurantId);
     res.status(200).json(staffList);
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Error fetching staff.' });
@@ -162,7 +163,8 @@ export const loginPin = async (req: Request, res: Response): Promise<void> => {
 
 export const getAllUsers = async (req: Request, res: Response): Promise<void> => {
   try {
-    const users = await authService.getAllUsersDetails();
+    const restaurantId = (req as AuthenticatedRequest).user?.restaurantId;
+    const users = await authService.getAllUsersDetails(restaurantId);
     res.status(200).json(users);
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Error fetching users.' });
@@ -173,7 +175,8 @@ export const updateUserByAdmin = async (req: Request, res: Response): Promise<vo
   try {
     const { id } = req.params;
     const { name, role, status } = req.body;
-    const updatedUser = await authService.updateUserDetail(id, { name, role, status });
+    const restaurantId = (req as AuthenticatedRequest).user?.restaurantId;
+    const updatedUser = await authService.updateUserDetail(id, { name, role, status }, restaurantId);
     res.status(200).json(updatedUser);
   } catch (error: any) {
     res.status(400).json({ error: error.message || 'Error updating user.' });
@@ -183,7 +186,8 @@ export const updateUserByAdmin = async (req: Request, res: Response): Promise<vo
 export const deleteUserByAdmin = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    await authService.deleteUser(id);
+    const restaurantId = (req as AuthenticatedRequest).user?.restaurantId;
+    await authService.deleteUser(id, restaurantId);
     res.status(200).json({ message: 'User deleted successfully.' });
   } catch (error: any) {
     res.status(400).json({ error: error.message || 'Error deleting user.' });
@@ -201,7 +205,6 @@ export const initRegister = async (req: Request, res: Response): Promise<void> =
     const result = await authService.initializeAdminRegistration(email);
     res.status(200).json({
       message: 'OTP verification code generated and dispatched.',
-      otp: result.otp,
     });
   } catch (error: any) {
     res.status(400).json({ error: error.message || 'Error sending verification code.' });

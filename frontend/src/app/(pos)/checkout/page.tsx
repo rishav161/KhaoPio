@@ -282,7 +282,7 @@ export default function CheckoutPage() {
                 <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-2 mb-2">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-black text-zinc-950 dark:text-zinc-100">
-                      Order {order.orderNumber}
+                      Order {order.orderNumber} {order.table ? `(${order.table.name})` : '(Takeaway)'}
                     </span>
                     <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-bold">
                       {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -367,7 +367,7 @@ export default function CheckoutPage() {
                 <div className="min-w-0 pr-2">
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs font-black text-zinc-950 dark:text-zinc-100">
-                      {order.orderNumber}
+                      {order.orderNumber} {order.table ? `(${order.table.name})` : '(Takeaway)'}
                     </span>
                     <span className="rounded bg-emerald-50 dark:bg-emerald-950/20 px-1.5 py-0.5 text-[8px] font-black text-emerald-700 dark:text-emerald-450 border border-emerald-200 dark:border-emerald-900 uppercase">
                       PAID
@@ -636,6 +636,7 @@ export default function CheckoutPage() {
                         <span>TIME: {new Date(selectedOrderForBill.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
                       <div>ORDER NO: {selectedOrderForBill.orderNumber}</div>
+                      <div>TABLE: {selectedOrderForBill.table ? selectedOrderForBill.table.name.toUpperCase() : 'TAKEAWAY'}</div>
                       <div>INVOICE ID: INV-{selectedOrderForBill.id.split('-')[0]?.toUpperCase()}</div>
                       <div className="capitalize">
                         PAY STATUS: <span className="font-extrabold">{selectedOrderForBill.status.replace('_', ' ')}</span>

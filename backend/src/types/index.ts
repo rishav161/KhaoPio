@@ -68,7 +68,35 @@ export interface Order {
   items: OrderItem[];
 }
 
+export type TableStatus = 'AVAILABLE' | 'OCCUPIED' | 'RESERVED';
+export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'SEATED' | 'CANCELLED';
+
+export interface DiningTable {
+  id: string;
+  name: string;
+  capacity: number;
+  status: TableStatus;
+  restaurantId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Booking {
+  id: string;
+  customerName: string;
+  customerPhone?: string | null;
+  bookingTime: Date;
+  guestsCount: number;
+  status: BookingStatus;
+  tableId: string;
+  restaurantId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface CreateOrderPayload {
   items: Omit<OrderItem, 'id' | 'orderId'>[];
+  tableId?: string;
 }
+
 

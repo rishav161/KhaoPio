@@ -1,12 +1,15 @@
 import { create } from 'zustand';
 import Big from 'big.js';
-import { MenuItem, CartItem, Order, OrderTotals } from '@/types/pos';
+import { MenuItem, CartItem, Order, OrderTotals, DiningTable, Booking } from '@/types/pos';
 import { apiFetch } from '@/utils/api';
 
 interface POSState {
   menuItems: MenuItem[];
   cartItems: CartItem[];
   activeOrders: Order[];
+  tables: DiningTable[];
+  bookings: Booking[];
+  selectedTableId: string | null;
   
   // Actions
   fetchMenuItems: () => Promise<void>;
@@ -25,12 +28,25 @@ interface POSState {
       payments?: { paymentMethod: 'CASH' | 'CARD' | 'UPI'; amount: number; transactionReference?: string }[];
     }
   ) => Promise<void>;
+
+  // New actions for tables & bookings
+  fetchTables: () => Promise<void>;
+  createTable: (name: string, capacity: number) => Promise<void>;
+  deleteTable: (id: string) => Promise<void>;
+  fetchBookings: () => Promise<void>;
+  createBooking: (payload: { customerName: string; customerPhone?: string; bookingTime: string; guestsCount: number; tableId: string }) => Promise<void>;
+  checkInBooking: (id: string) => Promise<void>;
+  cancelBooking: (id: string) => Promise<void>;
+  setSelectedTableId: (tableId: string | null) => void;
 }
 
 export const usePOSStore = create<POSState>((set, get) => ({
   menuItems: [],
   cartItems: [],
   activeOrders: [],
+  tables: [],
+  bookings: [],
+  selectedTableId: null,
 
   // 1. Fetch menu categories and items from backend
   fetchMenuItems: async () => {
@@ -155,6 +171,8 @@ export const usePOSStore = create<POSState>((set, get) => ({
           createdAt: order.createdAt,
           couponCode: order.couponCode,
           payments: order.payments,
+          tableId: order.tableId,
+          table: order.table,
         };
       });
 
@@ -166,7 +184,7 @@ export const usePOSStore = create<POSState>((set, get) => ({
 
   // 3. Post new orders to backend KOT endpoint
   sendOrderToKitchen: async () => {
-    const { cartItems } = get();
+    const { cartItems, selectedTableId } = get();
     if (cartItems.length === 0) return;
 
     try {
@@ -181,11 +199,12 @@ export const usePOSStore = create<POSState>((set, get) => ({
         method: 'POST',
         body: {
           items: itemsPayload,
+          tableId: selectedTableId || undefined,
         },
       });
 
       // Clear local cart
-      set({ cartItems: [] });
+      set({ cartItems: [], selectedTableId: null });
 
       // Refresh order queues
       await get().fetchActiveOrders();
@@ -230,5 +249,93 @@ export const usePOSStore = create<POSState>((set, get) => ({
     } catch (error) {
       console.error(`Error completing payment for order ${orderId}:`, error);
     }
+  },
+
+  // New actions for tables & bookings
+  fetchTables: async () => {
+    try {
+      const tables = await apiFetch<DiningTable[]>('/tables');
+      set({ tables });
+    } catch (error) {
+      console.error('Error fetching dining tables:', error);
+    }
+  },
+
+  createTable: async (name: string, capacity: number) => {
+    try {
+      await apiFetch('/tables', {
+        method: 'POST',
+        body: { name, capacity },
+      });
+      await get().fetchTables();
+    } catch (error) {
+      console.error('Error creating dining table:', error);
+      throw error;
+    }
+  },
+
+  deleteTable: async (id: string) => {
+    try {
+      await apiFetch(`/tables/${id}`, {
+        method: 'DELETE',
+      });
+      await get().fetchTables();
+    } catch (error) {
+      console.error('Error deleting dining table:', error);
+      throw error;
+    }
+  },
+
+  fetchBookings: async () => {
+    try {
+      const bookings = await apiFetch<Booking[]>('/bookings');
+      set({ bookings });
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+    }
+  },
+
+  createBooking: async (payload: { customerName: string; customerPhone?: string; bookingTime: string; guestsCount: number; tableId: string }) => {
+    try {
+      await apiFetch('/bookings', {
+        method: 'POST',
+        body: payload,
+      });
+      await get().fetchBookings();
+      await get().fetchTables(); // Sync table status which might become RESERVED
+    } catch (error) {
+      console.error('Error creating booking:', error);
+      throw error;
+    }
+  },
+
+  checkInBooking: async (id: string) => {
+    try {
+      await apiFetch(`/bookings/${id}/checkin`, {
+        method: 'POST',
+      });
+      await get().fetchBookings();
+      await get().fetchTables(); // Sync table status which becomes OCCUPIED
+    } catch (error) {
+      console.error('Error checking in booking:', error);
+      throw error;
+    }
+  },
+
+  cancelBooking: async (id: string) => {
+    try {
+      await apiFetch(`/bookings/${id}/cancel`, {
+        method: 'PATCH',
+      });
+      await get().fetchBookings();
+      await get().fetchTables(); // Sync table status which might revert to AVAILABLE
+    } catch (error) {
+      console.error('Error cancelling booking:', error);
+      throw error;
+    }
+  },
+
+  setSelectedTableId: (selectedTableId: string | null) => {
+    set({ selectedTableId });
   },
 }));

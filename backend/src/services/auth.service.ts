@@ -95,7 +95,14 @@ export class AuthService {
       where: { email: data.email.toLowerCase() },
     }).catch(() => {});
 
-    return this.generateUserResponse(newAdmin, ['view:dashboard', 'view:sales-reports', 'view:staff-reports', 'view:staff', 'invite:staff', 'update:staff', 'delete:staff', 'view:orders', 'create:kot', 'request:bill', 'update:order-status', 'pay:order']);
+    // Fetch all permissions linked to the SUPER_ADMIN role
+    const dbPermissions = await prisma.rolePermission.findMany({
+      where: { roleId: superAdminRole.id },
+      include: { permission: true },
+    });
+    const permissions = dbPermissions.map((dp) => dp.permission.name);
+
+    return this.generateUserResponse(newAdmin, permissions);
   }
 
   /**
@@ -321,10 +328,11 @@ export class AuthService {
   /**
    * Fetches list of active staff members (for POS screen quick login list).
    */
-  async getStaffList() {
+  async getStaffList(restaurantId?: string) {
     return prisma.user.findMany({
       where: {
         status: 'ACTIVE',
+        ...(restaurantId && { restaurantId }),
         // Hide super admins from tablet lock screen unless desired, but typically we want roles like cashier, waiter, chef, manager
       },
       select: {
@@ -382,8 +390,11 @@ export class AuthService {
   /**
    * Retrieves detailed information of all users (for administrative management).
    */
-  async getAllUsersDetails() {
+  async getAllUsersDetails(restaurantId?: string) {
     return prisma.user.findMany({
+      where: {
+        ...(restaurantId && { restaurantId }),
+      },
       include: {
         role: {
           select: {
@@ -401,7 +412,14 @@ export class AuthService {
   /**
    * Updates user name, status, or role.
    */
-  async updateUserDetail(id: string, data: { name?: string; role?: RoleName; status?: 'ACTIVE' | 'INACTIVE' | 'INVITED' }) {
+  async updateUserDetail(id: string, data: { name?: string; role?: RoleName; status?: 'ACTIVE' | 'INACTIVE' | 'INVITED' }, restaurantId?: string) {
+    if (restaurantId) {
+      const existingUser = await prisma.user.findUnique({ where: { id } });
+      if (!existingUser || existingUser.restaurantId !== restaurantId) {
+        throw new Error('User not found or does not belong to your restaurant.');
+      }
+    }
+
     let roleId: string | undefined;
     if (data.role) {
       const roleRecord = await prisma.role.findUnique({
@@ -429,7 +447,7 @@ export class AuthService {
   /**
    * Deletes a user if they have no active orders.
    */
-  async deleteUser(id: string) {
+  async deleteUser(id: string, restaurantId?: string) {
     const userWithOrders = await prisma.user.findUnique({
       where: { id },
       include: {
@@ -444,6 +462,10 @@ export class AuthService {
 
     if (!userWithOrders) {
       throw new Error('User not found.');
+    }
+
+    if (restaurantId && userWithOrders.restaurantId !== restaurantId) {
+      throw new Error('User not found or does not belong to your restaurant.');
     }
 
     const orderCount = userWithOrders._count.waiterOrders + userWithOrders._count.payments;

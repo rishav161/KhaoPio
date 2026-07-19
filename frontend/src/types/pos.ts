@@ -41,4 +41,24 @@ export interface Order {
   createdAt: string;
   couponCode?: string | null;
   payments?: Payment[];
+  tableId?: string | null;
+  table?: DiningTable | null;
+}
+
+export interface DiningTable {
+  id: string;
+  name: string;
+  capacity: number;
+  status: 'AVAILABLE' | 'OCCUPIED' | 'RESERVED';
+}
+
+export interface Booking {
+  id: string;
+  customerName: string;
+  customerPhone?: string | null;
+  bookingTime: string;
+  guestsCount: number;
+  status: 'PENDING' | 'CONFIRMED' | 'SEATED' | 'CANCELLED';
+  tableId: string;
+  table?: DiningTable;
 }

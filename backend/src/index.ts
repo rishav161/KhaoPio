@@ -7,6 +7,8 @@ import navigationRoutes from './routes/navigation.routes';
 import menuRoutes from './routes/menu.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import reportsRoutes from './routes/reports.routes';
+import tableRoutes from './routes/table.routes';
+import bookingRoutes from './routes/booking.routes';
 
 // Load environment variables
 dotenv.config();
@@ -41,6 +43,8 @@ app.use('/api/navigation', navigationRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/tables', tableRoutes);
+app.use('/api/bookings', bookingRoutes);
 
 // Server startup
 app.listen(PORT, () => {

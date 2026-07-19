@@ -4,6 +4,7 @@ const prisma = new PrismaClient();
 
 async function main() {
   // Clear existing database entries to ensure a clean seed
+  await prisma.booking.deleteMany({});
   await prisma.rolePermission.deleteMany({});
   await prisma.sidebarItem.deleteMany({});
   await prisma.invitation.deleteMany({});
@@ -12,6 +13,7 @@ async function main() {
   await prisma.user.deleteMany({});
   await prisma.menuItem.deleteMany({});
   await prisma.menuCategory.deleteMany({});
+  await prisma.diningTable.deleteMany({});
   await prisma.restaurant.deleteMany({});
   await prisma.permission.deleteMany({});
   await prisma.role.deleteMany({});
@@ -43,6 +45,10 @@ async function main() {
     { name: 'request:bill', description: 'Can trigger bill requests for customers' },
     { name: 'update:order-status', description: 'Can advance order preparation states (e.g. preparing, ready)' },
     { name: 'pay:order', description: 'Can close orders, apply discounts, and accept payments' },
+    
+    // Tables & Bookings
+    { name: 'view:tables', description: 'Can view restaurant dining tables and reservations' },
+    { name: 'manage:tables', description: 'Can add, remove, or modify dining tables and reservations' },
   ];
 
   const permissions: Record<string, any> = {};
@@ -79,6 +85,8 @@ async function main() {
       'request:bill',
       'update:order-status',
       'pay:order',
+      'view:tables',
+      'manage:tables',
     ],
     STORE_MANAGER: [
       'view:dashboard',
@@ -92,17 +100,23 @@ async function main() {
       'request:bill',
       'update:order-status',
       'pay:order',
+      'view:tables',
+      'manage:tables',
     ],
     CASHIER: [
       'view:orders',
       'create:kot',
       'request:bill',
       'pay:order',
+      'view:tables',
+      'manage:tables',
     ],
     WAITER: [
       'view:orders',
       'create:kot',
       'request:bill',
+      'view:tables',
+      'manage:tables',
     ],
     KITCHEN_CHEF: [
       'view:orders',
@@ -128,11 +142,12 @@ async function main() {
   const sidebarData = [
     { label: 'Dashboard', icon: 'LayoutDashboard', path: '/dashboard', order: 1, permissionName: 'view:dashboard' },
     { label: 'Billing (POS)', icon: 'Receipt', path: '/billing', order: 2, permissionName: 'create:kot' },
-    { label: 'Checkout', icon: 'CreditCard', path: '/checkout', order: 3, permissionName: 'pay:order' },
-    { label: 'Kitchen (KDS)', icon: 'ChefHat', path: '/kitchen', order: 4, permissionName: 'update:order-status' },
-    { label: 'Staff Management', icon: 'Users', path: '/staff', order: 5, permissionName: 'view:staff' },
-    { label: 'Set Menu', icon: 'Layers', path: '/menu', order: 6, permissionName: 'view:staff' },
-    { label: 'Reports', icon: 'BarChart3', path: '/reports', order: 7, permissionName: 'view:sales-reports' },
+    { label: 'Tables', icon: 'TableProperties', path: '/tables', order: 3, permissionName: 'view:tables' },
+    { label: 'Checkout', icon: 'CreditCard', path: '/checkout', order: 4, permissionName: 'pay:order' },
+    { label: 'Kitchen (KDS)', icon: 'ChefHat', path: '/kitchen', order: 5, permissionName: 'update:order-status' },
+    { label: 'Staff Management', icon: 'Users', path: '/staff', order: 6, permissionName: 'view:staff' },
+    { label: 'Set Menu', icon: 'Layers', path: '/menu', order: 7, permissionName: 'view:staff' },
+    { label: 'Reports', icon: 'BarChart3', path: '/reports', order: 8, permissionName: 'view:sales-reports' },
   ];
 
   const sidebarItems: Record<string, any> = {};
@@ -250,6 +265,30 @@ async function main() {
     ]
   });
   console.log('Coupons seeded successfully.');
+  
+  // 7. Seed Dining Tables
+  const defaultTables = [
+    { name: 'Table 1', capacity: 2 },
+    { name: 'Table 2', capacity: 2 },
+    { name: 'Table 3', capacity: 4 },
+    { name: 'Table 4', capacity: 4 },
+    { name: 'Table 5', capacity: 6 },
+    { name: 'Table 6', capacity: 6 },
+    { name: 'Table 7', capacity: 8 },
+    { name: 'Table 8', capacity: 8 },
+  ];
+  
+  for (const tbl of defaultTables) {
+    await prisma.diningTable.create({
+      data: {
+        name: tbl.name,
+        capacity: tbl.capacity,
+        status: 'AVAILABLE',
+        restaurantId: restaurant.id,
+      }
+    });
+  }
+  console.log('Default Dining Tables seeded successfully.');
 
   console.log('KhaoPio Database seeding finished successfully!');
 }

@@ -6,79 +6,8 @@ export class DashboardService {
    * Generates mock orders spanning the last 7 days if the store has no orders.
    */
   async seedMockOrdersIfEmpty(restaurantId: string) {
-    const count = await prisma.order.count({ where: { restaurantId } });
-    if (count > 0) return;
-
-    // Find any user associated with this restaurant
-    const waiter = await prisma.user.findFirst({ where: { restaurantId } });
-    if (!waiter) return;
-
-    // Find menu items
-    const menuItems = await prisma.menuItem.findMany({ where: { restaurantId } });
-    if (menuItems.length === 0) return;
-
-    const paymentMethods = ['CASH', 'CARD', 'UPI'];
-    const statuses = [OrderStatus.PAID, OrderStatus.PAID, OrderStatus.PAID, OrderStatus.READY, OrderStatus.CANCELLED];
-
-    // Create 30 random historical orders
-    for (let i = 0; i < 30; i++) {
-      const daysAgo = Math.floor(Math.random() * 8); // 0 to 7 days ago
-      const createdAt = new Date();
-      createdAt.setDate(createdAt.getDate() - daysAgo);
-      // stagger hours
-      createdAt.setHours(Math.floor(Math.random() * 12) + 9, Math.floor(Math.random() * 60));
-
-      const numItems = Math.floor(Math.random() * 3) + 1;
-      const orderItems: { menuItemId: string; name: string; quantity: number; price: number }[] = [];
-      let subtotal = 0;
-
-      for (let j = 0; j < numItems; j++) {
-        const item = menuItems[Math.floor(Math.random() * menuItems.length)];
-        const qty = Math.floor(Math.random() * 2) + 1;
-        
-        // Ensure no duplicate items within the same order
-        if (orderItems.some(oi => oi.menuItemId === item.id)) continue;
-
-        orderItems.push({
-          menuItemId: item.id,
-          name: item.name,
-          quantity: qty,
-          price: item.price,
-        });
-        subtotal += item.price * qty;
-      }
-
-      if (orderItems.length === 0) continue;
-
-      const taxTotal = parseFloat((subtotal * 0.05).toFixed(2));
-      const grandTotal = parseFloat((subtotal + taxTotal).toFixed(2));
-      const payMethod = paymentMethods[Math.floor(Math.random() * paymentMethods.length)];
-      const status = statuses[Math.floor(Math.random() * statuses.length)];
-
-      await prisma.order.create({
-        data: {
-          subtotal,
-          taxTotal,
-          grandTotal,
-          status,
-          restaurantId,
-          waiterId: waiter.id,
-          createdAt,
-          updatedAt: createdAt,
-          items: {
-            create: orderItems,
-          },
-          payments: status === OrderStatus.PAID ? {
-            create: {
-              amount: grandTotal,
-              paymentMethod: payMethod as any,
-              cashierId: waiter.id,
-              createdAt,
-            }
-          } : undefined,
-        },
-      });
-    }
+    // Seeding feature disabled: new signups will start with empty dashboards and reports.
+    return;
   }
 
   /**

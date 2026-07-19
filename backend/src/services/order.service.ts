@@ -43,6 +43,7 @@ export class OrderService {
         grandTotal,
         waiterId,
         restaurantId: waiter?.restaurantId,
+        tableId: payload.tableId || null,
         items: {
           create: payload.items.map(item => ({
             menuItemId: item.menuItemId,
@@ -54,9 +55,17 @@ export class OrderService {
       },
       include: {
         items: true,
-        payments: true
+        payments: true,
+        table: true
       }
     });
+
+    if (payload.tableId) {
+      await prisma.diningTable.update({
+        where: { id: payload.tableId },
+        data: { status: 'OCCUPIED' },
+      });
+    }
 
     return newOrder as unknown as Order;
   }
@@ -116,7 +125,8 @@ export class OrderService {
       where: whereClause,
       include: {
         items: true,
-        payments: true
+        payments: true,
+        table: true
       },
       orderBy: {
         createdAt: 'desc'
@@ -136,9 +146,18 @@ export class OrderService {
         data: { status: newStatus },
         include: {
           items: true,
-          payments: true
+          payments: true,
+          table: true
         }
       });
+
+      if (newStatus === 'CANCELLED' && updatedOrder.tableId) {
+        await prisma.diningTable.update({
+          where: { id: updatedOrder.tableId },
+          data: { status: 'AVAILABLE' },
+        });
+      }
+
       return updatedOrder as unknown as Order;
     } catch (error: any) {
       if (error.code === 'P2025') {
@@ -257,9 +276,17 @@ export class OrderService {
         },
         include: {
           items: true,
-          payments: true
+          payments: true,
+          table: true
         }
       });
+
+      if (newStatus === 'PAID' && updatedOrder.tableId) {
+        await prisma.diningTable.update({
+          where: { id: updatedOrder.tableId },
+          data: { status: 'AVAILABLE' },
+        });
+      }
 
       return updatedOrder as unknown as Order;
     } catch (error: any) {

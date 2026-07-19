@@ -148,7 +148,7 @@ export default function KitchenPage() {
                   >
                     <div>
                       <span className="text-sm font-black text-zinc-905 dark:text-zinc-50 leading-none">
-                        {order.orderNumber}
+                        {order.orderNumber} {order.table ? `(${order.table.name})` : '(Takeaway)'}
                       </span>
                       <div className="text-[9px] font-extrabold text-zinc-500 dark:text-zinc-400 mt-0.5">
                         Items: {order.items.reduce((acc, ci) => acc + ci.quantity, 0)}
