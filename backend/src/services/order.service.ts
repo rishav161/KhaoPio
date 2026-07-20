@@ -192,6 +192,15 @@ export class OrderService {
         throw new Error(`Order with ID ${orderId} not found`);
       }
 
+      if (payload.manualDiscount !== undefined) {
+        if (payload.manualDiscount < 0) {
+          throw new Error('Manual discount cannot be negative.');
+        }
+        if (payload.manualDiscount > order.subtotal) {
+          throw new Error('Manual discount cannot exceed the order subtotal.');
+        }
+      }
+
       let discountTotal = payload.manualDiscount || 0;
       let couponId: string | null = null;
       let couponCodeSnapshot: string | null = null;

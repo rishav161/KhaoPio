@@ -252,7 +252,7 @@ export const updateRestaurantDetails = async (req: Request, res: Response): Prom
   try {
     const restaurantId = (req as any).user?.restaurantId;
     const userRole = (req as any).user?.role;
-    const { name } = req.body;
+    const { name, defaultTaxRate, defaultServiceCharge, address, phone, gstin, logo, thankYouMessage } = req.body;
 
     if (userRole !== 'SUPER_ADMIN') {
       res.status(403).json({ error: 'Forbidden. Only SUPER_ADMIN can update restaurant details.' });
@@ -264,15 +264,58 @@ export const updateRestaurantDetails = async (req: Request, res: Response): Prom
       return;
     }
 
-    if (!name) {
-      res.status(400).json({ error: 'Field "name" is required.' });
+    if (name !== undefined && !name.trim()) {
+      res.status(400).json({ error: 'Restaurant name cannot be empty.' });
       return;
     }
 
-    const updatedRestaurant = await authService.updateRestaurant(restaurantId, name);
+    const taxRateVal = defaultTaxRate !== undefined ? parseFloat(defaultTaxRate) : undefined;
+    const serviceChargeVal = defaultServiceCharge !== undefined ? parseFloat(defaultServiceCharge) : undefined;
+
+    if (taxRateVal !== undefined && (isNaN(taxRateVal) || taxRateVal < 0)) {
+      res.status(400).json({ error: 'Tax rate must be a valid positive number.' });
+      return;
+    }
+    if (serviceChargeVal !== undefined && (isNaN(serviceChargeVal) || serviceChargeVal < 0)) {
+      res.status(400).json({ error: 'Service charge must be a valid positive number.' });
+      return;
+    }
+
+    const updatedRestaurant = await authService.updateRestaurant(restaurantId, {
+      name,
+      defaultTaxRate: taxRateVal,
+      defaultServiceCharge: serviceChargeVal,
+      address,
+      phone,
+      gstin,
+      logo,
+      thankYouMessage,
+    });
+
     res.status(200).json(updatedRestaurant);
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Error updating restaurant.' });
+  }
+};
+
+export const getRestaurantDetails = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const restaurantId = (req as any).user?.restaurantId;
+
+    if (!restaurantId) {
+      res.status(401).json({ error: 'Unauthorized. Restaurant context missing.' });
+      return;
+    }
+
+    const restaurant = await authService.getRestaurant(restaurantId);
+    if (!restaurant) {
+      res.status(404).json({ error: 'Restaurant not found.' });
+      return;
+    }
+
+    res.status(200).json(restaurant);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Error fetching restaurant details.' });
   }
 };
 

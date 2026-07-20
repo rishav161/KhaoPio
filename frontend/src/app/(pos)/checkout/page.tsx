@@ -7,6 +7,7 @@ import { Order } from '@/types/pos';
 import { Banknote, CreditCard, Receipt, CheckCircle, Printer, X, ShoppingBag, Trash2, Tag, Percent, Plus } from 'lucide-react';
 import confettiExplosion from 'canvas-confetti';
 import { Loader } from '@/components/Loader';
+import { apiFetch } from '@/utils/api';
 
 export default function CheckoutPage() {
   const { activeOrders, completePayment, fetchActiveOrders, fetchMenuItems } = usePOSStore();
@@ -15,6 +16,18 @@ export default function CheckoutPage() {
   const [completedFilter, setCompletedFilter] = useState<'today' | 'yesterday' | '7days' | 'all'>('today');
   const [loadingCompleted, setLoadingCompleted] = useState(false);
   const [loadingActive, setLoadingActive] = useState(false);
+
+  // Restaurant settings state for invoice header/footer styling
+  const [restaurantSettings, setRestaurantSettings] = useState<{
+    name: string;
+    defaultTaxRate: number;
+    defaultServiceCharge: number;
+    address: string | null;
+    phone: string | null;
+    gstin: string | null;
+    logo: string | null;
+    thankYouMessage: string | null;
+  } | null>(null);
 
   // Local checkout inputs
   const [localPayments, setLocalPayments] = useState<{ paymentMethod: 'CASH' | 'CARD' | 'UPI'; amount: number; transactionReference?: string }[]>([]);
@@ -28,6 +41,17 @@ export default function CheckoutPage() {
   const [couponSuccess, setCouponSuccess] = useState('');
   const [payingOrderId, setPayingOrderId] = useState<string | null>(null);
   const [loadingDiscounts, setLoadingDiscounts] = useState(false);
+
+  // Fetch restaurant configuration on mount
+  React.useEffect(() => {
+    apiFetch<any>('/auth/restaurant')
+      .then((data: any) => {
+        setRestaurantSettings(data);
+      })
+      .catch((err: any) => {
+        console.error('Failed to load restaurant settings for checkout print:', err);
+      });
+  }, []);
 
   React.useEffect(() => {
     setLoadingActive(true);
@@ -132,11 +156,25 @@ export default function CheckoutPage() {
     if (!selectedOrderForBill) return;
     setCouponError('');
     setCouponSuccess('');
+
+    const discountVal = manualDiscountInput ? parseFloat(manualDiscountInput) : 0;
+    if (manualDiscountInput) {
+      if (isNaN(discountVal) || discountVal < 0) {
+        setCouponError('Manual discount must be a valid positive number.');
+        return;
+      }
+      const orderSubtotal = parseFloat(selectedOrderForBill.totals.subtotal) || 0;
+      if (discountVal > orderSubtotal) {
+        setCouponError('Manual discount cannot exceed the order subtotal.');
+        return;
+      }
+    }
+
     setLoadingDiscounts(true);
     try {
       await completePayment(selectedOrderForBill.id, {
         couponCode: couponCodeInput || undefined,
-        manualDiscount: manualDiscountInput ? parseFloat(manualDiscountInput) : undefined,
+        manualDiscount: manualDiscountInput ? discountVal : undefined,
         payments: []
       });
       setCouponSuccess('Discount / Coupon applied successfully!');
@@ -150,9 +188,23 @@ export default function CheckoutPage() {
   // Finalize payment transaction
   const handleFinalizeCheckout = async () => {
     if (!selectedOrderForBill) return;
-    setPayingOrderId(selectedOrderForBill.id);
     setCouponError('');
     setCouponSuccess('');
+
+    const discountVal = manualDiscountInput ? parseFloat(manualDiscountInput) : 0;
+    if (manualDiscountInput) {
+      if (isNaN(discountVal) || discountVal < 0) {
+        setCouponError('Manual discount must be a valid positive number.');
+        return;
+      }
+      const orderSubtotal = parseFloat(selectedOrderForBill.totals.subtotal) || 0;
+      if (discountVal > orderSubtotal) {
+        setCouponError('Manual discount cannot exceed the order subtotal.');
+        return;
+      }
+    }
+
+    setPayingOrderId(selectedOrderForBill.id);
     try {
       let finalPayments = [...localPayments];
 
@@ -168,7 +220,7 @@ export default function CheckoutPage() {
 
       await completePayment(selectedOrderForBill.id, {
         couponCode: couponCodeInput || undefined,
-        manualDiscount: manualDiscountInput ? parseFloat(manualDiscountInput) : undefined,
+        manualDiscount: manualDiscountInput ? discountVal : undefined,
         payments: finalPayments
       });
 
@@ -182,6 +234,11 @@ export default function CheckoutPage() {
           colors: ['#f97316', '#10b981', '#3b82f6', '#f59e0b'],
         });
         setCouponSuccess('Order fully paid and checkout completed!');
+        
+        // Auto launch browser native print screen pre-formatted specifically for rolls
+        setTimeout(() => {
+          window.print();
+        }, 800);
       } else {
         setCouponSuccess('Partial payment recorded successfully!');
       }
@@ -215,9 +272,15 @@ export default function CheckoutPage() {
       {/* Print-only CSS style injection (Bulletproof selective rendering) */}
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
+          @page {
+            size: 80mm auto;
+            margin: 0mm;
+          }
           body {
             background: white !important;
             color: black !important;
+            margin: 0 !important;
+            padding: 0 !important;
           }
           /* Hide everything by default */
           body * {
@@ -235,14 +298,14 @@ export default function CheckoutPage() {
             top: 0 !important;
             width: 80mm !important;
             margin: 0 !important;
-            padding: 10px !important;
+            padding: 4mm !important;
+            box-sizing: border-box !important;
             border: none !important;
             box-shadow: none !important;
             display: block !important;
           }
-          @page {
-            size: auto;
-            margin: 0mm;
+          .print-exclude {
+            display: none !important;
           }
         }
       `}} />
@@ -605,15 +668,29 @@ export default function CheckoutPage() {
                   >
                     {/* Header Info */}
                     <div className="text-center space-y-1">
+                      {restaurantSettings?.logo && (
+                        <div className="text-sm font-bold mb-1">
+                          {restaurantSettings.logo.startsWith('http') ? (
+                            <img src={restaurantSettings.logo} alt="logo" className="mx-auto h-8 object-contain" />
+                          ) : (
+                            <span className="text-base">{restaurantSettings.logo}</span>
+                          )}
+                        </div>
+                      )}
                       <h3 className="text-sm font-extrabold tracking-wide uppercase">
-                        {user?.restaurantName || 'KHAOPIO RESTAURANT'}
+                        {restaurantSettings?.name || user?.restaurantName || 'KHAOPIO RESTAURANT'}
                       </h3>
                       <p className="text-[10px] text-zinc-650">
-                        123 Agentic Way, Silicon Valley
+                        {restaurantSettings?.address || '123 Agentic Way, Silicon Valley'}
                       </p>
                       <p className="text-[10px] text-zinc-650">
-                        PH: +1 (555) 019-9000
+                        PH: {restaurantSettings?.phone || '+1 (555) 019-9000'}
                       </p>
+                      {restaurantSettings?.gstin && (
+                        <p className="text-[9px] text-zinc-600 font-bold uppercase tracking-wider">
+                          GSTIN: {restaurantSettings.gstin}
+                        </p>
+                      )}
                       
                       {selectedOrderForBill.status === 'PAID' ? (
                         <div className="inline-block font-extrabold text-[9px] bg-zinc-100 text-zinc-800 px-2 py-0.5 rounded border border-zinc-300 uppercase tracking-widest mt-1">
@@ -727,8 +804,8 @@ export default function CheckoutPage() {
 
                     {/* Footer Message */}
                     <div className="text-center space-y-1 mt-3">
-                      <p className="text-[10px] font-bold">
-                        THANK YOU FOR DINE IN!
+                      <p className="text-[10px] font-bold uppercase">
+                        {restaurantSettings?.thankYouMessage || 'THANK YOU FOR DINE IN!'}
                       </p>
                       <p className="text-[9px] text-zinc-500 italic">
                         Powered by KhaoPio POS

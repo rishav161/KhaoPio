@@ -535,10 +535,40 @@ export class AuthService {
   /**
    * Updates restaurant details.
    */
-  async updateRestaurant(restaurantId: string, name: string) {
+  async updateRestaurant(
+    restaurantId: string,
+    data: {
+      name?: string;
+      defaultTaxRate?: number;
+      defaultServiceCharge?: number;
+      address?: string | null;
+      phone?: string | null;
+      gstin?: string | null;
+      logo?: string | null;
+      thankYouMessage?: string | null;
+    }
+  ) {
     return prisma.restaurant.update({
       where: { id: restaurantId },
-      data: { name }
+      data: {
+        ...(data.name && { name: data.name }),
+        ...(data.defaultTaxRate !== undefined && { defaultTaxRate: data.defaultTaxRate }),
+        ...(data.defaultServiceCharge !== undefined && { defaultServiceCharge: data.defaultServiceCharge }),
+        ...(data.address !== undefined && { address: data.address }),
+        ...(data.phone !== undefined && { phone: data.phone }),
+        ...(data.gstin !== undefined && { gstin: data.gstin }),
+        ...(data.logo !== undefined && { logo: data.logo }),
+        ...(data.thankYouMessage !== undefined && { thankYouMessage: data.thankYouMessage }),
+      }
+    });
+  }
+
+  /**
+   * Fetches restaurant configuration details.
+   */
+  async getRestaurant(restaurantId: string) {
+    return prisma.restaurant.findUnique({
+      where: { id: restaurantId }
     });
   }
 }

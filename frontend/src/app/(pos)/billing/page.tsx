@@ -1,13 +1,19 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { usePOSStore } from '@/store/usePOSStore';
+import { useAuthStore } from '@/store/useAuthStore';
 import { CartItem } from '@/types/pos';
 import { Search, Plus, Minus, Trash2, Soup, ShoppingCart, Send } from 'lucide-react';
 import { Loader } from '@/components/Loader';
+import { apiFetch } from '@/utils/api';
 import Big from 'big.js';
 
 export default function BillingPage() {
+  const router = useRouter();
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
   const {
     menuItems,
     cartItems,
@@ -27,9 +33,78 @@ export default function BillingPage() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
+  // Restaurant settings state for custom taxes & service charges
+  const [restaurantSettings, setRestaurantSettings] = useState<{
+    defaultTaxRate: number;
+    defaultServiceCharge: number;
+  } | null>(null);
+
   useEffect(() => {
-    Promise.all([fetchMenuItems(), fetchTables()]).finally(() => setLoading(false));
+    Promise.all([
+      fetchMenuItems(),
+      fetchTables(),
+      apiFetch<any>('/auth/restaurant')
+        .then((data) => setRestaurantSettings(data))
+        .catch((err) => console.error('Failed to load restaurant settings for POS calculations:', err))
+    ]).finally(() => setLoading(false));
   }, [fetchMenuItems, fetchTables]);
+
+  // POS Keyboard Shortcuts Handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 1. Focus search input on '/' or 'F2'
+      if (e.key === '/' || e.key === 'F2') {
+        if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') {
+          return;
+        }
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+
+      // 2. Go to Checkout on 'F9'
+      if (e.key === 'F9') {
+        e.preventDefault();
+        router.push('/checkout');
+      }
+
+      // 3. Send order to kitchen on 'F8'
+      if (e.key === 'F8') {
+        e.preventDefault();
+        if (cartItems.length > 0) {
+          handleSendToKitchen();
+        }
+      }
+
+      // 4. Adjust last cart item quantity with '+' / '-'
+      if (e.key === '+' || e.key === '=') {
+        if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') {
+          return;
+        }
+        if (cartItems.length > 0) {
+          e.preventDefault();
+          const lastItem = cartItems[cartItems.length - 1];
+          updateCartQuantity(lastItem.menuItem.id, 1); // incremental helper inside store accepts delta offset (+1 / -1)
+        }
+      }
+      if (e.key === '-' || e.key === '_') {
+        if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') {
+          return;
+        }
+        if (cartItems.length > 0) {
+          e.preventDefault();
+          const lastItem = cartItems[cartItems.length - 1];
+          if (lastItem.quantity > 1) {
+            updateCartQuantity(lastItem.menuItem.id, -1);
+          } else {
+            removeFromCart(lastItem.menuItem.id);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [cartItems, router, updateCartQuantity, removeFromCart]);
 
   // Get list of categories dynamically from menuItems
   const categories = useMemo(() => {
@@ -69,17 +144,23 @@ export default function BillingPage() {
     cartItems.forEach((item: CartItem) => {
       subtotal = subtotal.plus(new Big(item.menuItem.price).times(item.quantity));
     });
-    const tax = subtotal.times(0.05); // 5% GST
-    const serviceCharge = subtotal.times(0.05); // 5% Service Charge
+
+    const taxRate = restaurantSettings ? restaurantSettings.defaultTaxRate : 5.0;
+    const serviceChargeRate = restaurantSettings ? restaurantSettings.defaultServiceCharge : 5.0;
+
+    const tax = subtotal.times(taxRate / 100);
+    const serviceCharge = subtotal.times(serviceChargeRate / 100);
     const total = subtotal.plus(tax).plus(serviceCharge);
 
     return {
       subtotal: subtotal.toFixed(2),
+      taxRate: taxRate.toString(),
+      serviceChargeRate: serviceChargeRate.toString(),
       tax: tax.toFixed(2),
       serviceCharge: serviceCharge.toFixed(2),
       total: total.toFixed(2),
     };
-  }, [cartItems]);
+  }, [cartItems, restaurantSettings]);
 
   const [sendError, setSendError] = useState('');
 
@@ -173,8 +254,9 @@ export default function BillingPage() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
             <input
+              ref={searchInputRef}
               type="text"
-              placeholder="Search dishes or item short codes (e.g. B01)..."
+              placeholder="Search dishes or item short codes (e.g. B01) [F2 or /]..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full rounded-lg border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 py-2 pl-9 pr-4 text-xs font-medium placeholder-zinc-400 dark:placeholder-zinc-500 outline-none transition-all focus:border-coral-500 focus:ring-1 focus:ring-coral-500 text-zinc-900 dark:text-zinc-100"
@@ -374,13 +456,13 @@ export default function BillingPage() {
             </div>
             <div className="flex justify-between">
               <span className="flex items-center gap-1">
-                Service Charge <span className="rounded bg-zinc-100 dark:bg-zinc-950 px-1 py-0.5 text-[9px] font-black text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800">5%</span>
+                Service Charge <span className="rounded bg-zinc-100 dark:bg-zinc-950 px-1 py-0.5 text-[9px] font-black text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800">{cartTotals.serviceChargeRate}%</span>
               </span>
               <span className="text-zinc-900 dark:text-zinc-100">${cartTotals.serviceCharge}</span>
             </div>
             <div className="flex justify-between">
               <span className="flex items-center gap-1">
-                GST / Tax <span className="rounded bg-zinc-100 dark:bg-zinc-950 px-1 py-0.5 text-[9px] font-black text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800">5%</span>
+                GST / Tax <span className="rounded bg-zinc-100 dark:bg-zinc-950 px-1 py-0.5 text-[9px] font-black text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800">{cartTotals.taxRate}%</span>
               </span>
               <span className="text-zinc-900 dark:text-zinc-100">${cartTotals.tax}</span>
             </div>
@@ -396,12 +478,23 @@ export default function BillingPage() {
             className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 text-xs font-black text-white transition-all shadow-md ${
               cartItems.length === 0
                 ? 'bg-zinc-300 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-505 cursor-not-allowed shadow-none'
-                : 'bg-coral-500 hover:bg-coral-600 active:scale-[0.98]'
+                : 'bg-coral-500 hover:bg-coral-600 active:scale-[0.98] cursor-pointer'
             }`}
           >
             <Send className="h-4 w-4" />
-            SEND TO KITCHEN
+            <span>SEND TO KITCHEN [F8]</span>
           </button>
+
+          {/* POS Keyboard Shortcuts Quick Help Bar */}
+          <div className="mt-1 flex items-center justify-around border-t border-zinc-100 dark:border-zinc-800 pt-2 text-[9px] font-black text-zinc-400 select-none uppercase tracking-wider">
+            <span>[F9] Checkout</span>
+            <span>•</span>
+            <span>[F8] Send KOT</span>
+            <span>•</span>
+            <span>[+/-] Qty</span>
+            <span>•</span>
+            <span>[F2] Search</span>
+          </div>
         </div>
       </div>
     </div>

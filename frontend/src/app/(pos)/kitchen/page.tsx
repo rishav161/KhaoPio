@@ -73,16 +73,52 @@ export default function KitchenPage() {
     });
   }, [activeOrders, filter]);
 
-  // Audio alerts for KDS (optional, runs on client if activeOrders length changes)
+  // Compute the count of active pending kitchen orders
   const pendingCount = useMemo(() => {
     return activeOrders.filter((o) => o.status === 'KITCHEN_PENDING').length;
   }, [activeOrders]);
 
-  useEffect(() => {
-    // Custom ding sound can be added here, or a visual notification flash.
-    if (pendingCount > 0) {
-      console.log('KDS Alert: New pending order in kitchen!');
+  // Web Audio API chime synthesizer for zero-dependency KDS alert
+  const playChime = () => {
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) return;
+      const ctx = new AudioContextClass();
+      
+      // Dual tone: first chime (E5 note)
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.frequency.setValueAtTime(659.25, ctx.currentTime); // E5
+      gain1.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+      osc1.start(ctx.currentTime);
+      osc1.stop(ctx.currentTime + 0.4);
+
+      // Second chime (G5 note, offset by 0.12 seconds)
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.frequency.setValueAtTime(783.99, ctx.currentTime + 0.12); // G5
+      gain2.gain.setValueAtTime(0.12, ctx.currentTime + 0.12);
+      gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+      osc2.start(ctx.currentTime + 0.12);
+      osc2.stop(ctx.currentTime + 0.6);
+    } catch (e) {
+      console.error('Failed to synthesize notification chime:', e);
     }
+  };
+
+  // Track previous count to only play sound when count increases
+  const prevPendingCount = React.useRef(0);
+
+  useEffect(() => {
+    if (pendingCount > prevPendingCount.current) {
+      playChime();
+    }
+    prevPendingCount.current = pendingCount;
   }, [pendingCount]);
 
   return (

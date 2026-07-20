@@ -14,6 +14,7 @@ import {
   verifyOtp,
   updateProfile,
   updateRestaurantDetails,
+  getRestaurantDetails,
 } from '../controllers/auth.controller';
 import { authenticateJWT, requirePermission } from '../middlewares/auth.middleware';
 
@@ -39,6 +40,7 @@ router.delete('/admin/users/:id', authenticateJWT, requirePermission('delete:sta
 
 // Profile and Restaurant settings routes
 router.patch('/profile', authenticateJWT, updateProfile);
+router.get('/restaurant', authenticateJWT, getRestaurantDetails);
 router.patch('/restaurant', authenticateJWT, updateRestaurantDetails);
 
 export default router;

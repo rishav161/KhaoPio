@@ -192,6 +192,11 @@ model Restaurant {
   bookings             Booking[]
   defaultTaxRate       Float          @default(5.0)
   defaultServiceCharge Float          @default(5.0)
+  address              String?
+  phone                String?
+  gstin                String?
+  logo                 String?
+  thankYouMessage      String?
   createdAt            DateTime       @default(now())
   updatedAt            DateTime       @updatedAt
 }

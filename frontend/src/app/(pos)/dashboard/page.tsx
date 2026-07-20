@@ -170,7 +170,7 @@ export default function Dashboard() {
   const trendPoints = salesTrendData.map((s, idx) => {
     const x = salesTrendData.length > 1 ? (idx / (salesTrendData.length - 1)) * 100 : 50;
     const y = 100 - (s.amount / maxSale) * 80 - 10;
-    return { x, y, date: s.date, amount: s.amount };
+    return { x, y, date: s.date, amount: s.amount, count: s.count };
   });
 
   const linePath = trendPoints.map(p => `${p.x},${p.y}`).join(' L ');
@@ -373,9 +373,11 @@ export default function Dashboard() {
                     className="absolute group"
                     style={{ left: `${pt.x}%`, top: `${pt.y}%`, transform: 'translate(-50%, -50%)' }}
                   >
-                    <div className="h-3 w-3 rounded-full border-2 border-white dark:border-zinc-900 bg-coral-500 shadow-md group-hover:scale-125 transition-transform cursor-pointer"></div>
-                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 pointer-events-none rounded bg-zinc-900/95 dark:bg-zinc-800 text-[10px] font-black text-white px-2 py-1 shadow-lg transition-all duration-150 z-10 whitespace-nowrap">
-                      ${pt.amount.toFixed(2)}
+                    <div className="h-3.5 w-3.5 rounded-full border-2 border-white dark:border-zinc-900 bg-coral-500 shadow-md group-hover:scale-125 transition-all cursor-pointer"></div>
+                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 pointer-events-none rounded-lg bg-zinc-950/95 dark:bg-zinc-900 border border-zinc-800 dark:border-zinc-800 text-[10px] font-black text-white p-2.5 shadow-2xl transition-all duration-150 z-10 whitespace-nowrap space-y-0.5">
+                      <p className="text-zinc-400 font-bold">{new Date(pt.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                      <p className="text-coral-500 font-black text-[11px]">Sales: ${pt.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                      <p className="text-emerald-400 font-bold">Orders: {pt.count}</p>
                     </div>
                   </div>
                 ))}

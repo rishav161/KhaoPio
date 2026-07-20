@@ -27,6 +27,13 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [profileName, setProfileName] = useState(user?.name || '');
   const [profileRestaurant, setProfileRestaurant] = useState(user?.restaurantName || '');
+  const [profileTaxRate, setProfileTaxRate] = useState('5.0');
+  const [profileServiceCharge, setProfileServiceCharge] = useState('5.0');
+  const [profileAddress, setProfileAddress] = useState('');
+  const [profilePhone, setProfilePhone] = useState('');
+  const [profileGstin, setProfileGstin] = useState('');
+  const [profileLogo, setProfileLogo] = useState('');
+  const [profileThankYouMessage, setProfileThankYouMessage] = useState('');
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState('');
   const [profileSuccess, setProfileSuccess] = useState(false);
@@ -39,6 +46,33 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
       setProfileRestaurant(user.restaurantName || '');
     }
   }, [user]);
+
+  // Fetch restaurant details when profile opens
+  useEffect(() => {
+    if (isProfileOpen && user?.role === 'SUPER_ADMIN') {
+      apiFetch<{
+        defaultTaxRate: number;
+        defaultServiceCharge: number;
+        address: string | null;
+        phone: string | null;
+        gstin: string | null;
+        logo: string | null;
+        thankYouMessage: string | null;
+      }>('/auth/restaurant')
+        .then((data) => {
+          setProfileTaxRate(data.defaultTaxRate.toString());
+          setProfileServiceCharge(data.defaultServiceCharge.toString());
+          setProfileAddress(data.address || '');
+          setProfilePhone(data.phone || '');
+          setProfileGstin(data.gstin || '');
+          setProfileLogo(data.logo || '');
+          setProfileThankYouMessage(data.thankYouMessage || '');
+        })
+        .catch((err) => {
+          console.error('Failed to load restaurant settings:', err);
+        });
+    }
+  }, [isProfileOpen, user?.role]);
 
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,10 +88,25 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
         });
       }
 
+      const bodyPayload: any = {};
       if (profileRestaurant.trim() !== user?.restaurantName) {
+        bodyPayload.name = profileRestaurant.trim();
+      }
+
+      if (user?.role === 'SUPER_ADMIN') {
+        bodyPayload.defaultTaxRate = parseFloat(profileTaxRate);
+        bodyPayload.defaultServiceCharge = parseFloat(profileServiceCharge);
+        bodyPayload.address = profileAddress.trim() || null;
+        bodyPayload.phone = profilePhone.trim() || null;
+        bodyPayload.gstin = profileGstin.trim() || null;
+        bodyPayload.logo = profileLogo.trim() || null;
+        bodyPayload.thankYouMessage = profileThankYouMessage.trim() || null;
+      }
+
+      if (Object.keys(bodyPayload).length > 0) {
         await apiFetch('/auth/restaurant', {
           method: 'PATCH',
-          body: { name: profileRestaurant.trim() },
+          body: bodyPayload,
         });
       }
 
@@ -337,7 +386,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
               </button>
             </div>
 
-            <form onSubmit={handleSaveSettings} className="space-y-4">
+            <form onSubmit={handleSaveSettings} className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
               {profileError && (
                 <div className="rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 p-2.5 text-[10px] font-semibold text-red-600 dark:text-red-400 flex items-center gap-1.5">
                   <LucideIcons.AlertCircle className="h-3.5 w-3.5 shrink-0" />
@@ -373,6 +422,95 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
                   required
                 />
               </div>
+
+              {user?.role === 'SUPER_ADMIN' && (
+                <div className="border-t border-zinc-100 dark:border-zinc-800 pt-3 mt-3 space-y-4">
+                  <span className="block text-[10px] font-black uppercase tracking-wider text-coral-500 font-bold mb-1">POS & Invoice Configuration</span>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1 font-bold">Default Tax (GST %)</label>
+                      <input 
+                        type="number" 
+                        step="0.1"
+                        min="0"
+                        value={profileTaxRate}
+                        onChange={(e) => setProfileTaxRate(e.target.value)}
+                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-2.5 py-1.5 text-xs font-semibold outline-none focus:border-coral-500 text-zinc-900 dark:text-zinc-100"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1 font-bold">Service Charge (%)</label>
+                      <input 
+                        type="number" 
+                        step="0.1"
+                        min="0"
+                        value={profileServiceCharge}
+                        onChange={(e) => setProfileServiceCharge(e.target.value)}
+                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-2.5 py-1.5 text-xs font-semibold outline-none focus:border-coral-500 text-zinc-900 dark:text-zinc-100"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1 font-bold">Store Phone</label>
+                      <input 
+                        type="text" 
+                        value={profilePhone}
+                        onChange={(e) => setProfilePhone(e.target.value)}
+                        placeholder="+1 (555) 000-0000"
+                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-2.5 py-1.5 text-xs font-semibold outline-none focus:border-coral-500 text-zinc-900 dark:text-zinc-100"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1 font-bold">GSTIN / Tax ID</label>
+                      <input 
+                        type="text" 
+                        value={profileGstin}
+                        onChange={(e) => setProfileGstin(e.target.value)}
+                        placeholder="27AAAAA1111A1Z1"
+                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-2.5 py-1.5 text-xs font-semibold outline-none focus:border-coral-500 text-zinc-900 dark:text-zinc-100"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1 font-bold">Store Address</label>
+                    <input 
+                      type="text" 
+                      value={profileAddress}
+                      onChange={(e) => setProfileAddress(e.target.value)}
+                      placeholder="123 Main St, City, Country"
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-xs font-semibold outline-none focus:border-coral-500 text-zinc-900 dark:text-zinc-100"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1 font-bold">Store Logo (URL or Symbol)</label>
+                    <input 
+                      type="text" 
+                      value={profileLogo}
+                      onChange={(e) => setProfileLogo(e.target.value)}
+                      placeholder="e.g. 🍔 or https://logo-url"
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-xs font-semibold outline-none focus:border-coral-500 text-zinc-900 dark:text-zinc-100"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1 font-bold">Custom Invoice Footer</label>
+                    <input 
+                      type="text" 
+                      value={profileThankYouMessage}
+                      onChange={(e) => setProfileThankYouMessage(e.target.value)}
+                      placeholder="Thank you for dining with us!"
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-xs font-semibold outline-none focus:border-coral-500 text-zinc-900 dark:text-zinc-100"
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="flex gap-2.5 pt-2">
                 <button
