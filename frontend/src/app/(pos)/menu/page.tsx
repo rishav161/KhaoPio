@@ -9,6 +9,7 @@ import {
 import { apiFetch } from '@/utils/api';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Loader } from '@/components/Loader';
+import { useConfirmStore } from '@/store/useConfirmStore';
 
 interface MenuItem {
   id: string;
@@ -27,7 +28,9 @@ interface MenuCategory {
   menuItems: MenuItem[];
 }
 
-export default function MenuManagement() {
+export default function MenuPage() {
+  const { user } = useAuthStore();
+  const confirm = useConfirmStore((state) => state.confirm);
   const { permissions } = useAuthStore();
   const canManage = permissions.includes('view:staff'); // Manager/Admin check
 
@@ -119,21 +122,26 @@ export default function MenuManagement() {
     }
   };
 
-  const handleDeleteCategory = async (id: string, name: string) => {
-    if (!window.confirm(`Are you sure you want to delete the category "${name}"? This will permanently delete all its food items!`)) {
-      return;
-    }
-    setErrorMsg('');
-    setSuccessMsg('');
-    try {
-      await apiFetch(`/menu/categories/${id}`, {
-        method: 'DELETE',
-      });
-      setSuccessMsg(`Deleted category "${name}" and its items.`);
-      fetchMenu();
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Error deleting category.');
-    }
+  const handleDeleteCategory = (id: string, name: string) => {
+    confirm({
+      title: 'Delete Category',
+      message: `Are you sure you want to delete the category "${name}"? This will permanently delete all its food items!`,
+      type: 'danger',
+      confirmText: 'Delete Category',
+      onConfirm: async () => {
+        setErrorMsg('');
+        setSuccessMsg('');
+        try {
+          await apiFetch(`/menu/categories/${id}`, {
+            method: 'DELETE',
+          });
+          setSuccessMsg(`Deleted category "${name}" and its items.`);
+          fetchMenu();
+        } catch (err: any) {
+          setErrorMsg(err.message || 'Error deleting category.');
+        }
+      }
+    });
   };
 
   // Item Actions
@@ -222,21 +230,26 @@ export default function MenuManagement() {
     }
   };
 
-  const handleDeleteItem = async (id: string, name: string) => {
-    if (!window.confirm(`Are you sure you want to delete the item "${name}"?`)) {
-      return;
-    }
-    setErrorMsg('');
-    setSuccessMsg('');
-    try {
-      await apiFetch(`/menu/items/${id}`, {
-        method: 'DELETE',
-      });
-      setSuccessMsg(`Successfully deleted item "${name}".`);
-      fetchMenu();
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Error deleting item.');
-    }
+  const handleDeleteItem = (id: string, name: string) => {
+    confirm({
+      title: 'Delete Menu Item',
+      message: `Are you sure you want to delete the item "${name}"?`,
+      type: 'danger',
+      confirmText: 'Delete Item',
+      onConfirm: async () => {
+        setErrorMsg('');
+        setSuccessMsg('');
+        try {
+          await apiFetch(`/menu/items/${id}`, {
+            method: 'DELETE',
+          });
+          setSuccessMsg(`Successfully deleted item "${name}".`);
+          fetchMenu();
+        } catch (err: any) {
+          setErrorMsg(err.message || 'Error deleting item.');
+        }
+      }
+    });
   };
 
   const toggleItemAvailability = async (item: MenuItem) => {

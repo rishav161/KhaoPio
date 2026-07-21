@@ -5,6 +5,7 @@ import { usePOSStore } from '@/store/usePOSStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Loader } from '@/components/Loader';
 import { Plus, Trash2, CalendarDays, Users, Check, X, Armchair, PlusCircle, Clock, Sparkles } from 'lucide-react';
+import { useConfirmStore } from '@/store/useConfirmStore';
 
 export default function TablesPage() {
   const {
@@ -20,6 +21,8 @@ export default function TablesPage() {
   } = usePOSStore();
 
   const { user } = useAuthStore();
+  const confirm = useConfirmStore((state) => state.confirm);
+  const showAlert = useConfirmStore((state) => state.alert);
 
   const [loading, setLoading] = useState(true);
 
@@ -142,26 +145,40 @@ export default function TablesPage() {
     try {
       await checkInBooking(bookingId);
     } catch (err: any) {
-      alert(err.message || 'Failed to check-in reservation.');
+      showAlert('Check-In Error', err.message || 'Failed to check-in reservation.', 'danger');
     }
   };
 
-  const handleCancelBooking = async (bookingId: string) => {
-    if (!confirm('Are you sure you want to cancel this reservation?')) return;
-    try {
-      await cancelBooking(bookingId);
-    } catch (err: any) {
-      alert(err.message || 'Failed to cancel reservation.');
-    }
+  const handleCancelBooking = (bookingId: string) => {
+    confirm({
+      title: 'Cancel Reservation',
+      message: 'Are you sure you want to cancel this reservation?',
+      type: 'warning',
+      confirmText: 'Cancel Reservation',
+      onConfirm: async () => {
+        try {
+          await cancelBooking(bookingId);
+        } catch (err: any) {
+          showAlert('Cancellation Error', err.message || 'Failed to cancel reservation.', 'danger');
+        }
+      }
+    });
   };
 
-  const handleDeleteTable = async (tableId: string, tableName: string) => {
-    if (!confirm(`Are you sure you want to delete ${tableName}?`)) return;
-    try {
-      await deleteTable(tableId);
-    } catch (err: any) {
-      alert(err.message || 'Failed to delete table.');
-    }
+  const handleDeleteTable = (tableId: string, tableName: string) => {
+    confirm({
+      title: 'Delete Table',
+      message: `Are you sure you want to delete table "${tableName}"?`,
+      type: 'danger',
+      confirmText: 'Delete Table',
+      onConfirm: async () => {
+        try {
+          await deleteTable(tableId);
+        } catch (err: any) {
+          showAlert('Deletion Error', err.message || 'Failed to delete table.', 'danger');
+        }
+      }
+    });
   };
 
   if (loading && tables.length === 0) {

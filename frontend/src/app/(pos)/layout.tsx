@@ -7,6 +7,7 @@ import { usePOSStore } from '@/store/usePOSStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import { apiFetch } from '@/utils/api';
 import { Loader } from '@/components/Loader';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 
 // Dynamic Icon Renderer for database-seeded navigation menus
 const DynamicIcon = ({ name, className }: { name: string; className?: string }) => {
@@ -23,105 +24,8 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
   const activeOrders = usePOSStore((state) => state.activeOrders);
   const { user, token, sidebarItems, logout } = useAuthStore();
   
-  // Profile settings states
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [profileName, setProfileName] = useState(user?.name || '');
-  const [profileRestaurant, setProfileRestaurant] = useState(user?.restaurantName || '');
-  const [profileTaxRate, setProfileTaxRate] = useState('5.0');
-  const [profileServiceCharge, setProfileServiceCharge] = useState('5.0');
-  const [profileAddress, setProfileAddress] = useState('');
-  const [profilePhone, setProfilePhone] = useState('');
-  const [profileGstin, setProfileGstin] = useState('');
-  const [profileLogo, setProfileLogo] = useState('');
-  const [profileThankYouMessage, setProfileThankYouMessage] = useState('');
-  const [profileLoading, setProfileLoading] = useState(false);
-  const [profileError, setProfileError] = useState('');
-  const [profileSuccess, setProfileSuccess] = useState(false);
-
-  const updateUserStore = useAuthStore((state) => state.updateUser);
-
-  useEffect(() => {
-    if (user) {
-      setProfileName(user.name);
-      setProfileRestaurant(user.restaurantName || '');
-    }
-  }, [user]);
-
-  // Fetch restaurant details when profile opens
-  useEffect(() => {
-    if (isProfileOpen && user?.role === 'SUPER_ADMIN') {
-      apiFetch<{
-        defaultTaxRate: number;
-        defaultServiceCharge: number;
-        address: string | null;
-        phone: string | null;
-        gstin: string | null;
-        logo: string | null;
-        thankYouMessage: string | null;
-      }>('/auth/restaurant')
-        .then((data) => {
-          setProfileTaxRate(data.defaultTaxRate.toString());
-          setProfileServiceCharge(data.defaultServiceCharge.toString());
-          setProfileAddress(data.address || '');
-          setProfilePhone(data.phone || '');
-          setProfileGstin(data.gstin || '');
-          setProfileLogo(data.logo || '');
-          setProfileThankYouMessage(data.thankYouMessage || '');
-        })
-        .catch((err) => {
-          console.error('Failed to load restaurant settings:', err);
-        });
-    }
-  }, [isProfileOpen, user?.role]);
-
-  const handleSaveSettings = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setProfileLoading(true);
-    setProfileError('');
-    setProfileSuccess(false);
-
-    try {
-      if (profileName.trim() !== user?.name) {
-        await apiFetch('/auth/profile', {
-          method: 'PATCH',
-          body: { name: profileName.trim() },
-        });
-      }
-
-      const bodyPayload: any = {};
-      if (profileRestaurant.trim() !== user?.restaurantName) {
-        bodyPayload.name = profileRestaurant.trim();
-      }
-
-      if (user?.role === 'SUPER_ADMIN') {
-        bodyPayload.defaultTaxRate = parseFloat(profileTaxRate);
-        bodyPayload.defaultServiceCharge = parseFloat(profileServiceCharge);
-        bodyPayload.address = profileAddress.trim() || null;
-        bodyPayload.phone = profilePhone.trim() || null;
-        bodyPayload.gstin = profileGstin.trim() || null;
-        bodyPayload.logo = profileLogo.trim() || null;
-        bodyPayload.thankYouMessage = profileThankYouMessage.trim() || null;
-      }
-
-      if (Object.keys(bodyPayload).length > 0) {
-        await apiFetch('/auth/restaurant', {
-          method: 'PATCH',
-          body: bodyPayload,
-        });
-      }
-
-      updateUserStore(profileName.trim(), profileRestaurant.trim());
-      setProfileSuccess(true);
-      setTimeout(() => {
-        setProfileSuccess(false);
-        setIsProfileOpen(false);
-      }, 1000);
-    } catch (err: any) {
-      setProfileError(err.message || 'Failed to update settings.');
-    } finally {
-      setProfileLoading(false);
-    }
-  };
+  // Settings dropdown state
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   
   // Theme state
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
@@ -331,14 +235,51 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
               </span>
             </div>
 
-            {/* Profile Settings Button */}
-            <button
-              onClick={() => setIsProfileOpen(true)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-coral-500 active:scale-95 transition-all cursor-pointer"
-              title="Profile Settings"
-            >
-              <LucideIcons.User className="h-4.5 w-4.5" />
-            </button>
+            {/* Settings Dropdown Button */}
+            <div className="relative">
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className={`flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-coral-500 active:scale-95 transition-all cursor-pointer ${
+                  isDropdownOpen ? 'text-coral-500 border-coral-200 dark:border-coral-800' : ''
+                }`}
+                title="Settings"
+              >
+                <LucideIcons.Settings className="h-4.5 w-4.5" />
+              </button>
+
+              {isDropdownOpen && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-30" 
+                    onClick={() => setIsDropdownOpen(false)}
+                  />
+                  <div className="absolute right-0 mt-2 z-40 w-48 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 py-1.5 shadow-xl transition-all">
+                    <button
+                      onClick={() => {
+                        router.push('/settings');
+                        setIsDropdownOpen(false);
+                      }}
+                      className="flex w-full items-center gap-2 px-3.5 py-2.5 text-left text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-350 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-coral-500 transition-colors cursor-pointer"
+                    >
+                      <LucideIcons.User className="h-4 w-4" />
+                      <span>Profile Settings</span>
+                    </button>
+                    {user?.role === 'SUPER_ADMIN' && (
+                      <button
+                        onClick={() => {
+                          router.push('/coupons');
+                          setIsDropdownOpen(false);
+                        }}
+                        className="flex w-full items-center gap-2 px-3.5 py-2.5 text-left text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-350 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-coral-500 transition-colors cursor-pointer border-t border-zinc-100 dark:border-zinc-800"
+                      >
+                        <LucideIcons.Ticket className="h-4 w-4" />
+                        <span>Coupons & Promo</span>
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
 
             {/* Light/Dark Toggle */}
             <button
@@ -372,172 +313,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
-
-      {/* PROFILE & RESTAURANT SETTINGS MODAL */}
-      {isProfileOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="w-full max-w-sm rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-2xl transition-all duration-200">
-            <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3 mb-4">
-              <h3 className="text-sm font-black uppercase tracking-wider text-zinc-900 dark:text-zinc-50 flex items-center gap-1.5">
-                <LucideIcons.Settings className="h-4.5 w-4.5 text-coral-500" />
-                <span>Profile Settings</span>
-              </h3>
-              <button 
-                onClick={() => setIsProfileOpen(false)}
-                className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-150 dark:hover:bg-zinc-800 hover:text-zinc-650 dark:hover:text-zinc-100 transition-colors cursor-pointer"
-              >
-                <LucideIcons.X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveSettings} className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
-              {profileError && (
-                <div className="rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 p-2.5 text-[10px] font-semibold text-red-600 dark:text-red-400 flex items-center gap-1.5">
-                  <LucideIcons.AlertCircle className="h-3.5 w-3.5 shrink-0" />
-                  <span>{profileError}</span>
-                </div>
-              )}
-              {profileSuccess && (
-                <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-250 dark:border-emerald-900 p-2.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-450 flex items-center gap-1.5">
-                  <LucideIcons.Check className="h-3.5 w-3.5 shrink-0" />
-                  <span>Settings updated successfully!</span>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">Staff Member Name</label>
-                <input 
-                  type="text" 
-                  value={profileName}
-                  onChange={(e) => setProfileName(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-xs font-semibold outline-none focus:border-coral-500 text-zinc-900 dark:text-zinc-100"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">Restaurant Name</label>
-                <input 
-                  type="text" 
-                  value={profileRestaurant}
-                  onChange={(e) => setProfileRestaurant(e.target.value)}
-                  disabled={user?.role !== 'SUPER_ADMIN'}
-                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-xs font-semibold outline-none focus:border-coral-500 text-zinc-900 dark:text-zinc-100 disabled:opacity-60 disabled:cursor-not-allowed"
-                  required
-                />
-              </div>
-
-              {user?.role === 'SUPER_ADMIN' && (
-                <div className="border-t border-zinc-100 dark:border-zinc-800 pt-3 mt-3 space-y-4">
-                  <span className="block text-[10px] font-black uppercase tracking-wider text-coral-500 font-bold mb-1">POS & Invoice Configuration</span>
-                  
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1 font-bold">Default Tax (GST %)</label>
-                      <input 
-                        type="number" 
-                        step="0.1"
-                        min="0"
-                        value={profileTaxRate}
-                        onChange={(e) => setProfileTaxRate(e.target.value)}
-                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-2.5 py-1.5 text-xs font-semibold outline-none focus:border-coral-500 text-zinc-900 dark:text-zinc-100"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1 font-bold">Service Charge (%)</label>
-                      <input 
-                        type="number" 
-                        step="0.1"
-                        min="0"
-                        value={profileServiceCharge}
-                        onChange={(e) => setProfileServiceCharge(e.target.value)}
-                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-2.5 py-1.5 text-xs font-semibold outline-none focus:border-coral-500 text-zinc-900 dark:text-zinc-100"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1 font-bold">Store Phone</label>
-                      <input 
-                        type="text" 
-                        value={profilePhone}
-                        onChange={(e) => setProfilePhone(e.target.value)}
-                        placeholder="+1 (555) 000-0000"
-                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-2.5 py-1.5 text-xs font-semibold outline-none focus:border-coral-500 text-zinc-900 dark:text-zinc-100"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1 font-bold">GSTIN / Tax ID</label>
-                      <input 
-                        type="text" 
-                        value={profileGstin}
-                        onChange={(e) => setProfileGstin(e.target.value)}
-                        placeholder="27AAAAA1111A1Z1"
-                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-2.5 py-1.5 text-xs font-semibold outline-none focus:border-coral-500 text-zinc-900 dark:text-zinc-100"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1 font-bold">Store Address</label>
-                    <input 
-                      type="text" 
-                      value={profileAddress}
-                      onChange={(e) => setProfileAddress(e.target.value)}
-                      placeholder="123 Main St, City, Country"
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-xs font-semibold outline-none focus:border-coral-500 text-zinc-900 dark:text-zinc-100"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1 font-bold">Store Logo (URL or Symbol)</label>
-                    <input 
-                      type="text" 
-                      value={profileLogo}
-                      onChange={(e) => setProfileLogo(e.target.value)}
-                      placeholder="e.g. 🍔 or https://logo-url"
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-xs font-semibold outline-none focus:border-coral-500 text-zinc-900 dark:text-zinc-100"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1 font-bold">Custom Invoice Footer</label>
-                    <input 
-                      type="text" 
-                      value={profileThankYouMessage}
-                      onChange={(e) => setProfileThankYouMessage(e.target.value)}
-                      placeholder="Thank you for dining with us!"
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-xs font-semibold outline-none focus:border-coral-500 text-zinc-900 dark:text-zinc-100"
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div className="flex gap-2.5 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsProfileOpen(false)}
-                  className="flex-1 rounded-lg border border-zinc-250 dark:border-zinc-850 bg-white dark:bg-zinc-900 py-2.5 text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={profileLoading}
-                  className="flex-1 rounded-lg bg-coral-500 hover:bg-coral-600 text-white py-2.5 text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50 flex items-center justify-center gap-1 cursor-pointer"
-                >
-                  {profileLoading ? (
-                    <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                  ) : 'Save Changes'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog />
     </div>
   );
 }
