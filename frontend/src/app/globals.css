@@ -3,16 +3,16 @@
 @variant dark (.dark &); /* Support class-based dark mode in Tailwind v4 */
 
 @theme {
-  --color-coral-50: #fff5f2;
-  --color-coral-100: #ffe5dd;
-  --color-coral-200: #ffd0c0;
-  --color-coral-300: #ffa58b;
-  --color-coral-400: #ff7352;
-  --color-coral-500: #ff542d; /* Primary Coral Accent */
-  --color-coral-600: #ff360a;
-  --color-coral-700: #d62600;
-  --color-coral-800: #b02000;
-  --color-coral-900: #8e1f04;
+  --color-coral-50: #f5f3ff;
+  --color-coral-100: #ede9fe;
+  --color-coral-200: #ddd6fe;
+  --color-coral-300: #c4b5fd;
+  --color-coral-400: #a78bfa;
+  --color-coral-500: #8b5cf6; /* Primary Purple Accent */
+  --color-coral-600: #7c3aed;
+  --color-coral-700: #6d28d9;
+  --color-coral-800: #5b21b6;
+  --color-coral-900: #4c1d95;
 
   --color-primary: var(--color-coral-500);
   --color-primary-hover: var(--color-coral-600);
@@ -51,57 +51,57 @@ body {
 }
 
 /* FAIL-SAFE CUSTOM UTILITIES FOR CORAL COLORS */
-.bg-coral-50 { background-color: #fff5f2 !important; }
-.bg-coral-100 { background-color: #ffe5dd !important; }
-.bg-coral-200 { background-color: #ffd0c0 !important; }
-.bg-coral-300 { background-color: #ffa58b !important; }
-.bg-coral-400 { background-color: #ff7352 !important; }
-.bg-coral-500 { background-color: #ff542d !important; }
-.bg-coral-600 { background-color: #ff360a !important; }
-.bg-coral-700 { background-color: #d62600 !important; }
-.bg-coral-800 { background-color: #b02000 !important; }
-.bg-coral-900 { background-color: #8e1f04 !important; }
+.bg-coral-50 { background-color: #f5f3ff !important; }
+.bg-coral-100 { background-color: #ede9fe !important; }
+.bg-coral-200 { background-color: #ddd6fe !important; }
+.bg-coral-300 { background-color: #c4b5fd !important; }
+.bg-coral-400 { background-color: #a78bfa !important; }
+.bg-coral-500 { background-color: #8b5cf6 !important; }
+.bg-coral-600 { background-color: #7c3aed !important; }
+.bg-coral-700 { background-color: #6d28d9 !important; }
+.bg-coral-800 { background-color: #5b21b6 !important; }
+.bg-coral-900 { background-color: #4c1d95 !important; }
 
 /* Dark mode overrides for background elements if needed */
-.dark .dark\:bg-coral-950\/10 { background-color: rgba(255, 84, 45, 0.1) !important; }
-.dark .dark\:bg-coral-950\/20 { background-color: rgba(255, 84, 45, 0.2) !important; }
-.dark .dark\:bg-coral-950\/30 { background-color: rgba(255, 84, 45, 0.3) !important; }
+.dark .dark\:bg-coral-950\/10 { background-color: rgba(139, 92, 246, 0.1) !important; }
+.dark .dark\:bg-coral-950\/20 { background-color: rgba(139, 92, 246, 0.2) !important; }
+.dark .dark\:bg-coral-950\/30 { background-color: rgba(139, 92, 246, 0.3) !important; }
 
 /* Hover transitions */
-.hover\:bg-coral-600:hover { background-color: #ff360a !important; }
-.hover\:bg-coral-700:hover { background-color: #d62600 !important; }
-.hover\:bg-coral-500:hover { background-color: #ff542d !important; }
+.hover\:bg-coral-600:hover { background-color: #7c3aed !important; }
+.hover\:bg-coral-700:hover { background-color: #6d28d9 !important; }
+.hover\:bg-coral-500:hover { background-color: #8b5cf6 !important; }
 
 /* Text configurations */
-.text-coral-50 { color: #fff5f2 !important; }
-.text-coral-100 { color: #ffe5dd !important; }
-.text-coral-500 { color: #ff542d !important; }
-.text-coral-600 { color: #ff360a !important; }
-.text-coral-700 { color: #d62600 !important; }
-.text-coral-750 { color: #b02000 !important; }
-.text-coral-900 { color: #8e1f04 !important; }
+.text-coral-50 { color: #f5f3ff !important; }
+.text-coral-100 { color: #ede9fe !important; }
+.text-coral-500 { color: #8b5cf6 !important; }
+.text-coral-600 { color: #7c3aed !important; }
+.text-coral-700 { color: #6d28d9 !important; }
+.text-coral-750 { color: #5b21b6 !important; }
+.text-coral-900 { color: #4c1d95 !important; }
 
-.dark .dark\:text-coral-100 { color: #ffe5dd !important; }
-.dark .dark\:text-coral-400 { color: #ffa58b !important; }
-.dark .dark\:text-coral-450 { color: #ff7352 !important; }
+.dark .dark\:text-coral-100 { color: #ede9fe !important; }
+.dark .dark\:text-coral-400 { color: #c4b5fd !important; }
+.dark .dark\:text-coral-450 { color: #a78bfa !important; }
 
 /* Borders */
-.border-coral-100 { border-color: #ffe5dd !important; }
-.border-coral-200 { border-color: #ffd0c0 !important; }
-.border-coral-250 { border-color: #ffa58b !important; }
-.border-coral-400 { border-color: #ff7352 !important; }
-.border-coral-500 { border-color: #ff542d !important; }
-.border-coral-900 { border-color: #8e1f04 !important; }
+.border-coral-100 { border-color: #ede9fe !important; }
+.border-coral-200 { border-color: #ddd6fe !important; }
+.border-coral-250 { border-color: #c4b5fd !important; }
+.border-coral-400 { border-color: #a78bfa !important; }
+.border-coral-500 { border-color: #8b5cf6 !important; }
+.border-coral-900 { border-color: #4c1d95 !important; }
 
-.dark .dark\:border-coral-900 { border-color: #8e1f04 !important; }
+.dark .dark\:border-coral-900 { border-color: #4c1d95 !important; }
 
 /* Focus outlines */
-.focus\:border-coral-500:focus { border-color: #ff542d !important; }
-.focus\:ring-coral-500:focus { --tw-ring-color: #ff542d !important; }
+.focus\:border-coral-500:focus { border-color: #8b5cf6 !important; }
+.focus\:ring-coral-500:focus { --tw-ring-color: #8b5cf6 !important; }
 
 /* Shadows */
 .shadow-coral-100 {
-  --tw-shadow-color: rgba(255, 84, 45, 0.15) !important;
+  --tw-shadow-color: rgba(139, 92, 246, 0.15) !important;
   --tw-shadow: 0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color) !important;
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow) !important;
 }
