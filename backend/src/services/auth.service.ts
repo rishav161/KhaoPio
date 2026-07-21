@@ -11,98 +11,47 @@ export class AuthService {
   /**
    * Registers the very first SUPER_ADMIN in the system.
    */
-  async registerFirstAdmin(data: { name: string; email: string; passwordHash: string; restaurantName?: string; menuItems?: any[] }) {
-    // Verify that the email was verified with OTP first
-    const verification = await prisma.otpVerification.findUnique({
-      where: { email: data.email.toLowerCase() },
-    });
-
-    if (!verification || !verification.isVerified) {
-      throw new Error('Email address has not been verified with OTP.');
-    }
-
-    // Check if SUPER_ADMIN role exists
-    const superAdminRole = await prisma.role.findUnique({
-      where: { name: RoleName.SUPER_ADMIN },
-    });
-
-    if (!superAdminRole) {
-      throw new Error('SUPER_ADMIN role not found in database. Run seed first.');
-    }
-
-    const hashed = await bcrypt.hash(data.passwordHash, 10);
-
-    // 1. Create the restaurant
+  async completeAdminOnboarding(userId: string, data: { restaurantName: string; restaurantPhone: string; restaurantAddress?: string }) {
+    // 1. Create the restaurant with onboarding details
     const restaurant = await prisma.restaurant.create({
       data: {
-        name: data.restaurantName || 'KhaoPio Restaurant',
+        name: data.restaurantName,
+        phone: data.restaurantPhone,
+        address: data.restaurantAddress,
       },
     });
 
-    // 2. Create the user
-    const newAdmin = await prisma.user.create({
+    // 2. Link the user to the restaurant
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
       data: {
-        name: data.name,
-        email: data.email.toLowerCase(),
-        passwordHash: hashed,
-        status: 'ACTIVE',
-        roleId: superAdminRole.id,
         restaurantId: restaurant.id,
       },
       include: {
         role: true,
+        restaurant: {
+          select: {
+            name: true,
+          },
+        },
       },
     });
 
-    // 3. Bootstrap selected seed menu items if provided
-    if (data.menuItems && Array.isArray(data.menuItems)) {
-      for (const item of data.menuItems) {
-        // Find or create category
-        let category = await prisma.menuCategory.findFirst({
-          where: {
-            name: item.category,
-            restaurantId: restaurant.id,
-          },
-        });
-
-        if (!category) {
-          category = await prisma.menuCategory.create({
-            data: {
-              name: item.category,
-              restaurantId: restaurant.id,
-            },
-          });
-        }
-
-        // Create menu item
-        await prisma.menuItem.create({
-          data: {
-            name: item.name,
-            description: item.description || '',
-            price: parseFloat(item.price),
-            image: item.image || '',
-            code: item.code,
-            categoryId: category.id,
-            restaurantId: restaurant.id,
-            isAvailable: true,
-          },
-        });
-      }
+    // Cleanup OTP Verification
+    if (updatedUser.email) {
+      await prisma.otpVerification.delete({
+        where: { email: updatedUser.email.toLowerCase() },
+      }).catch(() => {});
     }
 
-    // Cleanup OTP Verification
-    await prisma.otpVerification.delete({
-      where: { email: data.email.toLowerCase() },
-    }).catch(() => {});
-
-    // Fetch all permissions linked to the SUPER_ADMIN role
+    // Fetch all permissions linked to the user's role
     const dbPermissions = await prisma.rolePermission.findMany({
-      where: { roleId: superAdminRole.id },
+      where: { roleId: updatedUser.roleId },
       include: { permission: true },
     });
     const permissions = dbPermissions.map((dp) => dp.permission.name);
 
-    return this.generateUserResponse(newAdmin, permissions);
+    return this.generateUserResponse(updatedUser, permissions);
   }
 
   /**
@@ -145,16 +94,18 @@ export class AuthService {
       },
     });
 
-    // Send the OTP via email
-    await emailService.sendOtpEmail(email.toLowerCase(), otp);
+    // Send the OTP via email in the background to keep the registration flow responsive
+    emailService.sendOtpEmail(email.toLowerCase(), otp).catch((error) => {
+      console.error(`[Background Email Error] Failed to send OTP email to ${email}:`, error.message || error);
+    });
 
     return { otp };
   }
 
   /**
-   * Verifies the OTP code for Super Admin email verification.
+   * Verifies the OTP code and creates the SUPER_ADMIN user (without a restaurant yet).
    */
-  async verifyAdminOtp(email: string, otp: string): Promise<boolean> {
+  async verifyAdminOtpAndCreateUser(email: string, otp: string, name: string, passwordHash: string) {
     const record = await prisma.otpVerification.findUnique({
       where: { email: email.toLowerCase() },
     });
@@ -171,12 +122,48 @@ export class AuthService {
       throw new Error('Verification code has expired. Please request a new one.');
     }
 
+    // Check if SUPER_ADMIN role exists
+    const superAdminRole = await prisma.role.findUnique({
+      where: { name: RoleName.SUPER_ADMIN },
+    });
+
+    if (!superAdminRole) {
+      throw new Error('SUPER_ADMIN role not found in database. Run seed first.');
+    }
+
+
+
+    const hashed = await bcrypt.hash(passwordHash, 10);
+
+    // Create the User with null restaurantId
+    const newAdmin = await prisma.user.create({
+      data: {
+        name,
+        email: email.toLowerCase(),
+        passwordHash: hashed,
+        status: 'ACTIVE',
+        roleId: superAdminRole.id,
+        restaurantId: null,
+      },
+      include: {
+        role: true,
+      },
+    });
+
+    // Mark OTP as verified
     await prisma.otpVerification.update({
       where: { email: email.toLowerCase() },
       data: { isVerified: true },
     });
 
-    return true;
+    // Fetch permissions linked to SUPER_ADMIN role
+    const dbPermissions = await prisma.rolePermission.findMany({
+      where: { roleId: superAdminRole.id },
+      include: { permission: true },
+    });
+    const permissions = dbPermissions.map((dp) => dp.permission.name);
+
+    return this.generateUserResponse(newAdmin, permissions);
   }
 
 

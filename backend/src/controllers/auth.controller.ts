@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import prisma from '../prisma';
 import authService from '../services/auth.service';
 import emailService from '../services/email.service';
 import { RoleName } from '@prisma/client';
@@ -6,24 +7,34 @@ import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 
 export const registerAdmin = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, email, password, restaurantName, menuItems } = req.body;
+    const { restaurantName, restaurantPhone, restaurantAddress } = req.body;
+    const userId = (req as AuthenticatedRequest).user?.id;
 
-    if (!name || !email || !password) {
-      res.status(400).json({ error: 'Fields "name", "email", and "password" are required.' });
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized. Admin user context is missing.' });
       return;
     }
 
-    const result = await authService.registerFirstAdmin({
-      name,
-      email,
-      passwordHash: password,
+    if (!restaurantName || !restaurantPhone) {
+      res.status(400).json({ error: 'Restaurant name and phone number are required.' });
+      return;
+    }
+
+    const result = await authService.completeAdminOnboarding(userId, {
       restaurantName,
-      menuItems,
+      restaurantPhone,
+      restaurantAddress,
     });
 
-    res.status(201).json(result);
+    res.status(200).json(result);
   } catch (error: any) {
-    res.status(400).json({ error: error.message || 'Error registering admin.' });
+    let message = error.message || 'Error completing onboarding.';
+    if (error.code === 'P2002') {
+      message = 'A restaurant with this name already exists.';
+    } else if (message.includes('Prisma') || message.includes('database') || message.includes('connect')) {
+      message = 'A database connection or system error occurred. Please try again.';
+    }
+    res.status(400).json({ error: message });
   }
 };
 
@@ -213,16 +224,20 @@ export const initRegister = async (req: Request, res: Response): Promise<void> =
 
 export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, otp } = req.body;
-    if (!email || !otp) {
-      res.status(400).json({ error: 'Fields "email" and "otp" are required.' });
+    const { email, otp, name, password } = req.body;
+    if (!email || !otp || !name || !password) {
+      res.status(400).json({ error: 'All fields (email, otp, name, and password) are required.' });
       return;
     }
 
-    await authService.verifyAdminOtp(email, otp);
-    res.status(200).json({ message: 'Email address verified successfully.' });
+    const result = await authService.verifyAdminOtpAndCreateUser(email, otp, name, password);
+    res.status(200).json(result);
   } catch (error: any) {
-    res.status(400).json({ error: error.message || 'Error verifying OTP.' });
+    let message = error.message || 'Error verifying OTP.';
+    if (error.code === 'P2002') {
+      message = 'A user with this email address is already registered.';
+    }
+    res.status(400).json({ error: message });
   }
 };
 

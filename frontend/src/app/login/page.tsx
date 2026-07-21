@@ -20,10 +20,15 @@ export default function Login() {
     setIsMounted(true);
   }, []);
 
+
+
   // If already authenticated, redirect to starting dashboard/billing immediately
   useEffect(() => {
     if (isMounted && token) {
-      if (useAuthStore.getState().user?.role === 'SUPER_ADMIN') {
+      const user = useAuthStore.getState().user;
+      if (user && !user.restaurantId) {
+        router.push('/register-admin');
+      } else if (user?.role === 'SUPER_ADMIN') {
         router.push('/dashboard');
       } else {
         router.push('/billing');
@@ -79,7 +84,9 @@ export default function Login() {
       setSidebarItems(sidebarItems);
 
       // Redirect
-      if (response.user.role === 'SUPER_ADMIN') {
+      if (!response.user.restaurantId) {
+        router.push('/register-admin');
+      } else if (response.user.role === 'SUPER_ADMIN') {
         router.push('/dashboard');
       } else {
         router.push('/billing');

@@ -131,12 +131,16 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
     setIsMounted(true);
   }, []);
 
-  // Guard the routes: Redirect to login if token is missing
+  // Guard the routes: Redirect to login if token is missing, or to onboarding if restaurantId is missing
   useEffect(() => {
-    if (isMounted && !token) {
-      router.push('/login');
+    if (isMounted) {
+      if (!token) {
+        router.push('/login');
+      } else if (user && !user.restaurantId) {
+        router.push('/register-admin');
+      }
     }
-  }, [token, router, isMounted]);
+  }, [token, user, router, isMounted]);
 
   // Load and apply theme on mount
   useEffect(() => {

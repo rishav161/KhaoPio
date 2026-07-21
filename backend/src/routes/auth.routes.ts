@@ -23,7 +23,7 @@ const router = Router();
 // Public onboarding / auth routes
 router.post('/register-init', initRegister);
 router.post('/register-verify-otp', verifyOtp);
-router.post('/register-admin', registerAdmin);
+router.post('/register-admin', authenticateJWT, registerAdmin);
 router.post('/login', loginEmail);
 router.get('/invitation/:token', verifyInvitation);
 router.post('/accept-invite', acceptInvitation);

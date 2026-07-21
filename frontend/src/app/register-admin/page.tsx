@@ -11,22 +11,6 @@ import { apiFetch } from '@/utils/api';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Loader } from '@/components/Loader';
 
-const SEED_TEMPLATE_ITEMS = [
-  { name: 'Classic Cheese Burger', price: 6.99, category: 'Burgers', image: '🍔', description: 'Flame-grilled beef patty, melted cheddar, lettuce, tomato, house sauce', code: 'B01' },
-  { name: 'Double BBQ Bacon Burger', price: 8.99, category: 'Burgers', image: '🥓', description: 'Double beef patty, crispy bacon, cheddar, crispy onions, smoky BBQ sauce', code: 'B02' },
-  { name: 'Spicy Crispy Chicken Burger', price: 7.49, category: 'Burgers', image: '🍗', description: 'Crispy fried chicken breast, spicy mayo, pickles, shredded lettuce', code: 'B03' },
-  { name: 'Classic Margherita Pizza', price: 10.99, category: 'Pizzas', image: '🍕', description: 'San Marzano tomato sauce, fresh mozzarella, fresh basil, olive oil', code: 'P01' },
-  { name: 'Pepperoni Supreme Pizza', price: 12.99, category: 'Pizzas', image: '🍕', description: 'Double pepperoni, mozzarella cheese, spicy marinara sauce', code: 'P02' },
-  { name: 'Truffle Mushroom Pizza', price: 13.49, category: 'Pizzas', image: '🍄', description: 'Cremini mushrooms, white truffle oil, fontina, fresh arugula', code: 'P03' },
-  { name: 'Golden French Fries', price: 3.49, category: 'Sides', image: '🍟', description: 'Crispy golden fries, sea salt, served with ketchup', code: 'S01' },
-  { name: 'Garlic Bread with Cheese', price: 4.99, category: 'Sides', image: '🥖', description: 'Toasted baguette with garlic butter, mozzarella, herbs', code: 'S02' },
-  { name: 'Mozzarella Sticks', price: 5.49, category: 'Sides', image: '🧀', description: 'Crispy breaded mozzarella cheese sticks, marinara dipping sauce', code: 'S03' },
-  { name: 'Iced Caramel Macchiato', price: 4.49, category: 'Drinks', image: '☕', description: 'Espresso, vanilla syrup, cold milk, caramel drizzle', code: 'D01' },
-  { name: 'Lemon Mint Cooler', price: 3.29, category: 'Drinks', image: '🥤', description: 'Freshly squeezed lemon juice, crushed mint leaves, club soda', code: 'D02' },
-  { name: 'Coca Cola Zero', price: 1.99, category: 'Drinks', image: '🥤', description: 'Chilled canned Coca-Cola Zero Sugar', code: 'D03' },
-  { name: 'Chocolate Fudge Brownie', price: 5.49, category: 'Desserts', image: '🍫', description: 'Warm, gooey chocolate fudge brownie with chocolate drizzle', code: 'E01' },
-  { name: 'New York Blueberry Cheesecake', price: 6.99, category: 'Desserts', image: '🍰', description: 'Rich, creamy classic cheesecake topped with sweet blueberry compote', code: 'E02' }
-];
 
 export default function RegisterAdmin() {
   const router = useRouter();
@@ -38,19 +22,34 @@ export default function RegisterAdmin() {
     setIsMounted(true);
   }, []);
 
-  // Redirect if already logged in
+  // Redirect if already logged in and onboarding is completed
   useEffect(() => {
     if (isMounted && token) {
-      if (useAuthStore.getState().user?.role === 'SUPER_ADMIN') {
-        router.push('/dashboard');
-      } else {
-        router.push('/billing');
+      const user = useAuthStore.getState().user;
+      if (user && user.restaurantId) {
+        if (user.role === 'SUPER_ADMIN') {
+          router.push('/dashboard');
+        } else {
+          router.push('/billing');
+        }
       }
     }
   }, [token, router, isMounted]);
 
+
+
   // Setup step
   const [step, setStep] = useState<1 | 2 | 3>(1);
+
+  // Skip to step 3 if logged in but missing restaurantId
+  useEffect(() => {
+    if (isMounted && token) {
+      const user = useAuthStore.getState().user;
+      if (user && !user.restaurantId) {
+        setStep(3);
+      }
+    }
+  }, [token, isMounted]);
 
   // Form fields
   const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
@@ -58,18 +57,8 @@ export default function RegisterAdmin() {
   const [otpInput, setOtpInput] = useState('');
   const [debugOtp, setDebugOtp] = useState('');
   
-  // Selected seed template codes
-  const [selectedCodes, setSelectedCodes] = useState<string[]>(
-    SEED_TEMPLATE_ITEMS.map((item) => item.code)
-  );
-  
-  // Customizable item prices mapping
-  const [itemPrices, setItemPrices] = useState<Record<string, string>>(
-    SEED_TEMPLATE_ITEMS.reduce((acc, item) => {
-      acc[item.code] = item.price.toString();
-      return acc;
-    }, {} as Record<string, string>)
-  );
+  const [restaurantPhone, setRestaurantPhone] = useState('');
+  const [restaurantAddress, setRestaurantAddress] = useState('');
 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -127,10 +116,18 @@ export default function RegisterAdmin() {
 
     setLoading(true);
     try {
-      await apiFetch('/auth/register-verify-otp', {
+      const response = await apiFetch('/auth/register-verify-otp', {
         method: 'POST',
-        body: { email: form.email, otp: otpInput },
+        body: {
+          email: form.email,
+          otp: otpInput,
+          name: form.name,
+          password: form.password,
+        },
       });
+
+      // Save credentials in Zustand store (logs in the user)
+      setAuth(response.user, response.token, response.permissions);
 
       setStep(3);
     } catch (err: unknown) {
@@ -141,22 +138,7 @@ export default function RegisterAdmin() {
     }
   };
 
-  // Toggle template item select state
-  const toggleItemSelection = (code: string) => {
-    if (selectedCodes.includes(code)) {
-      setSelectedCodes(selectedCodes.filter((c) => c !== code));
-    } else {
-      setSelectedCodes([...selectedCodes, code]);
-    }
-  };
 
-  // Update customized price
-  const updateItemPrice = (code: string, priceStr: string) => {
-    setItemPrices({
-      ...itemPrices,
-      [code]: priceStr.replace(/[^0-9.]/g, ''),
-    });
-  };
 
   // Handle final signup submit
   const handleSubmit = async () => {
@@ -167,28 +149,23 @@ export default function RegisterAdmin() {
       return;
     }
 
+    if (!restaurantPhone.trim()) {
+      setError('Please enter your Restaurant Phone Number.');
+      return;
+    }
+
     setLoading(true);
     try {
-      // Build selected menu items payload
-      const bootstrappedMenuItems = SEED_TEMPLATE_ITEMS.filter((item) =>
-        selectedCodes.includes(item.code)
-      ).map((item) => ({
-        ...item,
-        price: parseFloat(itemPrices[item.code]) || item.price,
-      }));
-
       const response = await apiFetch('/auth/register-admin', {
         method: 'POST',
         body: {
-          name: form.name,
-          email: form.email,
-          password: form.password,
           restaurantName: restaurantName.trim(),
-          menuItems: bootstrappedMenuItems,
+          restaurantPhone: restaurantPhone.trim(),
+          restaurantAddress: restaurantAddress.trim(),
         },
       });
 
-      // Save credentials in Zustand store
+      // Update credentials in Zustand store with the new session token
       setAuth(response.user, response.token, response.permissions);
       setSuccess(true);
       
@@ -207,10 +184,7 @@ export default function RegisterAdmin() {
     }
   };
 
-  // Group templates by category
-  const categories = ['Burgers', 'Pizzas', 'Sides', 'Drinks', 'Desserts'];
-
-  if (!isMounted || token) {
+  if (!isMounted || (token && useAuthStore.getState().user?.restaurantId)) {
     return (
       <Loader
         size="lg"
@@ -271,7 +245,7 @@ export default function RegisterAdmin() {
                   type="text"
                   placeholder="e.g. Rahul Sen"
                   value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  onChange={(e) => setForm({ ...form, name: e.target.value.replace(/[^a-zA-Z\s'\-]/g, '') })}
                   className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-1 focus:ring-coral-500"
                   required
                 />
@@ -413,15 +387,15 @@ export default function RegisterAdmin() {
             </div>
           </form>
         ) : (
-          /* STEP 3: Restaurant Name & Menu bootstrapping template selection */
-          <div className="space-y-6">
+          /* STEP 3: Restaurant Details */
+          <div className="space-y-4">
             <div>
               <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
                 Restaurant Name
               </label>
               <input
                 type="text"
-                placeholder="e.g. Spicy Affair"
+                placeholder="e.g. KhaoPio Restaurant"
                 value={restaurantName}
                 onChange={(e) => setRestaurantName(e.target.value)}
                 className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-3.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-1 focus:ring-coral-500"
@@ -429,85 +403,31 @@ export default function RegisterAdmin() {
               />
             </div>
 
-            {/* Menu Template Selection */}
             <div>
-              <div className="flex items-center justify-between mb-3 border-b border-zinc-200 dark:border-zinc-800 pb-2">
-                <h3 className="text-xs font-black uppercase tracking-wider text-coral-500">
-                  Select Quick-Start Food Menu Templates
-                </h3>
-                <span className="text-[10px] font-bold text-zinc-400">
-                  {selectedCodes.length} of {SEED_TEMPLATE_ITEMS.length} selected
-                </span>
-              </div>
-              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mb-4 font-semibold">
-                Pick food items to populate your restaurant menu immediately. You can modify prices below or toggle item imports.
-              </p>
+              <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
+                Restaurant Phone Number
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. +91 98765 43210"
+                value={restaurantPhone}
+                onChange={(e) => setRestaurantPhone(e.target.value.replace(/[^0-9+\-\s()]/g, ''))}
+                className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-3.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-1 focus:ring-coral-500"
+                required
+              />
+            </div>
 
-              {/* Categorized Menu Scrollbox */}
-              <div className="max-h-72 overflow-y-auto space-y-4 pr-1">
-                {categories.map((category) => {
-                  const categoryItems = SEED_TEMPLATE_ITEMS.filter(
-                    (item) => item.category === category
-                  );
-
-                  return (
-                    <div key={category} className="space-y-2">
-                      <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 border-l-2 border-coral-500 pl-2">
-                        {category}
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        {categoryItems.map((item) => {
-                          const isSelected = selectedCodes.includes(item.code);
-                          return (
-                            <div 
-                              key={item.code}
-                              onClick={() => toggleItemSelection(item.code)}
-                              className={`flex items-center justify-between gap-2 p-2.5 rounded-xl border transition-all cursor-pointer select-none ${
-                                isSelected
-                                  ? 'bg-coral-50/20 dark:bg-coral-950/10 border-coral-400'
-                                  : 'bg-zinc-50/50 dark:bg-zinc-950/20 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100/40 dark:hover:bg-zinc-900/50'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2 min-w-0">
-                                <span className={`flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded border transition-all ${
-                                  isSelected 
-                                    ? 'bg-coral-500 border-coral-500 text-white' 
-                                    : 'border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950'
-                                }`}>
-                                  {isSelected && <Check className="h-3.5 w-3.5" />}
-                                </span>
-                                <span className="text-sm shrink-0">{item.image}</span>
-                                <div className="min-w-0">
-                                  <div className={`text-xs font-black truncate leading-tight ${isSelected ? 'text-zinc-950 dark:text-zinc-50' : 'text-zinc-500'}`}>
-                                    {item.name}
-                                  </div>
-                                  <span className="text-[9px] font-black tracking-wider text-zinc-400 font-mono">
-                                    {item.code}
-                                  </span>
-                                </div>
-                              </div>
-
-                              {/* Price customization input */}
-                              <div 
-                                className="flex items-center gap-1 shrink-0"
-                                onClick={(e) => e.stopPropagation()} // Prevent toggling selection
-                              >
-                                <span className="text-[10px] font-black text-zinc-400 font-mono">$</span>
-                                <input
-                                  type="text"
-                                  value={itemPrices[item.code]}
-                                  onChange={(e) => updateItemPrice(item.code, e.target.value)}
-                                  className="w-12 text-center rounded border border-zinc-250 dark:border-zinc-800 bg-white dark:bg-zinc-950 py-0.5 text-xs font-extrabold text-zinc-800 dark:text-zinc-100 outline-none focus:border-coral-500"
-                                />
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+            <div>
+              <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
+                Restaurant Address
+              </label>
+              <textarea
+                placeholder="e.g. 123 Main Street, City Name, Pin Code"
+                value={restaurantAddress}
+                onChange={(e) => setRestaurantAddress(e.target.value)}
+                rows={3}
+                className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-3.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-1 focus:ring-coral-500 resize-none"
+              />
             </div>
 
             {/* Back and Submit Actions */}

@@ -27,6 +27,9 @@ export class EmailService {
         user: SMTP_USER,
         pass: SMTP_PASS,
       },
+      connectionTimeout: 5000, // 5 seconds
+      greetingTimeout: 5000,   // 5 seconds
+      socketTimeout: 10000,    // 10 seconds
     });
   }
 

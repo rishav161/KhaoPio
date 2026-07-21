@@ -29,6 +29,7 @@ interface AuthState {
   setAuth: (user: User, token: string, permissions: string[]) => void;
   setSidebarItems: (items: SidebarItem[]) => void;
   updateUser: (name: string, restaurantName?: string) => void;
+  updateUserRestaurant: (restaurantId: string, restaurantName: string) => void;
   logout: () => void;
 }
 
@@ -55,6 +56,17 @@ export const useAuthStore = create<AuthState>()(
             ...state.user,
             name,
             ...(restaurantName !== undefined ? { restaurantName } : {}),
+          }
+        };
+      }),
+
+      updateUserRestaurant: (restaurantId, restaurantName) => set((state) => {
+        if (!state.user) return {};
+        return {
+          user: {
+            ...state.user,
+            restaurantId,
+            restaurantName,
           }
         };
       }),
