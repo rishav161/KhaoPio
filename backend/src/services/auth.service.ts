@@ -32,10 +32,11 @@ export class AuthService {
         restaurant: {
           select: {
             name: true,
+            currency: true,
           },
         },
       },
-    });
+    } as any);
 
     // Cleanup OTP Verification
     if (updatedUser.email) {
@@ -185,11 +186,12 @@ export class AuthService {
         },
         restaurant: {
           select: {
-            name: true
+            name: true,
+            currency: true,
           }
         }
       },
-    });
+    } as any);
 
     if (!user || !user.passwordHash || user.status !== 'ACTIVE') {
       throw new Error('Invalid email, password, or inactive account.');
@@ -200,7 +202,7 @@ export class AuthService {
       throw new Error('Invalid email or password.');
     }
 
-    const permissions = user.role.permissions.map((rp) => rp.permission.name);
+    const permissions = (user as any).role.permissions.map((rp: any) => rp.permission.name);
     return this.generateUserResponse(user, permissions);
   }
 
@@ -355,11 +357,12 @@ export class AuthService {
         },
         restaurant: {
           select: {
-            name: true
+            name: true,
+            currency: true,
           }
         }
       },
-    });
+    } as any);
 
     if (!user || !user.pin || user.status !== 'ACTIVE') {
       throw new Error('Invalid email or PIN.');
@@ -370,7 +373,7 @@ export class AuthService {
       throw new Error('Invalid email or PIN.');
     }
 
-    const permissions = user.role.permissions.map((rp) => rp.permission.name);
+    const permissions = (user as any).role.permissions.map((rp: any) => rp.permission.name);
     return this.generateUserResponse(user, permissions);
   }
 
@@ -478,6 +481,7 @@ export class AuthService {
         role: user.role.name,
         restaurantId: user.restaurantId,
         restaurantName: user.restaurant?.name || '',
+        currency: user.restaurant?.currency || 'INR',
         permissions,
       },
       JWT_SECRET,
@@ -492,6 +496,7 @@ export class AuthService {
         role: user.role.name,
         restaurantId: user.restaurantId,
         restaurantName: user.restaurant?.name || '',
+        currency: user.restaurant?.currency || 'INR',
       },
       permissions,
       token,
@@ -533,6 +538,7 @@ export class AuthService {
       gstin?: string | null;
       logo?: string | null;
       thankYouMessage?: string | null;
+      currency?: string;
     }
   ) {
     return prisma.restaurant.update({
@@ -546,6 +552,7 @@ export class AuthService {
         ...(data.gstin !== undefined && { gstin: data.gstin }),
         ...(data.logo !== undefined && { logo: data.logo }),
         ...(data.thankYouMessage !== undefined && { thankYouMessage: data.thankYouMessage }),
+        ...(data.currency !== undefined && { currency: data.currency }),
       }
     });
   }

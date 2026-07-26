@@ -8,10 +8,12 @@ import { Banknote, CreditCard, Receipt, CheckCircle, Printer, X, ShoppingBag, Tr
 import confettiExplosion from 'canvas-confetti';
 import { Loader } from '@/components/Loader';
 import { apiFetch } from '@/utils/api';
+import { useCurrencySymbol } from '@/utils/currency';
 
 export default function CheckoutPage() {
   const { activeOrders, completePayment, fetchActiveOrders, fetchMenuItems } = usePOSStore();
   const { user } = useAuthStore();
+  const currencySymbol = useCurrencySymbol();
   const [selectedOrderForBill, setSelectedOrderForBill] = useState<Order | null>(null);
   const [completedFilter, setCompletedFilter] = useState<'today' | 'yesterday' | '7days' | 'all'>('today');
   const [loadingCompleted, setLoadingCompleted] = useState(false);
@@ -357,7 +359,7 @@ export default function CheckoutPage() {
                     )}
                   </div>
                   <span className="text-sm font-black text-coral-500">
-                    ${order.totals.total}
+                    {currencySymbol}{order.totals.total}
                   </span>
                 </div>
 
@@ -368,7 +370,7 @@ export default function CheckoutPage() {
                       <span>
                         {item.menuItem.name} <span className="text-[10px] text-zinc-400 dark:text-zinc-500">x{item.quantity}</span>
                       </span>
-                      <span>${(item.menuItem.price * item.quantity).toFixed(2)}</span>
+                      <span>{currencySymbol}{(item.menuItem.price * item.quantity).toFixed(2)}</span>
                     </div>
                   ))}
                 </div>
@@ -552,7 +554,7 @@ export default function CheckoutPage() {
                           {selectedOrderForBill.payments.map((p, idx) => (
                             <div key={p.id || idx} className="flex justify-between items-center bg-zinc-50 dark:bg-zinc-955 border border-zinc-200 dark:border-zinc-850 rounded px-2 py-1 text-[10px] font-bold text-zinc-650 dark:text-zinc-400">
                               <span className="uppercase text-[9px]">{p.paymentMethod} {p.transactionReference ? `(${p.transactionReference})` : ''}</span>
-                              <span className="font-extrabold text-zinc-900 dark:text-zinc-100">${p.amount.toFixed(2)}</span>
+                              <span className="font-extrabold text-zinc-900 dark:text-zinc-100">{currencySymbol}{p.amount.toFixed(2)}</span>
                             </div>
                           ))}
                         </div>
@@ -566,7 +568,7 @@ export default function CheckoutPage() {
                             <div key={idx} className="flex justify-between items-center bg-coral-50/50 dark:bg-coral-955/10 border border-coral-200 dark:border-coral-900 rounded px-2 py-1 text-[10px] font-bold text-coral-650 dark:text-coral-450">
                               <span className="uppercase text-[9px]">{p.paymentMethod} {p.transactionReference ? `(${p.transactionReference})` : ''}</span>
                               <div className="flex items-center gap-1.5">
-                                <span className="font-extrabold">${p.amount.toFixed(2)}</span>
+                                <span className="font-extrabold">{currencySymbol}{p.amount.toFixed(2)}</span>
                                 <button
                                   onClick={() => handleRemovePayment(idx)}
                                   className="text-zinc-450 hover:text-red-500 rounded p-0.5"
@@ -582,7 +584,7 @@ export default function CheckoutPage() {
                       {/* Add payment inputs */}
                       <div className="grid grid-cols-12 gap-2 bg-zinc-50 dark:bg-zinc-950/40 p-2 border border-zinc-200 dark:border-zinc-850 rounded-lg">
                         <div className="col-span-5">
-                          <label className="block text-[8px] font-black uppercase text-zinc-400 dark:text-zinc-500 mb-0.5">Amount ($)</label>
+                          <label className="block text-[8px] font-black uppercase text-zinc-400 dark:text-zinc-500 mb-0.5">Amount ({currencySymbol})</label>
                           <input
                             type="number"
                             step="0.01"
@@ -629,15 +631,15 @@ export default function CheckoutPage() {
                     <div className="border-t border-zinc-200 dark:border-zinc-800 pt-3 text-xs font-bold text-zinc-650 dark:text-zinc-400 space-y-1.5">
                       <div className="flex justify-between text-zinc-900 dark:text-zinc-100">
                         <span>Grand Total:</span>
-                        <span className="font-extrabold">${selectedOrderForBill.totals.total}</span>
+                        <span className="font-extrabold">{currencySymbol}{selectedOrderForBill.totals.total}</span>
                       </div>
                       <div className="flex justify-between text-emerald-600">
                         <span>Total Paid:</span>
-                        <span className="font-extrabold">${totalPaid.toFixed(2)}</span>
+                        <span className="font-extrabold">{currencySymbol}{totalPaid.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between border-t border-zinc-200 dark:border-zinc-800 pt-2 text-sm font-black text-zinc-900 dark:text-zinc-100">
                         <span>Remaining Balance:</span>
-                        <span className="text-coral-500 text-base">${remainingBalance.toFixed(2)}</span>
+                        <span className="text-coral-500 text-base">{currencySymbol}{remainingBalance.toFixed(2)}</span>
                       </div>
                     </div>
 
@@ -740,7 +742,7 @@ export default function CheckoutPage() {
                           <span className="col-span-6 truncate uppercase">{item.menuItem.name}</span>
                           <span className="col-span-2 text-center">{item.quantity}</span>
                           <span className="col-span-4 text-right">
-                            ${(item.menuItem.price * item.quantity).toFixed(2)}
+                            {currencySymbol}{(item.menuItem.price * item.quantity).toFixed(2)}
                           </span>
                         </div>
                       ))}
@@ -753,27 +755,27 @@ export default function CheckoutPage() {
                     <div className="space-y-0.5">
                       <div className="flex justify-between font-medium">
                         <span>SUBTOTAL:</span>
-                        <span>${selectedOrderForBill.totals.subtotal}</span>
+                        <span>{currencySymbol}{selectedOrderForBill.totals.subtotal}</span>
                       </div>
                       {parseFloat(selectedOrderForBill.totals.discount) > 0 && (
                         <div className="flex justify-between font-medium text-[10px] text-red-650">
                           <span>DISCOUNT {selectedOrderForBill.couponCode ? `(${selectedOrderForBill.couponCode})` : ''}:</span>
-                          <span>-${parseFloat(selectedOrderForBill.totals.discount).toFixed(2)}</span>
+                          <span>-{currencySymbol}{parseFloat(selectedOrderForBill.totals.discount).toFixed(2)}</span>
                         </div>
                       )}
                       {parseFloat(selectedOrderForBill.totals.serviceCharge) > 0 && (
                         <div className="flex justify-between font-medium text-[10px]">
                           <span>SERVICE CHARGE @ {parseFloat(selectedOrderForBill.totals.serviceChargeRate)}%:</span>
-                          <span>${parseFloat(selectedOrderForBill.totals.serviceCharge).toFixed(2)}</span>
+                          <span>{currencySymbol}{parseFloat(selectedOrderForBill.totals.serviceCharge).toFixed(2)}</span>
                         </div>
                       )}
                       <div className="flex justify-between font-medium text-[10px]">
                         <span>CGST @ {(parseFloat(selectedOrderForBill.totals.taxRate) / 2).toFixed(1)}%:</span>
-                        <span>${(parseFloat(selectedOrderForBill.totals.tax) / 2).toFixed(2)}</span>
+                        <span>{currencySymbol}{(parseFloat(selectedOrderForBill.totals.tax) / 2).toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between font-medium text-[10px]">
                         <span>SGST @ {(parseFloat(selectedOrderForBill.totals.taxRate) / 2).toFixed(1)}%:</span>
-                        <span>${(parseFloat(selectedOrderForBill.totals.tax) / 2).toFixed(2)}</span>
+                        <span>{currencySymbol}{(parseFloat(selectedOrderForBill.totals.tax) / 2).toFixed(2)}</span>
                       </div>
                       
                       {/* Dashed line separator */}
@@ -781,7 +783,7 @@ export default function CheckoutPage() {
 
                       <div className="flex justify-between font-black text-xs pt-0.5">
                         <span>TOTAL AMOUNT:</span>
-                        <span>${selectedOrderForBill.totals.total}</span>
+                        <span>{currencySymbol}{selectedOrderForBill.totals.total}</span>
                       </div>
 
                       {/* Display transactions list if available */}
@@ -792,7 +794,7 @@ export default function CheckoutPage() {
                           {selectedOrderForBill.payments.map((p, idx) => (
                             <div key={p.id || idx} className="flex justify-between text-[10px]">
                               <span className="uppercase text-[9px]">- {p.paymentMethod} {p.transactionReference ? `(${p.transactionReference})` : ''}:</span>
-                              <span>${p.amount.toFixed(2)}</span>
+                              <span>{currencySymbol}{p.amount.toFixed(2)}</span>
                             </div>
                           ))}
                         </>

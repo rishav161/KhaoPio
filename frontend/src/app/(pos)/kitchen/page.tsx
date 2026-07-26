@@ -50,6 +50,18 @@ function ElapsedTimer({ createdAt }: { createdAt: string }) {
 export default function KitchenPage() {
   const { activeOrders, updateOrderStatus, fetchActiveOrders, fetchMenuItems } = usePOSStore();
   const [filter, setFilter] = useState<'ALL' | 'PENDING' | 'PREPARING'>('ALL');
+  const [submittingOrderIds, setSubmittingOrderIds] = useState<Record<string, boolean>>({});
+
+  const handleUpdateStatus = async (orderId: string, status: 'PREPARING' | 'READY') => {
+    setSubmittingOrderIds((prev) => ({ ...prev, [orderId]: true }));
+    try {
+      await updateOrderStatus(orderId, status);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSubmittingOrderIds((prev) => ({ ...prev, [orderId]: false }));
+    }
+  };
 
   useEffect(() => {
     fetchMenuItems().then(() => {
@@ -217,23 +229,36 @@ export default function KitchenPage() {
                     ))}
                   </div>
 
-                  {/* Action button at bottom */}
                   <div className="border-t border-zinc-200 dark:border-zinc-800 p-2 bg-zinc-50 dark:bg-zinc-950 rounded-b-xl">
                     {isPending ? (
                       <button
-                        onClick={() => updateOrderStatus(order.id, 'PREPARING')}
-                        className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-coral-500 hover:bg-coral-600 py-2.5 text-xs font-black text-white transition-all shadow-sm cursor-pointer"
+                        onClick={() => handleUpdateStatus(order.id, 'PREPARING')}
+                        disabled={submittingOrderIds[order.id]}
+                        className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-coral-500 hover:bg-coral-600 py-2.5 text-xs font-black text-white transition-all shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <Play className="h-4 w-4 fill-white" />
-                        ACCEPT / PREPARE
+                        {submittingOrderIds[order.id] ? (
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                        ) : (
+                          <>
+                            <Play className="h-4 w-4 fill-white" />
+                            <span>ACCEPT / PREPARE</span>
+                          </>
+                        )}
                       </button>
                     ) : (
                       <button
-                        onClick={() => updateOrderStatus(order.id, 'READY')}
-                        className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-blue-600 py-2.5 text-xs font-black text-white hover:bg-blue-700 transition-colors shadow-sm animate-pulse"
+                        onClick={() => handleUpdateStatus(order.id, 'READY')}
+                        disabled={submittingOrderIds[order.id]}
+                        className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-blue-600 py-2.5 text-xs font-black text-white hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <Check className="h-4 w-4 stroke-[3]" />
-                        MARK AS READY
+                        {submittingOrderIds[order.id] ? (
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                        ) : (
+                          <>
+                            <Check className="h-4 w-4 stroke-[3]" />
+                            <span>MARK AS READY</span>
+                          </>
+                        )}
                       </button>
                     )}
                   </div>

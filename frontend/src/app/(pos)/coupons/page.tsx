@@ -9,6 +9,7 @@ import {
   Calendar, Percent, DollarSign, ToggleLeft, ToggleRight, Info 
 } from 'lucide-react';
 import { useConfirmStore } from '@/store/useConfirmStore';
+import { useCurrencySymbol } from '@/utils/currency';
 
 interface Coupon {
   id: string;
@@ -27,6 +28,7 @@ interface Coupon {
 export default function CouponsPage() {
   const { user } = useAuthStore();
   const confirm = useConfirmStore((state) => state.confirm);
+  const currencySymbol = useCurrencySymbol();
   const [isMounted, setIsMounted] = useState(false);
 
   // States
@@ -263,7 +265,7 @@ export default function CouponsPage() {
                   <h3 className="text-xs font-extrabold text-zinc-900 dark:text-zinc-50 mb-1">
                     {coupon.discountType === 'PERCENTAGE' 
                       ? `${coupon.discountValue}% OFF` 
-                      : `₹${coupon.discountValue} FLAT OFF`
+                      : `${currencySymbol}${coupon.discountValue} FLAT OFF`
                     }
                   </h3>
                                    {coupon.description && (
@@ -275,12 +277,12 @@ export default function CouponsPage() {
                   <div className="space-y-1.5 border-t border-zinc-150 dark:border-zinc-800/80 pt-3 text-[10px] text-zinc-650 dark:text-zinc-400 font-semibold">
                     <div className="flex justify-between">
                       <span>Min Order Subtotal:</span>
-                      <span className="font-black text-zinc-900 dark:text-zinc-100">₹{coupon.minSubtotal}</span>
+                      <span className="font-black text-zinc-900 dark:text-zinc-100">{currencySymbol}{coupon.minSubtotal}</span>
                     </div>
                     {coupon.discountType === 'PERCENTAGE' && coupon.maxDiscount && (
                       <div className="flex justify-between">
                         <span>Max Cap Discount:</span>
-                        <span className="font-black text-zinc-900 dark:text-zinc-100">₹{coupon.maxDiscount}</span>
+                        <span className="font-black text-zinc-900 dark:text-zinc-100">{currencySymbol}{coupon.maxDiscount}</span>
                       </div>
                     )}
                     <div className="flex items-center gap-1 text-[10px] text-zinc-500 mt-2 font-bold">
@@ -388,7 +390,7 @@ export default function CouponsPage() {
                       className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-2 text-xs font-semibold outline-none focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
                     >
                       <option value="PERCENTAGE">Percentage (%)</option>
-                      <option value="FLAT">Flat (₹)</option>
+                      <option value="FLAT">Flat ({currencySymbol})</option>
                     </select>
                   </div>
 
@@ -396,7 +398,7 @@ export default function CouponsPage() {
                     <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">Value</label>
                     <div className="relative">
                       <span className="absolute top-1/2 left-2.5 -translate-y-1/2 text-zinc-400 text-xs font-black">
-                        {discountType === 'PERCENTAGE' ? '%' : '₹'}
+                        {discountType === 'PERCENTAGE' ? '%' : currencySymbol}
                       </span>
                       <input 
                         type="number" 
@@ -405,7 +407,7 @@ export default function CouponsPage() {
                         placeholder="20"
                         value={discountValue}
                         onChange={(e) => setDiscountValue(e.target.value)}
-                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-7 text-xs font-semibold outline-none focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
+                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-55 dark:bg-zinc-950 py-2.5 pr-3 pl-7 text-xs font-semibold outline-none focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
                         required
                       />
                     </div>
@@ -414,19 +416,19 @@ export default function CouponsPage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">Min Subtotal (₹)</label>
+                    <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">Min Subtotal ({currencySymbol})</label>
                     <input 
                       type="number" 
                       min="0"
                       value={minSubtotal}
                       onChange={(e) => setMinSubtotal(e.target.value)}
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-3 text-xs font-semibold outline-none focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-55 dark:bg-zinc-950 py-2.5 px-3 text-xs font-semibold outline-none focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-450 mb-1.5 font-bold disabled:opacity-40">Max Cap (₹)</label>
+                    <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-450 mb-1.5 font-bold disabled:opacity-40">Max Cap ({currencySymbol})</label>
                     <input 
                       type="number" 
                       min="1"

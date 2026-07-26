@@ -9,6 +9,7 @@ import { apiFetch } from '@/utils/api';
 import { Table } from '@/components/Table';
 import { Pagination } from '@/components/Pagination';
 import { Loader } from '@/components/Loader';
+import { useCurrencySymbol } from '@/utils/currency';
 
 interface DashboardStats {
   metrics: {
@@ -37,6 +38,7 @@ interface DashboardStats {
 }
 
 export default function Dashboard() {
+  const currencySymbol = useCurrencySymbol();
   // Query Filters State
   const [startDate, setStartDate] = useState(() => {
     const d = new Date();
@@ -283,7 +285,7 @@ export default function Dashboard() {
           <div>
             <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block mb-1">Total Sales</span>
             <span className="text-2xl font-black tracking-tight font-mono text-zinc-900 dark:text-zinc-50">
-              ${metricsData.totalSales.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {currencySymbol}{metricsData.totalSales.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
           <div className="h-10 w-10 rounded-xl bg-coral-50 dark:bg-coral-950/20 text-coral-500 flex items-center justify-center">
@@ -309,7 +311,7 @@ export default function Dashboard() {
           <div>
             <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block mb-1">Avg Order Value</span>
             <span className="text-2xl font-black tracking-tight font-mono text-zinc-900 dark:text-zinc-50">
-              ${metricsData.aov.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {currencySymbol}{metricsData.aov.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
           <div className="h-10 w-10 rounded-xl bg-coral-50 dark:bg-coral-950/20 text-coral-500 flex items-center justify-center">
@@ -470,7 +472,7 @@ export default function Dashboard() {
               </td>
               <td className="px-5 py-3">{getStatusBadge(order.status)}</td>
               <td className="px-5 py-3 font-mono font-black text-zinc-950 dark:text-zinc-50">
-                ${order.grandTotal.toFixed(2)}
+                {currencySymbol}{order.grandTotal.toFixed(2)}
               </td>
             </tr>
           )}

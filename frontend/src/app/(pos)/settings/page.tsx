@@ -9,6 +9,7 @@ import {
   Settings, User, Landmark, Phone, FileText, MapPin, 
   Image, MessageSquare, Save, AlertCircle, CheckCircle2 
 } from 'lucide-react';
+import { SUPPORTED_CURRENCIES } from '@/utils/currency';
 
 export default function SettingsPage() {
   const { user, updateUser } = useAuthStore();
@@ -24,6 +25,7 @@ export default function SettingsPage() {
   const [profileGstin, setProfileGstin] = useState('');
   const [profileLogo, setProfileLogo] = useState('');
   const [profileThankYouMessage, setProfileThankYouMessage] = useState('');
+  const [profileCurrency, setProfileCurrency] = useState(user?.currency || 'INR');
 
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
@@ -46,6 +48,7 @@ export default function SettingsPage() {
           gstin: string | null;
           logo: string | null;
           thankYouMessage: string | null;
+          currency: string;
         }>('/auth/restaurant')
           .then((data) => {
             setProfileTaxRate(data.defaultTaxRate.toString());
@@ -55,6 +58,7 @@ export default function SettingsPage() {
             setProfileGstin(data.gstin || '');
             setProfileLogo(data.logo || '');
             setProfileThankYouMessage(data.thankYouMessage || '');
+            setProfileCurrency(data.currency || 'INR');
             setPageLoading(false);
           })
           .catch((err) => {
@@ -93,6 +97,7 @@ export default function SettingsPage() {
         bodyPayload.gstin = profileGstin.trim() || null;
         bodyPayload.logo = profileLogo.trim() || null;
         bodyPayload.thankYouMessage = profileThankYouMessage.trim() || null;
+        bodyPayload.currency = profileCurrency;
 
         await apiFetch('/auth/restaurant', {
           method: 'PATCH',
@@ -101,7 +106,7 @@ export default function SettingsPage() {
       }
 
       // 3. Update Zustand local auth state
-      updateUser(profileName.trim(), profileRestaurant.trim());
+      updateUser(profileName.trim(), profileRestaurant.trim(), profileCurrency);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
@@ -280,6 +285,20 @@ export default function SettingsPage() {
                       className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-semibold outline-none focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
                     />
                   </div>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">Base Currency</label>
+                  <select
+                    value={profileCurrency}
+                    onChange={(e) => setProfileCurrency(e.target.value)}
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2.5 text-xs font-semibold outline-none focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all cursor-pointer"
+                  >
+                    {SUPPORTED_CURRENCIES.map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </>
             )}

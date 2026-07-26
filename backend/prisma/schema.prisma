@@ -197,6 +197,7 @@ model Restaurant {
   gstin                String?
   logo                 String?
   thankYouMessage      String?
+  currency             String         @default("INR")
   createdAt            DateTime       @default(now())
   updatedAt            DateTime       @updatedAt
 }

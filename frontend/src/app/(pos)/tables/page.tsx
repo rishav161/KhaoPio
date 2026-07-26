@@ -39,6 +39,7 @@ export default function TablesPage() {
   const [guestsCount, setGuestsCount] = useState('2');
   const [selectedTableId, setSelectedTableId] = useState('');
   const [addBookingError, setAddBookingError] = useState('');
+  const [isBookingSubmitting, setIsBookingSubmitting] = useState(false);
 
   // Fetch tables and bookings on mount and set polling interval
   useEffect(() => {
@@ -120,6 +121,7 @@ export default function TablesPage() {
       return;
     }
 
+    setIsBookingSubmitting(true);
     try {
       await createBooking({
         customerName: customerName.trim(),
@@ -137,6 +139,8 @@ export default function TablesPage() {
       setIsAddBookingOpen(false);
     } catch (err: any) {
       setAddBookingError(err.message || 'Failed to create reservation.');
+    } finally {
+      setIsBookingSubmitting(false);
     }
   };
 
@@ -632,9 +636,14 @@ export default function TablesPage() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 rounded-lg bg-coral-500 hover:bg-coral-600 text-white py-2.5 text-xs font-black uppercase tracking-wider shadow-md transition-all cursor-pointer"
+                  disabled={isBookingSubmitting}
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-coral-500 hover:bg-coral-600 text-white py-2.5 text-xs font-black uppercase tracking-wider shadow-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Secure Booking
+                  {isBookingSubmitting ? (
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                  ) : (
+                    <span>Secure Booking</span>
+                  )}
                 </button>
               </div>
             </form>

@@ -8,10 +8,12 @@ import { CartItem } from '@/types/pos';
 import { Search, Plus, Minus, Trash2, Soup, ShoppingCart, Send } from 'lucide-react';
 import { Loader } from '@/components/Loader';
 import { apiFetch } from '@/utils/api';
+import { useCurrencySymbol } from '@/utils/currency';
 import Big from 'big.js';
 
 export default function BillingPage() {
   const router = useRouter();
+  const currencySymbol = useCurrencySymbol();
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -163,6 +165,7 @@ export default function BillingPage() {
   }, [cartItems, restaurantSettings]);
 
   const [sendError, setSendError] = useState('');
+  const [isSendingToKitchen, setIsSendingToKitchen] = useState(false);
 
   if (loading && menuItems.length === 0) {
     return (
@@ -177,6 +180,7 @@ export default function BillingPage() {
   const handleSendToKitchen = async () => {
     if (cartItems.length === 0) return;
     setSendError('');
+    setIsSendingToKitchen(true);
     try {
       await sendOrderToKitchen();
       // Quick custom native alert or indicator
@@ -187,12 +191,14 @@ export default function BillingPage() {
         setTimeout(() => {
           alertEl.classList.remove('opacity-100');
           alertEl.classList.add('opacity-0');
-        }, 2000);
+        }, 2050);
       }
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to send KOT order to kitchen.';
       setSendError(errorMsg);
       setTimeout(() => setSendError(''), 4000);
+    } finally {
+      setIsSendingToKitchen(false);
     }
   };
 
@@ -318,10 +324,9 @@ export default function BillingPage() {
                       </div>
                     </div>
 
-                    {/* Price and Add button */}
                     <div className="mt-3 flex items-center justify-between border-t border-dashed border-zinc-200 dark:border-zinc-800 pt-2">
                       <span className="text-xs font-black text-zinc-900 dark:text-zinc-100">
-                        ${item.price.toFixed(2)}
+                        {currencySymbol}{item.price.toFixed(2)}
                       </span>
                       <span className="rounded-md bg-zinc-900 dark:bg-zinc-950 px-2 py-1 text-[9px] font-black text-white dark:text-zinc-350 hover:bg-coral-500 transition-colors">
                         ADD +
@@ -410,7 +415,7 @@ export default function BillingPage() {
                     </h4>
                   </div>
                   <span className="text-[10px] font-extrabold text-zinc-500">
-                    ${item.menuItem.price.toFixed(2)} each
+                    {currencySymbol}{item.menuItem.price.toFixed(2)} each
                   </span>
                 </div>
 
@@ -452,37 +457,43 @@ export default function BillingPage() {
           <div className="space-y-1.5 text-xs font-bold text-zinc-650 dark:text-zinc-400">
             <div className="flex justify-between">
               <span>Subtotal</span>
-              <span className="text-zinc-900 dark:text-zinc-100">${cartTotals.subtotal}</span>
+              <span className="text-zinc-900 dark:text-zinc-100">{currencySymbol}{cartTotals.subtotal}</span>
             </div>
             <div className="flex justify-between">
               <span className="flex items-center gap-1">
                 Service Charge <span className="rounded bg-zinc-100 dark:bg-zinc-950 px-1 py-0.5 text-[9px] font-black text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800">{cartTotals.serviceChargeRate}%</span>
               </span>
-              <span className="text-zinc-900 dark:text-zinc-100">${cartTotals.serviceCharge}</span>
+              <span className="text-zinc-900 dark:text-zinc-100">{currencySymbol}{cartTotals.serviceCharge}</span>
             </div>
             <div className="flex justify-between">
               <span className="flex items-center gap-1">
                 GST / Tax <span className="rounded bg-zinc-100 dark:bg-zinc-950 px-1 py-0.5 text-[9px] font-black text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800">{cartTotals.taxRate}%</span>
               </span>
-              <span className="text-zinc-900 dark:text-zinc-100">${cartTotals.tax}</span>
+              <span className="text-zinc-900 dark:text-zinc-100">{currencySymbol}{cartTotals.tax}</span>
             </div>
             <div className="flex justify-between border-t border-zinc-200 dark:border-zinc-800 pt-2 text-sm font-black text-zinc-900 dark:text-zinc-100">
               <span>Total Payable</span>
-              <span className="text-coral-500 text-base">${cartTotals.total}</span>
+              <span className="text-coral-500 text-base">{currencySymbol}{cartTotals.total}</span>
             </div>
           </div>
 
           <button
             onClick={handleSendToKitchen}
-            disabled={cartItems.length === 0}
+            disabled={cartItems.length === 0 || isSendingToKitchen}
             className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 text-xs font-black text-white transition-all shadow-md ${
-              cartItems.length === 0
+              cartItems.length === 0 || isSendingToKitchen
                 ? 'bg-zinc-300 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-505 cursor-not-allowed shadow-none'
                 : 'bg-coral-500 hover:bg-coral-600 active:scale-[0.98] cursor-pointer'
             }`}
           >
-            <Send className="h-4 w-4" />
-            <span>SEND TO KITCHEN [F8]</span>
+            {isSendingToKitchen ? (
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+            ) : (
+              <>
+                <Send className="h-4 w-4" />
+                <span>SEND TO KITCHEN [F8]</span>
+              </>
+            )}
           </button>
 
           {/* POS Keyboard Shortcuts Quick Help Bar */}

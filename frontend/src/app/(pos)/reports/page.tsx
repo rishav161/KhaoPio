@@ -9,6 +9,7 @@ import { apiFetch } from '@/utils/api';
 import { Table } from '@/components/Table';
 import { Pagination } from '@/components/Pagination';
 import { Loader } from '@/components/Loader';
+import { useCurrencySymbol } from '@/utils/currency';
 
 interface ReportResponse {
   summary: {
@@ -39,6 +40,7 @@ interface ReportResponse {
 }
 
 export default function Reports() {
+  const currencySymbol = useCurrencySymbol();
   // Query Filters State
   const [startDate, setStartDate] = useState(() => {
     const d = new Date();
@@ -290,7 +292,7 @@ export default function Reports() {
               <div>
                 <span className="text-[9px] font-black uppercase tracking-wider text-zinc-400">Filtered Sales Revenue</span>
                 <h4 className="text-xl font-black font-mono text-zinc-955 dark:text-zinc-50 leading-tight">
-                  ${reportData.summary.totalRevenue.toFixed(2)}
+                  {currencySymbol}{reportData.summary.totalRevenue.toFixed(2)}
                 </h4>
               </div>
             </div>
@@ -314,7 +316,7 @@ export default function Reports() {
               <div>
                 <span className="text-[9px] font-black uppercase tracking-wider text-zinc-400">Tax Component Total</span>
                 <h4 className="text-xl font-black font-mono text-zinc-955 dark:text-zinc-50 leading-tight">
-                  ${reportData.summary.totalTax.toFixed(2)}
+                  {currencySymbol}{reportData.summary.totalTax.toFixed(2)}
                 </h4>
               </div>
             </div>
@@ -350,10 +352,10 @@ export default function Reports() {
                   <td className="px-5 py-3 max-w-xs truncate" title={order.itemsSummary}>
                     {order.itemsSummary}
                   </td>
-                  <td className="px-5 py-3 font-mono">${order.subtotal.toFixed(2)}</td>
-                  <td className="px-5 py-3 font-mono text-zinc-400">${order.taxTotal.toFixed(2)}</td>
+                  <td className="px-5 py-3 font-mono">{currencySymbol}{order.subtotal.toFixed(2)}</td>
+                  <td className="px-5 py-3 font-mono text-zinc-400">{currencySymbol}{order.taxTotal.toFixed(2)}</td>
                   <td className="px-5 py-3 font-mono font-black text-zinc-950 dark:text-zinc-50">
-                    ${order.grandTotal.toFixed(2)}
+                    {currencySymbol}{order.grandTotal.toFixed(2)}
                   </td>
                 </tr>
               )}

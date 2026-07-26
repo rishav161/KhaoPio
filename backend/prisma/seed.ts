@@ -1,4 +1,5 @@
 import { PrismaClient, RoleName } from '@prisma/client';
+import process from 'process';
 
 const prisma = new PrismaClient();
 
@@ -201,20 +202,20 @@ async function main() {
   console.log('Menu Categories seeded successfully.');
 
   const seedMenuItemsData = [
-    { name: 'Classic Cheese Burger', price: 6.99, category: 'Burgers', image: '🍔', description: 'Flame-grilled beef patty, melted cheddar, lettuce, tomato, house sauce', code: 'B01' },
-    { name: 'Double BBQ Bacon Burger', price: 8.99, category: 'Burgers', image: '🥓', description: 'Double beef patty, crispy bacon, cheddar, crispy onions, smoky BBQ sauce', code: 'B02' },
-    { name: 'Spicy Crispy Chicken Burger', price: 7.49, category: 'Burgers', image: '🍗', description: 'Crispy fried chicken breast, spicy mayo, pickles, shredded lettuce', code: 'B03' },
-    { name: 'Classic Margherita Pizza', price: 10.99, category: 'Pizzas', image: '🍕', description: 'San Marzano tomato sauce, fresh mozzarella, fresh basil, olive oil', code: 'P01' },
-    { name: 'Pepperoni Supreme Pizza', price: 12.99, category: 'Pizzas', image: '🍕', description: 'Double pepperoni, mozzarella cheese, spicy marinara sauce', code: 'P02' },
-    { name: 'Truffle Mushroom Pizza', price: 13.49, category: 'Pizzas', image: '🍄', description: 'Cremini mushrooms, white truffle oil, fontina, fresh arugula', code: 'P03' },
-    { name: 'Golden French Fries', price: 3.49, category: 'Sides', image: '🍟', description: 'Crispy golden fries, sea salt, served with ketchup', code: 'S01' },
-    { name: 'Garlic Bread with Cheese', price: 4.99, category: 'Sides', image: '🥖', description: 'Toasted baguette with garlic butter, mozzarella, herbs', code: 'S02' },
-    { name: 'Mozzarella Sticks', price: 5.49, category: 'Sides', image: '🧀', description: 'Crispy breaded mozzarella cheese sticks, marinara dipping sauce', code: 'S03' },
-    { name: 'Iced Caramel Macchiato', price: 4.49, category: 'Drinks', image: '☕', description: 'Espresso, vanilla syrup, cold milk, caramel drizzle', code: 'D01' },
-    { name: 'Lemon Mint Cooler', price: 3.29, category: 'Drinks', image: '🥤', description: 'Freshly squeezed lemon juice, crushed mint leaves, club soda', code: 'D02' },
-    { name: 'Coca Cola Zero', price: 1.99, category: 'Drinks', image: '🥤', description: 'Chilled canned Coca-Cola Zero Sugar', code: 'D03' },
-    { name: 'Chocolate Fudge Brownie', price: 5.49, category: 'Desserts', image: '🍫', description: 'Warm, gooey chocolate fudge brownie with chocolate drizzle', code: 'E01' },
-    { name: 'New York Blueberry Cheesecake', price: 6.99, category: 'Desserts', image: '🍰', description: 'Rich, creamy classic cheesecake topped with sweet blueberry compote', code: 'E02' }
+    { name: 'Classic Cheese Burger', price: 199.00, category: 'Burgers', image: '🍔', description: 'Flame-grilled beef patty, melted cheddar, lettuce, tomato, house sauce', code: 'B01' },
+    { name: 'Double BBQ Bacon Burger', price: 299.00, category: 'Burgers', image: '🥓', description: 'Double beef patty, crispy bacon, cheddar, crispy onions, smoky BBQ sauce', code: 'B02' },
+    { name: 'Spicy Crispy Chicken Burger', price: 249.00, category: 'Burgers', image: '🍗', description: 'Crispy fried chicken breast, spicy mayo, pickles, shredded lettuce', code: 'B03' },
+    { name: 'Classic Margherita Pizza', price: 399.00, category: 'Pizzas', image: '🍕', description: 'San Marzano tomato sauce, fresh mozzarella, fresh basil, olive oil', code: 'P01' },
+    { name: 'Pepperoni Supreme Pizza', price: 499.00, category: 'Pizzas', image: '🍕', description: 'Double pepperoni, mozzarella cheese, spicy marinara sauce', code: 'P02' },
+    { name: 'Truffle Mushroom Pizza', price: 549.00, category: 'Pizzas', image: '🍄', description: 'Cremini mushrooms, white truffle oil, fontina, fresh arugula', code: 'P03' },
+    { name: 'Golden French Fries', price: 129.00, category: 'Sides', image: '🍟', description: 'Crispy golden fries, sea salt, served with ketchup', code: 'S01' },
+    { name: 'Garlic Bread with Cheese', price: 179.00, category: 'Sides', image: '🥖', description: 'Toasted baguette with garlic butter, mozzarella, herbs', code: 'S02' },
+    { name: 'Mozzarella Sticks', price: 199.00, category: 'Sides', image: '🧀', description: 'Crispy breaded mozzarella cheese sticks, marinara dipping sauce', code: 'S03' },
+    { name: 'Iced Caramel Macchiato', price: 189.00, category: 'Drinks', image: '☕', description: 'Espresso, vanilla syrup, cold milk, caramel drizzle', code: 'D01' },
+    { name: 'Lemon Mint Cooler', price: 119.00, category: 'Drinks', image: '🥤', description: 'Freshly squeezed lemon juice, crushed mint leaves, club soda', code: 'D02' },
+    { name: 'Coca Cola Zero', price: 59.00, category: 'Drinks', image: '🥤', description: 'Chilled canned Coca-Cola Zero Sugar', code: 'D03' },
+    { name: 'Chocolate Fudge Brownie', price: 149.00, category: 'Desserts', image: '🍫', description: 'Warm, gooey chocolate fudge brownie with chocolate drizzle', code: 'E01' },
+    { name: 'New York Blueberry Cheesecake', price: 249.00, category: 'Desserts', image: '🍰', description: 'Rich, creamy classic cheesecake topped with sweet blueberry compote', code: 'E02' }
   ];
 
   for (const item of seedMenuItemsData) {
@@ -245,18 +246,18 @@ async function main() {
         description: 'Get 10% off on your order',
         discountType: 'PERCENTAGE',
         discountValue: 10.0,
-        minSubtotal: 10.0,
+        minSubtotal: 299.0,
         startDate,
         endDate,
         isActive: true,
         restaurantId: restaurant.id,
       },
       {
-        code: 'FLAT50',
-        description: 'Get $50 off on orders above $100',
+        code: 'FLAT100',
+        description: 'Get ₹100 off on orders above ₹500',
         discountType: 'FLAT',
-        discountValue: 50.0,
-        minSubtotal: 100.0,
+        discountValue: 100.0,
+        minSubtotal: 500.0,
         startDate,
         endDate,
         isActive: true,

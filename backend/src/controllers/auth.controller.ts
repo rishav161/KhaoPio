@@ -267,7 +267,7 @@ export const updateRestaurantDetails = async (req: Request, res: Response): Prom
   try {
     const restaurantId = (req as any).user?.restaurantId;
     const userRole = (req as any).user?.role;
-    const { name, defaultTaxRate, defaultServiceCharge, address, phone, gstin, logo, thankYouMessage } = req.body;
+    const { name, defaultTaxRate, defaultServiceCharge, address, phone, gstin, logo, thankYouMessage, currency } = req.body;
 
     if (userRole !== 'SUPER_ADMIN') {
       res.status(403).json({ error: 'Forbidden. Only SUPER_ADMIN can update restaurant details.' });
@@ -305,6 +305,7 @@ export const updateRestaurantDetails = async (req: Request, res: Response): Prom
       gstin,
       logo,
       thankYouMessage,
+      currency,
     });
 
     res.status(200).json(updatedRestaurant);

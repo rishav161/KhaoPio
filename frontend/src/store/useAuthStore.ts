@@ -8,6 +8,7 @@ export interface User {
   role: string;
   restaurantId?: string | null;
   restaurantName?: string | null;
+  currency?: string | null;
 }
 
 export interface SidebarItem {
@@ -28,8 +29,8 @@ interface AuthState {
   // Actions
   setAuth: (user: User, token: string, permissions: string[]) => void;
   setSidebarItems: (items: SidebarItem[]) => void;
-  updateUser: (name: string, restaurantName?: string) => void;
-  updateUserRestaurant: (restaurantId: string, restaurantName: string) => void;
+  updateUser: (name: string, restaurantName?: string, currency?: string) => void;
+  updateUserRestaurant: (restaurantId: string, restaurantName: string, currency?: string) => void;
   logout: () => void;
 }
 
@@ -49,24 +50,26 @@ export const useAuthStore = create<AuthState>()(
       
       setSidebarItems: (sidebarItems) => set({ sidebarItems }),
       
-      updateUser: (name, restaurantName) => set((state) => {
+      updateUser: (name, restaurantName, currency) => set((state) => {
         if (!state.user) return {};
         return {
           user: {
             ...state.user,
             name,
             ...(restaurantName !== undefined ? { restaurantName } : {}),
+            ...(currency !== undefined ? { currency } : {}),
           }
         };
       }),
 
-      updateUserRestaurant: (restaurantId, restaurantName) => set((state) => {
+      updateUserRestaurant: (restaurantId, restaurantName, currency) => set((state) => {
         if (!state.user) return {};
         return {
           user: {
             ...state.user,
             restaurantId,
             restaurantName,
+            ...(currency !== undefined ? { currency } : {}),
           }
         };
       }),

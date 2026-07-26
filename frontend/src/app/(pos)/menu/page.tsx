@@ -10,6 +10,7 @@ import { apiFetch } from '@/utils/api';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Loader } from '@/components/Loader';
 import { useConfirmStore } from '@/store/useConfirmStore';
+import { useCurrencySymbol } from '@/utils/currency';
 
 interface MenuItem {
   id: string;
@@ -31,6 +32,7 @@ interface MenuCategory {
 export default function MenuPage() {
   const { user } = useAuthStore();
   const confirm = useConfirmStore((state) => state.confirm);
+  const currencySymbol = useCurrencySymbol();
   const { permissions } = useAuthStore();
   const canManage = permissions.includes('view:staff'); // Manager/Admin check
 
@@ -515,7 +517,7 @@ export default function MenuPage() {
 
                       <div className="mt-2 flex items-center justify-between">
                         <span className="text-xs font-black text-coral-500 font-mono">
-                          ${item.price.toFixed(2)}
+                          {currencySymbol}{item.price.toFixed(2)}
                         </span>
 
                         <span className={`text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full border ${
@@ -623,8 +625,8 @@ export default function MenuPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-450 mb-1">
-                    Price ($)
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-455 mb-1">
+                    Price ({currencySymbol})
                   </label>
                   <input
                     type="text"
