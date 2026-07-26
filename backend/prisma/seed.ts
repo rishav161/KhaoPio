@@ -1,5 +1,4 @@
 import { PrismaClient, RoleName } from '@prisma/client';
-import process from 'process';
 
 const prisma = new PrismaClient();
 

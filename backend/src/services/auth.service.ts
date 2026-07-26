@@ -20,6 +20,79 @@ export class AuthService {
         address: data.restaurantAddress,
       },
     });
+    // 1.5 Query template restaurant items and categories
+    const templateRestaurant = await prisma.restaurant.findFirst({
+      where: { name: 'KhaoPio Restaurant' },
+    });
+
+    if (templateRestaurant) {
+      // Copy categories and menu items
+      const templateCategories = await prisma.menuCategory.findMany({
+        where: { restaurantId: templateRestaurant.id },
+        include: { menuItems: true },
+      });
+
+      for (const cat of templateCategories) {
+        const newCategory = await prisma.menuCategory.create({
+          data: {
+            name: cat.name,
+            restaurantId: restaurant.id,
+          },
+        });
+
+        for (const item of cat.menuItems) {
+          await prisma.menuItem.create({
+            data: {
+              name: item.name,
+              description: item.description || '',
+              price: item.price,
+              image: item.image || '',
+              code: item.code,
+              categoryId: newCategory.id,
+              restaurantId: restaurant.id,
+              isAvailable: item.isAvailable,
+            },
+          });
+        }
+      }
+
+      // Copy dining tables
+      const templateTables = await prisma.diningTable.findMany({
+        where: { restaurantId: templateRestaurant.id },
+      });
+
+      for (const tbl of templateTables) {
+        await prisma.diningTable.create({
+          data: {
+            name: tbl.name,
+            capacity: tbl.capacity,
+            status: 'AVAILABLE',
+            restaurantId: restaurant.id,
+          },
+        });
+      }
+
+      // Copy coupons
+      const templateCoupons = await prisma.coupon.findMany({
+        where: { restaurantId: templateRestaurant.id },
+      });
+
+      for (const cp of templateCoupons) {
+        await prisma.coupon.create({
+          data: {
+            code: cp.code,
+            description: cp.description,
+            discountType: cp.discountType,
+            discountValue: cp.discountValue,
+            minSubtotal: cp.minSubtotal,
+            startDate: cp.startDate,
+            endDate: cp.endDate,
+            isActive: cp.isActive,
+            restaurantId: restaurant.id,
+          },
+        });
+      }
+    }
 
     // 2. Link the user to the restaurant
     const updatedUser = await prisma.user.update({
