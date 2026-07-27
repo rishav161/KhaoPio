@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import nodemailer from 'nodemailer';
+import dns from 'dns';
 
 dotenv.config();
 
@@ -15,18 +16,39 @@ export class EmailService {
   /**
    * Creates a Nodemailer transporter if configuration is present.
    */
-  private getTransporter() {
+  private async getTransporter() {
     if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
       return null;
     }
+
+    let host = SMTP_HOST;
+    let tlsOptions = undefined;
+
+    try {
+      // Force DNS resolution to IPv4 to prevent connection issues (ENETUNREACH) on deployed IPv6-unrouted hosts.
+      const resolvedAddress = await new Promise<string>((resolve, reject) => {
+        dns.lookup(SMTP_HOST, { family: 4 }, (err, address) => {
+          if (err) return reject(err);
+          resolve(address);
+        });
+      });
+      host = resolvedAddress;
+      tlsOptions = {
+        servername: SMTP_HOST,
+      };
+    } catch (dnsError) {
+      console.warn(`[Email Service] DNS lookup failed for ${SMTP_HOST}, falling back to hostname resolution:`, dnsError);
+    }
+
     return nodemailer.createTransport({
-      host: SMTP_HOST,
+      host,
       port: SMTP_PORT,
       secure: SMTP_SECURE,
       auth: {
         user: SMTP_USER,
         pass: SMTP_PASS,
       },
+      tls: tlsOptions,
       connectionTimeout: 5000, // 5 seconds
       greetingTimeout: 5000,   // 5 seconds
       socketTimeout: 10000,    // 10 seconds
@@ -37,7 +59,7 @@ export class EmailService {
    * Sends an invitation email to a newly invited staff member using SMTP.
    */
   async sendInvitationEmail(email: string, token: string, roleName: string): Promise<boolean> {
-    const transporter = this.getTransporter();
+    const transporter = await this.getTransporter();
     if (!transporter) {
       console.warn('WARNING: SMTP configuration is incomplete. Skipping invitation email dispatch.');
       return false;
@@ -88,7 +110,7 @@ export class EmailService {
    * Sends an OTP verification email using SMTP.
    */
   async sendOtpEmail(email: string, otp: string): Promise<boolean> {
-    const transporter = this.getTransporter();
+    const transporter = await this.getTransporter();
     if (!transporter) {
       console.warn('WARNING: SMTP configuration is incomplete. Skipping OTP email dispatch.');
       return false;
