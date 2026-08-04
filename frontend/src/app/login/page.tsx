@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Mail, KeyRound, Lock, AlertTriangle, Shield, Users, Smartphone, Eye, EyeOff } from 'lucide-react';
+import { Utensils, Flame, CreditCard, BarChart2, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 import { apiFetch } from '@/utils/api';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Loader } from '@/components/Loader';
@@ -37,7 +37,7 @@ export default function Login() {
   }, [token, router, isMounted]);
 
   // Tab state: 'pin' (staff email + PIN quick login) or 'email' (admin password login)
-  const [tab, setTab] = useState<'pin' | 'email'>('pin');
+  const [tab, setTab] = useState<'pin' | 'email'>('email');
 
   // Staff PIN login states
   const [staffEmail, setStaffEmail] = useState('');
@@ -165,217 +165,168 @@ export default function Login() {
     );
   }
 
+  const features = [
+    { icon: <Utensils className="h-4 w-4" />, label: 'Dine-in & Takeaway' },
+    { icon: <Flame className="h-4 w-4" />, label: 'Live Kitchen View' },
+    { icon: <CreditCard className="h-4 w-4" />, label: 'UPI / Cash / Card' },
+    { icon: <BarChart2 className="h-4 w-4" />, label: 'Sales Reports' },
+  ];
+
   return (
-    <div className="relative flex min-h-screen w-screen items-center justify-center overflow-hidden bg-zinc-100 dark:bg-zinc-950 px-4 font-sans antialiased text-zinc-900 dark:text-zinc-100 transition-colors duration-200">
-      
-      {/* Light/Dark backdrop coral glow */}
-      <div className="absolute top-1/4 left-1/4 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-coral-500/5 blur-[120px] pointer-events-none"></div>
-      <div className="absolute bottom-1/4 right-1/4 h-[500px] w-[500px] translate-x-1/2 translate-y-1/2 rounded-full bg-amber-500/5 blur-[120px] pointer-events-none"></div>
+    <div className="flex min-h-screen w-screen font-sans antialiased">
 
-      <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-8 shadow-2xl transition-all duration-300">
-        
-        {/* Colorful top border strip */}
-        <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-coral-500 via-amber-500 to-yellow-400"></div>
+      {/* ── Left panel: branding ── */}
+      <div className="hidden lg:flex lg:w-[55%] flex-col justify-between p-12 relative overflow-hidden bg-zinc-950 text-white">
+        {/* dark restaurant atmosphere overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-zinc-950 via-zinc-900/95 to-zinc-950 pointer-events-none" />
+        <div className="absolute top-0 right-0 h-[500px] w-[500px] rounded-full bg-orange-600/8 blur-[140px] pointer-events-none" />
 
-        {/* Brand / Logo */}
-        <div className="mb-6 text-center">
-          <span className="text-[10px] font-black tracking-[0.25em] text-coral-500 uppercase block mb-1">
-            Terminal Access
-          </span>
-          <h1 className="text-3xl font-black text-zinc-900 dark:text-zinc-50 tracking-tight flex items-center justify-center gap-1.5">
-            <Smartphone className="h-6 w-6 text-coral-500" />
-            <span>KhaoPio</span>
-          </h1>
-        </div>
-
-        {/* Tab Selection */}
-        <div className="mb-6 grid grid-cols-2 gap-1 rounded-lg bg-zinc-100 dark:bg-zinc-950 p-1 border border-zinc-200 dark:border-zinc-800">
-          <button
-            onClick={() => handleTabChange('pin')}
-            className={`flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold rounded-md cursor-pointer transition-all ${
-              tab === 'pin'
-                ? 'bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-50 shadow-sm border border-zinc-200/50 dark:border-zinc-800'
-                : 'text-zinc-500 dark:text-zinc-450 hover:text-zinc-850 dark:hover:text-zinc-200'
-            }`}
-          >
-            <Users className="h-4 w-4 text-coral-500" />
-            Staff PIN
-          </button>
-          <button
-            onClick={() => handleTabChange('email')}
-            className={`flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold rounded-md cursor-pointer transition-all ${
-              tab === 'email'
-                ? 'bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-50 shadow-sm border border-zinc-200/50 dark:border-zinc-800'
-                : 'text-zinc-500 dark:text-zinc-450 hover:text-zinc-850 dark:hover:text-zinc-200'
-            }`}
-          >
-            <Shield className="h-4 w-4 text-coral-500" />
-            Admin Portal
-          </button>
-        </div>
-
-        {/* Main Render Panel */}
-        {tab === 'pin' ? (
-          /* Email + PIN quick login flow */
-          <div className="flex flex-col items-center">
-            {staffError && (
-              <div className="mb-4 w-full flex items-center gap-2 rounded-lg border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/20 p-3 text-center text-xs font-bold text-red-600 dark:text-red-400 animate-shake">
-                <AlertTriangle className="h-4 w-4 shrink-0 mx-auto" />
-                <span>{staffError}</span>
-              </div>
-            )}
-
-            {/* Staff Email Input */}
-            <div className="w-full mb-4">
-              <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
-                Staff Email
-              </label>
-              <div className="relative">
-                <Mail className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-                <input
-                  type="email"
-                  placeholder="waiter@khaopio.com"
-                  value={staffEmail}
-                  onChange={(e) => {
-                    setStaffEmail(e.target.value);
-                    setPin('');
-                    setStaffError('');
-                  }}
-                  className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-1 focus:ring-coral-500"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* PIN Code Dots Indicator */}
-            <div className="mb-5 flex flex-col items-center">
-              <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">
-                6-Digit PIN
-              </label>
-              <div className="flex gap-4">
-                {[...Array(6)].map((_, i) => (
-                  <div
-                    key={i}
-                    className={`h-4.5 w-4.5 rounded-full border-2 transition-all duration-100 ${
-                      pin.length > i
-                        ? 'bg-coral-500 border-coral-500 scale-110 shadow-lg shadow-coral-500/40'
-                        : 'border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-950'
-                    }`}
-                  ></div>
-                ))}
-              </div>
-            </div>
-
-            {/* Keypad Layout */}
-            <div className="grid w-full max-w-[280px] grid-cols-3 gap-3">
-              {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((num) => (
-                <button
-                  key={num}
-                  onClick={() => handleKeyPress(num)}
-                  disabled={loadingStaff}
-                  className="flex h-15 items-center justify-center rounded-xl bg-zinc-50 dark:bg-zinc-800 text-xl font-black text-zinc-800 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700/60 transition-all cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-750 active:scale-95 shadow-sm disabled:opacity-50"
-                >
-                  {num}
-                </button>
-              ))}
-              
-              <button
-                onClick={handleClear}
-                disabled={loadingStaff}
-                className="flex h-15 items-center justify-center rounded-xl bg-red-50 dark:bg-red-950/20 text-xs font-black uppercase tracking-wider text-red-600 dark:text-red-400 border border-red-100 dark:border-red-950 transition-all cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/30 active:scale-95 shadow-sm disabled:opacity-50"
-              >
-                Clear
-              </button>
-              <button
-                onClick={() => handleKeyPress('0')}
-                disabled={loadingStaff}
-                className="flex h-15 items-center justify-center rounded-xl bg-zinc-50 dark:bg-zinc-800 text-xl font-black text-zinc-800 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700/60 transition-all cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-750 active:scale-95 shadow-sm disabled:opacity-50"
-              >
-                0
-              </button>
-              <button
-                onClick={handleBackspace}
-                disabled={loadingStaff}
-                className="flex h-15 items-center justify-center rounded-xl bg-zinc-50 dark:bg-zinc-800 text-lg font-black text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700/60 transition-all cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-750 active:scale-95 shadow-sm disabled:opacity-50"
-              >
-                ⌫
-              </button>
-            </div>
+        {/* Logo */}
+        <div className="relative flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500">
+            <Utensils className="h-5 w-5 text-white" />
           </div>
-        ) : (
-          /* Email & Password Admin login */
-          <form onSubmit={handleEmailLogin} className="space-y-4">
-            <h2 className="text-sm font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-2">
-              Administrator Login
-            </h2>
+          <span className="text-xl font-bold tracking-tight">KhaoPio</span>
+          <span className="rounded-full border border-zinc-700 px-2 py-0.5 text-[10px] font-semibold text-zinc-400 tracking-widest">POS</span>
+        </div>
 
-            {emailError && (
-              <div className="flex items-start gap-2.5 rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/20 p-3.5 text-xs font-bold text-red-650 dark:text-red-400">
-                <AlertTriangle className="h-4.5 w-4.5 shrink-0" />
-                <span>{emailError}</span>
+        {/* Hero copy */}
+        <div className="relative space-y-6 max-w-lg">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-orange-400">Restaurant Command Centre</p>
+          <h2 className="text-5xl font-extrabold leading-[1.1]">
+            Every order, every table, every bill —{' '}
+            <span className="text-orange-400">in one place.</span>
+          </h2>
+          <p className="text-zinc-400 text-sm leading-relaxed">
+            Manage your menu, kitchen, staff and payments from a single fast POS built for Indian restaurants.
+          </p>
+
+          <div className="grid grid-cols-2 gap-3 pt-2">
+            {features.map((f) => (
+              <div key={f.label} className="flex items-center gap-2.5 rounded-full bg-white/5 border border-white/8 px-4 py-2.5 text-sm font-medium text-zinc-300">
+                <span className="text-orange-400">{f.icon}</span>
+                {f.label}
               </div>
-            )}
+            ))}
+          </div>
+        </div>
 
-            <div>
-              <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-                <input
-                  type="email"
-                  placeholder="e.g. admin@yourrestaurant.com"
-                  value={emailForm.email}
-                  onChange={(e) => setEmailForm({ ...emailForm, email: e.target.value })}
-                  className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-1 focus:ring-coral-500"
-                  required
-                />
+        <p className="relative text-xs text-zinc-600">© {new Date().getFullYear()} KhaoPio. All rights reserved.</p>
+      </div>
+
+      {/* ── Right panel: login form ── */}
+      <div className="flex w-full lg:w-[45%] flex-col items-center justify-center px-8 py-12" style={{ background: 'linear-gradient(160deg, #fde8d0 0%, #fddbb8 50%, #fce8d5 100%)' }}>
+
+        {/* Heading outside card */}
+        <div className="w-full max-w-md mb-8">
+          <h1 className="text-4xl font-extrabold text-zinc-900 mb-2">Welcome back</h1>
+          <p className="text-sm text-zinc-500">Sign in to your KhaoPio account</p>
+        </div>
+
+        {/* Card */}
+        <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg shadow-orange-200/40">
+
+          {/* Tab Selection */}
+          <div className="mb-6 flex rounded-full border border-zinc-200 bg-zinc-100 p-1 gap-1">
+            <button onClick={() => handleTabChange('email')}
+              className={`flex-1 py-2 text-sm font-medium rounded-full cursor-pointer transition-all ${tab === 'email' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'}`}>
+              Admin
+            </button>
+            <button onClick={() => handleTabChange('pin')}
+              className={`flex-1 py-2 text-sm font-medium rounded-full cursor-pointer transition-all ${tab === 'pin' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'}`}>
+              Staff PIN
+            </button>
+          </div>
+
+          {tab === 'pin' ? (
+            <div className="flex flex-col items-center">
+              {staffError && (
+                <div className="mb-4 w-full flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  <span>{staffError}</span>
+                </div>
+              )}
+              <div className="w-full mb-5">
+                <label className="block text-sm font-medium text-zinc-700 mb-1.5">Staff Email</label>
+                <input type="email" placeholder="staff@restaurant.com" value={staffEmail}
+                  onChange={(e) => { setStaffEmail(e.target.value); setPin(''); setStaffError(''); }}
+                  className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 focus:bg-white"
+                  required />
               </div>
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
-                Password
-              </label>
-              <div className="relative">
-                <KeyRound className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  value={emailForm.password}
-                  onChange={(e) => setEmailForm({ ...emailForm, password: e.target.value })}
-                  className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-10 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-1 focus:ring-coral-500"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-250 cursor-pointer"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              <div className="mb-5 flex flex-col items-center">
+                <label className="block text-sm font-medium text-zinc-700 mb-3">Enter 6-digit PIN</label>
+                <div className="flex gap-3">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className={`h-3 w-3 rounded-full border-2 transition-all duration-100 ${pin.length > i ? 'bg-orange-500 border-orange-500 scale-110' : 'border-zinc-300 bg-white'}`} />
+                  ))}
+                </div>
+              </div>
+              <div className="grid w-full max-w-[260px] grid-cols-3 gap-2">
+                {['1','2','3','4','5','6','7','8','9'].map((num) => (
+                  <button key={num} onClick={() => handleKeyPress(num)} disabled={loadingStaff}
+                    className="flex h-14 items-center justify-center rounded-xl border border-zinc-200 bg-white text-lg font-semibold text-zinc-800 transition hover:bg-zinc-50 active:scale-95 disabled:opacity-50 cursor-pointer shadow-sm">
+                    {num}
+                  </button>
+                ))}
+                <button onClick={handleClear} disabled={loadingStaff}
+                  className="flex h-14 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-xs font-semibold text-red-500 transition hover:bg-red-100 active:scale-95 disabled:opacity-50 cursor-pointer">
+                  Clear
+                </button>
+                <button onClick={() => handleKeyPress('0')} disabled={loadingStaff}
+                  className="flex h-14 items-center justify-center rounded-xl border border-zinc-200 bg-white text-lg font-semibold text-zinc-800 transition hover:bg-zinc-50 active:scale-95 disabled:opacity-50 cursor-pointer shadow-sm">
+                  0
+                </button>
+                <button onClick={handleBackspace} disabled={loadingStaff}
+                  className="flex h-14 items-center justify-center rounded-xl border border-zinc-200 bg-white text-lg text-zinc-500 transition hover:bg-zinc-50 active:scale-95 disabled:opacity-50 cursor-pointer shadow-sm">
+                  ⌫
                 </button>
               </div>
             </div>
-
-            <button
-              type="submit"
-              disabled={loadingEmail}
-              className="w-full cursor-pointer rounded-lg bg-coral-500 py-3 text-xs font-black uppercase tracking-wider text-white transition-all hover:bg-coral-600 active:scale-[0.98] disabled:opacity-50 shadow-md shadow-coral-100 dark:shadow-none"
-            >
-              {loadingEmail ? 'Authorizing Portal...' : 'Unlock Portal'}
-            </button>
-          </form>
-        )}
-
-        {/* Footer / Setup navigation Link */}
-        <div className="mt-8 border-t border-zinc-250 dark:border-zinc-800 pt-5 text-center">
-          <Link
-            href="/register-admin"
-            className="text-[11px] font-black text-coral-500 hover:text-coral-600 transition-colors uppercase tracking-wider"
-          >
-            Create Account
-          </Link>
+          ) : (
+            <form onSubmit={handleEmailLogin} className="space-y-5">
+              {emailError && (
+                <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  <span>{emailError}</span>
+                </div>
+              )}
+              <div>
+                <label className="block text-sm font-medium text-zinc-700 mb-1.5">Email</label>
+                <input type="email" placeholder="admin@yourrestaurant.com" value={emailForm.email}
+                  onChange={(e) => setEmailForm({ ...emailForm, email: e.target.value })}
+                  className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 focus:bg-white"
+                  required />
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-sm font-medium text-zinc-700">Password</label>
+                  <span className="text-xs font-medium text-orange-500 cursor-pointer hover:text-orange-600">Forgot?</span>
+                </div>
+                <div className="relative">
+                  <input type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={emailForm.password}
+                    onChange={(e) => setEmailForm({ ...emailForm, password: e.target.value })}
+                    className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 pr-11 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 focus:bg-white"
+                    required />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 cursor-pointer">
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+              <button type="submit" disabled={loadingEmail}
+                className="w-full rounded-xl bg-orange-500 py-3 text-sm font-semibold text-white transition hover:bg-orange-600 active:scale-[0.98] disabled:opacity-50 cursor-pointer">
+                {loadingEmail ? 'Signing in...' : 'Sign In'}
+              </button>
+            </form>
+          )}
         </div>
+
+        <p className="mt-6 text-sm text-zinc-600">
+          New restaurant?{' '}
+          <Link href="/register-admin" className="font-semibold text-orange-500 hover:text-orange-600 transition-colors">
+            Create an account
+          </Link>
+        </p>
       </div>
     </div>
   );
