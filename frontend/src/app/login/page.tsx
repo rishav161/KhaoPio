@@ -20,8 +20,6 @@ export default function Login() {
     setIsMounted(true);
   }, []);
 
-
-
   // If already authenticated, redirect to starting dashboard/billing immediately
   useEffect(() => {
     if (isMounted && token) {
@@ -48,6 +46,7 @@ export default function Login() {
   // Admin email/password login states
   const [emailForm, setEmailForm] = useState({ email: '', password: '' });
   const [emailError, setEmailError] = useState('');
+  const [emailSuccess, setEmailSuccess] = useState('');
   const [loadingEmail, setLoadingEmail] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -59,7 +58,13 @@ export default function Login() {
   const [forgotShowPassword, setForgotShowPassword] = useState(false);
   const [forgotError, setForgotError] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
-  const [forgotDebugOtp, setForgotDebugOtp] = useState('');
+
+  // Auto-dismiss success banner after 6 seconds
+  useEffect(() => {
+    if (!emailSuccess) return;
+    const t = setTimeout(() => setEmailSuccess(''), 6000);
+    return () => clearTimeout(t);
+  }, [emailSuccess]);
 
   const handleForgotSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,7 +73,6 @@ export default function Login() {
     setForgotLoading(true);
     try {
       const res = await apiFetch('/auth/forgot-password', { method: 'POST', body: { email: forgotEmail } });
-      setForgotDebugOtp(res.otp || '');
       setForgotStep('otp');
     } catch (err: any) {
       setForgotError(err.message || 'Failed to send reset code.');
@@ -86,9 +90,9 @@ export default function Login() {
     try {
       await apiFetch('/auth/reset-password', { method: 'POST', body: { email: forgotEmail, otp: forgotOtp, newPassword: forgotNewPassword } });
       setForgotStep('idle');
-      setForgotEmail(''); setForgotOtp(''); setForgotNewPassword(''); setForgotDebugOtp('');
+      setForgotEmail(''); setForgotOtp(''); setForgotNewPassword('');
       setEmailForm({ ...emailForm, email: forgotEmail });
-      setEmailError('Password reset successfully. Please sign in.');
+      setEmailSuccess('Password reset successfully. Please sign in.');
     } catch (err: any) {
       setForgotError(err.message || 'Failed to reset password.');
     } finally {
@@ -108,6 +112,7 @@ export default function Login() {
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setEmailError('');
+    setEmailSuccess('');
 
     if (!emailForm.email || !emailForm.password) {
       setEmailError('Please enter both email and password.');
@@ -302,17 +307,12 @@ export default function Login() {
                   </button>
                 </form>
               ) : (
-                <form onSubmit={handleForgotReset} className="space-y-4">
-                  {forgotDebugOtp && (
-                    <div className="rounded-xl border border-orange-200 bg-orange-50 p-3 text-center">
-                      <span className="text-[10px] font-semibold uppercase tracking-widest text-orange-500 block mb-1">Debug OTP</span>
-                      <span className="text-2xl font-bold tracking-[0.5em] text-orange-600 font-mono">{forgotDebugOtp}</span>
-                    </div>
-                  )}
+                <form onSubmit={handleForgotReset} className="space-y-4" autoComplete="off">
                   <div>
                     <label className="block text-sm font-medium text-zinc-700 mb-1.5">Verification Code</label>
                     <input type="text" placeholder="••••••" maxLength={6} value={forgotOtp}
                       onChange={(e) => setForgotOtp(e.target.value.replace(/[^0-9]/g, ''))}
+                      autoComplete="one-time-code"
                       className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-center tracking-[0.5em] font-mono text-sm text-zinc-900 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 focus:bg-white"
                       required />
                   </div>
@@ -321,6 +321,7 @@ export default function Login() {
                     <div className="relative">
                       <input type={forgotShowPassword ? 'text' : 'password'} placeholder="••••••••" value={forgotNewPassword}
                         onChange={(e) => setForgotNewPassword(e.target.value)}
+                        autoComplete="new-password"
                         className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 pr-11 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 focus:bg-white"
                         required />
                       <button type="button" onClick={() => setForgotShowPassword(!forgotShowPassword)}
@@ -395,17 +396,27 @@ export default function Login() {
               </div>
             </div>
           ) : (
-            <form onSubmit={handleEmailLogin} className="space-y-5">
+            <form onSubmit={handleEmailLogin} className="space-y-5" autoComplete="off">
               {emailError && (
                 <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600">
                   <AlertTriangle className="h-4 w-4 shrink-0" />
                   <span>{emailError}</span>
                 </div>
               )}
+              {emailSuccess && (
+                <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+                  <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  <span className="flex-1">{emailSuccess}</span>
+                  <button type="button" onClick={() => setEmailSuccess('')} className="ml-auto text-green-500 hover:text-green-700 cursor-pointer">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-zinc-700 mb-1.5">Email</label>
                 <input type="email" placeholder="admin@yourrestaurant.com" value={emailForm.email}
                   onChange={(e) => setEmailForm({ ...emailForm, email: e.target.value })}
+                  autoComplete="off"
                   className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 focus:bg-white"
                   required />
               </div>
@@ -418,6 +429,7 @@ export default function Login() {
                 <div className="relative">
                   <input type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={emailForm.password}
                     onChange={(e) => setEmailForm({ ...emailForm, password: e.target.value })}
+                    autoComplete="new-password"
                     className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 pr-11 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 focus:bg-white"
                     required />
                   <button type="button" onClick={() => setShowPassword(!showPassword)}

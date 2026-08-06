@@ -107,6 +107,50 @@ export class EmailService {
   }
 
   /**
+   * Sends a security alert email when a user's password is changed.
+   */
+  async sendPasswordChangedEmail(email: string): Promise<boolean> {
+    const transporter = await this.getTransporter();
+    if (!transporter) {
+      console.warn('WARNING: SMTP configuration is incomplete. Skipping password change notification.');
+      return false;
+    }
+
+    const mailOptions = {
+      from: SMTP_FROM,
+      to: email,
+      subject: 'Your KhaoPio password was changed',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+          <h2 style="color: #333333; text-align: center;">Password Changed</h2>
+          <p style="font-size: 16px; color: #555555; line-height: 1.5;">
+            Hi, this is a confirmation that the password for your KhaoPio account (<strong>${email}</strong>) was recently changed.
+          </p>
+          <p style="font-size: 16px; color: #555555; line-height: 1.5;">
+            If you made this change, no further action is needed.
+          </p>
+          <p style="font-size: 16px; color: #d97706; line-height: 1.5;">
+            <strong>If you did not change your password</strong>, please contact your system administrator immediately or use the Forgot Password option to secure your account.
+          </p>
+          <hr style="border: 0; border-top: 1px solid #eeeeee; margin: 20px 0;">
+          <p style="font-size: 12px; color: #999999; text-align: center;">
+            KhaoPio POS System &copy; ${new Date().getFullYear()}
+          </p>
+        </div>
+      `,
+    };
+
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log(`Password change notification dispatched to ${email}.`);
+      return true;
+    } catch (error: any) {
+      console.warn(`[Email Service Warning] Failed to send password change notification to ${email}: ${error.message || error}`);
+      return false;
+    }
+  }
+
+  /**
    * Sends an OTP verification email using SMTP.
    */
   async sendOtpEmail(email: string, otp: string): Promise<boolean> {

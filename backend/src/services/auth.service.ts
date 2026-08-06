@@ -638,6 +638,28 @@ export class AuthService {
     await prisma.otpVerification.delete({
       where: { email: email.toLowerCase() },
     }).catch(() => {});
+
+    emailService.sendPasswordChangedEmail(email.toLowerCase()).catch(() => {});
+  }
+
+  /**
+   * Changes a user's password after verifying their current password.
+   */
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !user.passwordHash) {
+      throw new Error('User not found or does not have a password set.');
+    }
+
+    const match = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!match) {
+      throw new Error('Current password is incorrect.');
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({ where: { id: userId }, data: { passwordHash: hashed } });
+
+    emailService.sendPasswordChangedEmail(user.email!).catch(() => {});
   }
 
   /**

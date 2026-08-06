@@ -210,6 +210,18 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
             >
               <LucideIcons.Menu className="h-4.5 w-4.5" />
             </button>
+
+            {/* Back button — shown only on sub-pages (path not in sidebar) */}
+            {!sidebarItems.some((item) => item.path === pathname) && (
+              <button
+                onClick={() => router.back()}
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-500 dark:text-zinc-400 hover:bg-orange-50 dark:hover:bg-orange-950/20 hover:text-orange-500 hover:border-orange-200 dark:hover:border-orange-800 active:scale-95 transition-all cursor-pointer"
+                title="Go back"
+              >
+                <LucideIcons.ArrowLeft className="h-4 w-4" />
+              </button>
+            )}
+
             <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0"></span>
             <span className="text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-200 truncate max-w-[80px] sm:max-w-none">
               {user?.restaurantName || 'KhaoPio'}

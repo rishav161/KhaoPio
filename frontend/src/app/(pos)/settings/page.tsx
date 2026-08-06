@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { apiFetch } from '@/utils/api';
 import { Loader } from '@/components/Loader';
-import { 
-  Settings, User, Landmark, Phone, FileText, MapPin, 
-  Image, MessageSquare, Save, AlertCircle, CheckCircle2 
+import {
+  Settings, User, Landmark, Phone, FileText, MapPin,
+  Image, MessageSquare, Save, AlertCircle, CheckCircle2, Eye, EyeOff, KeyRound
 } from 'lucide-react';
 import { SUPPORTED_CURRENCIES } from '@/utils/currency';
 
@@ -31,6 +31,13 @@ export default function SettingsPage() {
   const [pageLoading, setPageLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  // Change password states
+  const [pwForm, setPwForm] = useState({ current: '', next: '', confirm: '' });
+  const [pwShow, setPwShow] = useState({ current: false, next: false, confirm: false });
+  const [pwLoading, setPwLoading] = useState(false);
+  const [pwError, setPwError] = useState('');
+  const [pwSuccess, setPwSuccess] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -116,6 +123,34 @@ export default function SettingsPage() {
     }
   };
 
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwError('');
+    setPwSuccess(false);
+    if (pwForm.next !== pwForm.confirm) {
+      setPwError('New passwords do not match.');
+      return;
+    }
+    if (pwForm.next.length < 6) {
+      setPwError('New password must be at least 6 characters.');
+      return;
+    }
+    setPwLoading(true);
+    try {
+      await apiFetch('/auth/change-password', {
+        method: 'PATCH',
+        body: { currentPassword: pwForm.current, newPassword: pwForm.next },
+      });
+      setPwForm({ current: '', next: '', confirm: '' });
+      setPwSuccess(true);
+      setTimeout(() => setPwSuccess(false), 4000);
+    } catch (err: any) {
+      setPwError(err.message || 'Failed to change password.');
+    } finally {
+      setPwLoading(false);
+    }
+  };
+
   if (pageLoading) {
     return <Loader size="lg" text="Loading settings configuration..." className="h-full w-full" />;
   }
@@ -134,7 +169,8 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <div className="max-w-xl rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-sm">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+      <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-sm">
         <form onSubmit={handleSave} className="space-y-5">
           {error && (
             <div className="rounded-lg bg-red-50 dark:bg-red-950/25 border border-red-200 dark:border-red-900 p-3 text-xs font-bold text-red-600 dark:text-red-400 flex items-center gap-2">
@@ -321,6 +357,77 @@ export default function SettingsPage() {
             </button>
           </div>
         </form>
+      </div>
+
+      {/* Change Password card */}
+      <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-sm">
+        <div className="flex items-center gap-2 mb-5">
+          <div className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-orange-50 dark:bg-orange-950/20 text-orange-500">
+            <KeyRound className="h-4 w-4" />
+          </div>
+          <div>
+            <span className="block text-[10px] font-black uppercase tracking-widest text-orange-500">Security</span>
+            <span className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">Change Password</span>
+          </div>
+        </div>
+
+        <form onSubmit={handleChangePassword} className="space-y-4" autoComplete="off">
+          {pwError && (
+            <div className="rounded-lg bg-red-50 dark:bg-red-950/25 border border-red-200 dark:border-red-900 p-3 text-xs font-bold text-red-600 dark:text-red-400 flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{pwError}</span>
+            </div>
+          )}
+          {pwSuccess && (
+            <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950/25 border border-emerald-200 dark:border-emerald-900 p-3 text-xs font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+              <span>Password changed successfully!</span>
+            </div>
+          )}
+
+          {(['current', 'next', 'confirm'] as const).map((field) => {
+            const labels = { current: 'Current Password', next: 'New Password', confirm: 'Confirm New Password' };
+            return (
+              <div key={field}>
+                <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">
+                  {labels[field]}
+                </label>
+                <div className="relative">
+                  <input
+                    type={pwShow[field] ? 'text' : 'password'}
+                    value={pwForm[field]}
+                    onChange={(e) => setPwForm({ ...pwForm, [field]: e.target.value })}
+                    autoComplete="new-password"
+                    placeholder="••••••••"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pl-3 pr-10 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
+                    required
+                  />
+                  <button type="button"
+                    onClick={() => setPwShow({ ...pwShow, [field]: !pwShow[field] })}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 cursor-pointer">
+                    {pwShow[field] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+
+          <div className="flex pt-1">
+            <button type="submit" disabled={pwLoading}
+              className="w-full flex items-center justify-center gap-1.5 cursor-pointer rounded-lg bg-orange-500 hover:bg-orange-600 text-white py-3 text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50 active:scale-[0.98] shadow-md shadow-orange-100 dark:shadow-none">
+              {pwLoading ? (
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              ) : (
+                <>
+                  <KeyRound className="h-4 w-4" />
+                  <span>Update Password</span>
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+
       </div>
     </div>
   );
