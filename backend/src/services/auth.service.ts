@@ -577,6 +577,70 @@ export class AuthService {
   }
 
   /**
+   * Sends a password reset OTP to the user's email.
+   */
+  async sendPasswordResetOtp(email: string): Promise<{ otp: string }> {
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+    });
+
+    if (!user || !user.passwordHash) {
+      throw new Error('No account found with this email address.');
+    }
+
+    if (user.status !== 'ACTIVE') {
+      throw new Error('This account is inactive. Please contact your administrator.');
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    await prisma.otpVerification.upsert({
+      where: { email: email.toLowerCase() },
+      create: { email: email.toLowerCase(), otp, isVerified: false, expiresAt },
+      update: { otp, isVerified: false, expiresAt },
+    });
+
+    emailService.sendOtpEmail(email.toLowerCase(), otp).catch((error) => {
+      console.error(`[Background Email Error] Failed to send reset OTP to ${email}:`, error.message || error);
+    });
+
+    return { otp };
+  }
+
+  /**
+   * Verifies OTP and resets the user's password.
+   */
+  async resetPassword(email: string, otp: string, newPassword: string): Promise<void> {
+    const record = await prisma.otpVerification.findUnique({
+      where: { email: email.toLowerCase() },
+    });
+
+    if (!record) {
+      throw new Error('No reset request found for this email. Please request a new code.');
+    }
+
+    if (record.otp !== otp) {
+      throw new Error('Invalid verification code.');
+    }
+
+    if (record.expiresAt < new Date()) {
+      throw new Error('Verification code has expired. Please request a new one.');
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+
+    await prisma.user.update({
+      where: { email: email.toLowerCase() },
+      data: { passwordHash: hashed },
+    });
+
+    await prisma.otpVerification.delete({
+      where: { email: email.toLowerCase() },
+    }).catch(() => {});
+  }
+
+  /**
    * Updates user name.
    */
   async updateProfile(userId: string, name: string) {

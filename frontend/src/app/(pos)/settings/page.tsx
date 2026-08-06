@@ -124,7 +124,7 @@ export default function SettingsPage() {
     <div className="h-full w-full overflow-y-auto pb-8 pr-1">
       <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3.5 mb-6">
         <div className="flex items-center gap-2">
-          <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-coral-50 dark:bg-coral-950/20 text-coral-500">
+          <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-orange-50 dark:bg-orange-950/20 text-orange-500">
             <Settings className="h-5 w-5" />
           </div>
           <div>
@@ -152,7 +152,7 @@ export default function SettingsPage() {
 
           {/* Section 1: Personal Credentials */}
           <div className="space-y-4">
-            <span className="block text-[10px] font-black uppercase tracking-widest text-coral-500">Personal Information</span>
+            <span className="block text-[10px] font-black uppercase tracking-widest text-orange-500">Personal Information</span>
             <div>
               <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">Staff Member Name</label>
               <div className="relative">
@@ -161,7 +161,7 @@ export default function SettingsPage() {
                   type="text" 
                   value={profileName}
                   onChange={(e) => setProfileName(e.target.value.replace(/[^a-zA-Z\s'\-]/g, ''))}
-                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-semibold outline-none focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
+                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
                   required
                 />
               </div>
@@ -170,7 +170,7 @@ export default function SettingsPage() {
 
           {/* Section 2: Restaurant Identity & POS configuration */}
           <div className="border-t border-zinc-150 dark:border-zinc-800 pt-5 mt-5 space-y-4">
-            <span className="block text-[10px] font-black uppercase tracking-widest text-coral-500">Restaurant Settings</span>
+            <span className="block text-[10px] font-black uppercase tracking-widest text-orange-500">Restaurant Settings</span>
             
             <div>
               <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">Restaurant Workspace Name</label>
@@ -181,7 +181,7 @@ export default function SettingsPage() {
                   value={profileRestaurant}
                   onChange={(e) => setProfileRestaurant(e.target.value)}
                   disabled={user?.role !== 'SUPER_ADMIN'}
-                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-semibold outline-none focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
                   required
                 />
               </div>
@@ -198,7 +198,7 @@ export default function SettingsPage() {
                       min="0"
                       value={profileTaxRate}
                       onChange={(e) => setProfileTaxRate(e.target.value)}
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2.5 text-xs font-semibold outline-none focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2.5 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
                       required
                     />
                   </div>
@@ -210,7 +210,7 @@ export default function SettingsPage() {
                       min="0"
                       value={profileServiceCharge}
                       onChange={(e) => setProfileServiceCharge(e.target.value)}
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2.5 text-xs font-semibold outline-none focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2.5 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
                       required
                     />
                   </div>
@@ -226,7 +226,7 @@ export default function SettingsPage() {
                         value={profilePhone}
                         onChange={(e) => setProfilePhone(e.target.value.replace(/[^0-9+\-\s()]/g, ''))}
                         placeholder="+91 98765 43210"
-                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-semibold outline-none focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
+                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
                       />
                     </div>
                   </div>
@@ -239,7 +239,7 @@ export default function SettingsPage() {
                         value={profileGstin}
                         onChange={(e) => setProfileGstin(e.target.value)}
                         placeholder="27AAAAA1111A1Z1"
-                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-semibold outline-none focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
+                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
                       />
                     </div>
                   </div>
@@ -254,7 +254,7 @@ export default function SettingsPage() {
                       onChange={(e) => setProfileAddress(e.target.value)}
                       placeholder="e.g. 123 Main Street, City, Pin Code"
                       rows={2}
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-semibold outline-none focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all resize-none"
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all resize-none"
                     />
                   </div>
                 </div>
@@ -268,7 +268,7 @@ export default function SettingsPage() {
                       value={profileLogo}
                       onChange={(e) => setProfileLogo(e.target.value)}
                       placeholder="e.g. 🍔 or https://logo-url"
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-semibold outline-none focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
                     />
                   </div>
                 </div>
@@ -282,7 +282,7 @@ export default function SettingsPage() {
                       value={profileThankYouMessage}
                       onChange={(e) => setProfileThankYouMessage(e.target.value)}
                       placeholder="Thank you for dining with us!"
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-semibold outline-none focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
                     />
                   </div>
                 </div>
@@ -291,7 +291,7 @@ export default function SettingsPage() {
                   <select
                     value={profileCurrency}
                     onChange={(e) => setProfileCurrency(e.target.value)}
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2.5 text-xs font-semibold outline-none focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all cursor-pointer"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2.5 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all cursor-pointer"
                   >
                     {SUPPORTED_CURRENCIES.map((c) => (
                       <option key={c.code} value={c.code}>
@@ -308,7 +308,7 @@ export default function SettingsPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-1.5 cursor-pointer rounded-lg bg-coral-500 hover:bg-coral-600 text-white py-3 text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50 active:scale-[0.98] shadow-md shadow-coral-100 dark:shadow-none"
+              className="w-full flex items-center justify-center gap-1.5 cursor-pointer rounded-lg bg-orange-500 hover:bg-orange-600 text-white py-3 text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50 active:scale-[0.98] shadow-md shadow-orange-100 dark:shadow-none"
             >
               {loading ? (
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>

@@ -15,6 +15,8 @@ import {
   updateProfile,
   updateRestaurantDetails,
   getRestaurantDetails,
+  forgotPassword,
+  resetPassword,
 } from '../controllers/auth.controller';
 import { authenticateJWT, requirePermission } from '../middlewares/auth.middleware';
 
@@ -29,6 +31,8 @@ router.get('/invitation/:token', verifyInvitation);
 router.post('/accept-invite', acceptInvitation);
 router.get('/staff', getStaff); // Public list for PIN-login screen
 router.post('/pin-login', loginPin);
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', resetPassword);
 
 // Secured administrative invitation route
 router.post('/invite', authenticateJWT, requirePermission('invite:staff'), inviteStaff);

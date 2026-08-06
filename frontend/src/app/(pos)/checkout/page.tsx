@@ -316,7 +316,7 @@ export default function CheckoutPage() {
       <div className="flex w-full lg:w-[55%] flex-col border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-xl shadow-sm overflow-hidden shrink-0">
         <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-955 p-3">
           <div className="flex items-center gap-2">
-            <ShoppingBag className="h-5 w-5 text-coral-500" />
+            <ShoppingBag className="h-5 w-5 text-orange-500" />
             <h2 className="text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
               Ready for Checkout ({readyOrders.length})
             </h2>
@@ -358,7 +358,7 @@ export default function CheckoutPage() {
                       </span>
                     )}
                   </div>
-                  <span className="text-sm font-black text-coral-500">
+                  <span className="text-sm font-black text-orange-500">
                     {currencySymbol}{order.totals.total}
                   </span>
                 </div>
@@ -378,7 +378,7 @@ export default function CheckoutPage() {
                 {/* Action buttons */}
                 <button
                   onClick={() => setSelectedOrderForBill(order)}
-                  className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-coral-500 hover:bg-coral-600 py-2.5 text-xs font-black text-white transition-all shadow-sm cursor-pointer"
+                  className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 py-2.5 text-xs font-black text-white transition-all shadow-sm cursor-pointer"
                 >
                   <Receipt className="h-4 w-4" />
                   CHECKOUT & PRINT
@@ -402,7 +402,7 @@ export default function CheckoutPage() {
             <select
               value={completedFilter}
               onChange={(e) => setCompletedFilter(e.target.value as any)}
-              className="rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-[9px] font-black uppercase py-1 px-1.5 outline-none focus:border-coral-500 cursor-pointer text-zinc-700 dark:text-zinc-350"
+              className="rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-[9px] font-black uppercase py-1 px-1.5 outline-none focus:border-orange-400 cursor-pointer text-zinc-700 dark:text-zinc-350"
             >
               <option value="today">Today</option>
               <option value="yesterday">Yesterday</option>
@@ -484,7 +484,7 @@ export default function CheckoutPage() {
                     {/* Discounts & Coupons Section */}
                     <div className="bg-zinc-50 dark:bg-zinc-950/40 p-3 border border-zinc-200 dark:border-zinc-850 rounded-lg space-y-3">
                       <h5 className="text-[10px] font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-800 pb-1 flex items-center gap-1.5">
-                        <Tag className="h-3.5 w-3.5 text-coral-500" />
+                        <Tag className="h-3.5 w-3.5 text-orange-500" />
                         <span>Discounts & Coupons</span>
                       </h5>
                       
@@ -500,7 +500,7 @@ export default function CheckoutPage() {
                             placeholder="Enter discount amount"
                             value={manualDiscountInput}
                             onChange={(e) => setManualDiscountInput(e.target.value)}
-                            className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-white dark:bg-zinc-950 py-1.5 pl-8 pr-3 text-xs outline-none focus:border-coral-500 dark:text-zinc-100 font-bold"
+                            className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-white dark:bg-zinc-950 py-1.5 pl-8 pr-3 text-xs outline-none focus:border-orange-400 dark:text-zinc-100 font-bold"
                           />
                         </div>
                       </div>
@@ -516,7 +516,7 @@ export default function CheckoutPage() {
                             placeholder="e.g. WELCOME10"
                             value={couponCodeInput}
                             onChange={(e) => setCouponCodeInput(e.target.value)}
-                            className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-white dark:bg-zinc-950 py-1.5 pl-8 pr-3 text-xs outline-none focus:border-coral-500 uppercase dark:text-zinc-100 font-bold"
+                            className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-white dark:bg-zinc-950 py-1.5 pl-8 pr-3 text-xs outline-none focus:border-orange-400 uppercase dark:text-zinc-100 font-bold"
                           />
                         </div>
                       </div>
@@ -543,7 +543,7 @@ export default function CheckoutPage() {
                     {/* Split Payments Builder */}
                     <div className="border-t border-zinc-200 dark:border-zinc-800 pt-3 space-y-3">
                       <h5 className="text-[10px] font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-800 pb-1 flex items-center gap-1.5">
-                        <Banknote className="h-3.5 w-3.5 text-coral-500" />
+                        <Banknote className="h-3.5 w-3.5 text-orange-500" />
                         <span>Record Payments</span>
                       </h5>
                       
@@ -563,9 +563,9 @@ export default function CheckoutPage() {
                       {/* Local pending payments to be added */}
                       {localPayments.length > 0 && (
                         <div className="space-y-1">
-                          <p className="text-[8px] font-black text-coral-500 uppercase">Pending Finalization:</p>
+                          <p className="text-[8px] font-black text-orange-500 uppercase">Pending Finalization:</p>
                           {localPayments.map((p, idx) => (
-                            <div key={idx} className="flex justify-between items-center bg-coral-50/50 dark:bg-coral-955/10 border border-coral-200 dark:border-coral-900 rounded px-2 py-1 text-[10px] font-bold text-coral-650 dark:text-coral-450">
+                            <div key={idx} className="flex justify-between items-center bg-orange-50/50 dark:bg-orange-955/10 border border-orange-200 dark:border-orange-900 rounded px-2 py-1 text-[10px] font-bold text-orange-650 dark:text-orange-450">
                               <span className="uppercase text-[9px]">{p.paymentMethod} {p.transactionReference ? `(${p.transactionReference})` : ''}</span>
                               <div className="flex items-center gap-1.5">
                                 <span className="font-extrabold">{currencySymbol}{p.amount.toFixed(2)}</span>
@@ -591,7 +591,7 @@ export default function CheckoutPage() {
                             placeholder="Amount"
                             value={paymentAmountInput}
                             onChange={(e) => setPaymentAmountInput(e.target.value)}
-                            className="w-full rounded border border-zinc-250 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-2 py-1 text-xs font-bold outline-none focus:border-coral-500 dark:text-zinc-100"
+                            className="w-full rounded border border-zinc-250 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-2 py-1 text-xs font-bold outline-none focus:border-orange-400 dark:text-zinc-100"
                           />
                         </div>
                         <div className="col-span-4">
@@ -599,7 +599,7 @@ export default function CheckoutPage() {
                           <select
                             value={paymentMethodInput}
                             onChange={(e) => setPaymentMethodInput(e.target.value as any)}
-                            className="w-full rounded border border-zinc-250 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-2 py-1 text-xs font-bold outline-none focus:border-coral-500 dark:text-zinc-100"
+                            className="w-full rounded border border-zinc-250 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-2 py-1 text-xs font-bold outline-none focus:border-orange-400 dark:text-zinc-100"
                           >
                             <option value="CASH">CASH</option>
                             <option value="CARD">CARD</option>
@@ -609,7 +609,7 @@ export default function CheckoutPage() {
                         <div className="col-span-3 flex items-end">
                           <button
                             onClick={handleAddPayment}
-                            className="w-full h-[26px] flex items-center justify-center gap-1 rounded bg-coral-500 hover:bg-coral-600 text-white font-black text-xs transition-colors cursor-pointer"
+                            className="w-full h-[26px] flex items-center justify-center gap-1 rounded bg-orange-500 hover:bg-orange-600 text-white font-black text-xs transition-colors cursor-pointer"
                           >
                             <Plus className="h-3.5 w-3.5" />
                             ADD
@@ -621,7 +621,7 @@ export default function CheckoutPage() {
                             placeholder="Transaction reference (Optional)"
                             value={paymentRefInput}
                             onChange={(e) => setPaymentRefInput(e.target.value)}
-                            className="w-full rounded border border-zinc-250 dark:border-zinc-800 bg-white dark:bg-zinc-955 px-2 py-1 text-[10px] font-bold outline-none focus:border-coral-500 dark:text-zinc-100"
+                            className="w-full rounded border border-zinc-250 dark:border-zinc-800 bg-white dark:bg-zinc-955 px-2 py-1 text-[10px] font-bold outline-none focus:border-orange-400 dark:text-zinc-100"
                           />
                         </div>
                       </div>
@@ -639,7 +639,7 @@ export default function CheckoutPage() {
                       </div>
                       <div className="flex justify-between border-t border-zinc-200 dark:border-zinc-800 pt-2 text-sm font-black text-zinc-900 dark:text-zinc-100">
                         <span>Remaining Balance:</span>
-                        <span className="text-coral-500 text-base">{currencySymbol}{remainingBalance.toFixed(2)}</span>
+                        <span className="text-orange-500 text-base">{currencySymbol}{remainingBalance.toFixed(2)}</span>
                       </div>
                     </div>
 

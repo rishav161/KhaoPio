@@ -62,7 +62,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
                   onClick={() => onPageChange(p)}
                   className={`relative inline-flex items-center border px-3 py-1.5 text-xs font-black cursor-pointer transition-all ${
                     isCurrent
-                      ? 'z-10 bg-coral-500 border-coral-500 text-white shadow-sm'
+                      ? 'z-10 bg-orange-500 border-orange-500 text-white shadow-sm'
                       : 'border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-650 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900'
                   }`}
                 >

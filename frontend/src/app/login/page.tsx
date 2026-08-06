@@ -51,6 +51,51 @@ export default function Login() {
   const [loadingEmail, setLoadingEmail] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Forgot password states
+  const [forgotStep, setForgotStep] = useState<'idle' | 'email' | 'otp'> ('idle');
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotOtp, setForgotOtp] = useState('');
+  const [forgotNewPassword, setForgotNewPassword] = useState('');
+  const [forgotShowPassword, setForgotShowPassword] = useState(false);
+  const [forgotError, setForgotError] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotDebugOtp, setForgotDebugOtp] = useState('');
+
+  const handleForgotSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotError('');
+    if (!forgotEmail) { setForgotError('Please enter your email.'); return; }
+    setForgotLoading(true);
+    try {
+      const res = await apiFetch('/auth/forgot-password', { method: 'POST', body: { email: forgotEmail } });
+      setForgotDebugOtp(res.otp || '');
+      setForgotStep('otp');
+    } catch (err: any) {
+      setForgotError(err.message || 'Failed to send reset code.');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const handleForgotReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotError('');
+    if (!forgotOtp || forgotOtp.length !== 6) { setForgotError('Enter the 6-digit code.'); return; }
+    if (!forgotNewPassword || forgotNewPassword.length < 6) { setForgotError('Password must be at least 6 characters.'); return; }
+    setForgotLoading(true);
+    try {
+      await apiFetch('/auth/reset-password', { method: 'POST', body: { email: forgotEmail, otp: forgotOtp, newPassword: forgotNewPassword } });
+      setForgotStep('idle');
+      setForgotEmail(''); setForgotOtp(''); setForgotNewPassword(''); setForgotDebugOtp('');
+      setEmailForm({ ...emailForm, email: forgotEmail });
+      setEmailError('Password reset successfully. Please sign in.');
+    } catch (err: any) {
+      setForgotError(err.message || 'Failed to reset password.');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
   // Clear errors and input fields when changing tabs
   const handleTabChange = (targetTab: 'pin' | 'email') => {
     setTab(targetTab);
@@ -226,6 +271,73 @@ export default function Login() {
         {/* Card */}
         <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg shadow-orange-200/40">
 
+          {/* ── Forgot password panel ── */}
+          {forgotStep !== 'idle' ? (
+            <div>
+              <button onClick={() => { setForgotStep('idle'); setForgotError(''); }}
+                className="mb-5 text-sm text-zinc-500 hover:text-zinc-700 transition cursor-pointer">
+                ← Back to sign in
+              </button>
+              <h2 className="text-lg font-bold text-zinc-900 mb-1">Reset your password</h2>
+              <p className="text-sm text-zinc-500 mb-6">
+                {forgotStep === 'email' ? "Enter your email and we'll send a reset code." : `Code sent to ${forgotEmail}. Enter it below with your new password.`}
+              </p>
+              {forgotError && (
+                <div className="mb-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+                  <AlertTriangle className="h-4 w-4 shrink-0" /><span>{forgotError}</span>
+                </div>
+              )}
+              {forgotStep === 'email' ? (
+                <form onSubmit={handleForgotSendOtp} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-700 mb-1.5">Email</label>
+                    <input type="email" placeholder="admin@yourrestaurant.com" value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 focus:bg-white"
+                      required />
+                  </div>
+                  <button type="submit" disabled={forgotLoading}
+                    className="w-full rounded-xl bg-orange-500 py-3 text-sm font-semibold text-white transition hover:bg-orange-600 active:scale-[0.98] disabled:opacity-50 cursor-pointer">
+                    {forgotLoading ? 'Sending...' : 'Send Reset Code'}
+                  </button>
+                </form>
+              ) : (
+                <form onSubmit={handleForgotReset} className="space-y-4">
+                  {forgotDebugOtp && (
+                    <div className="rounded-xl border border-orange-200 bg-orange-50 p-3 text-center">
+                      <span className="text-[10px] font-semibold uppercase tracking-widest text-orange-500 block mb-1">Debug OTP</span>
+                      <span className="text-2xl font-bold tracking-[0.5em] text-orange-600 font-mono">{forgotDebugOtp}</span>
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-700 mb-1.5">Verification Code</label>
+                    <input type="text" placeholder="••••••" maxLength={6} value={forgotOtp}
+                      onChange={(e) => setForgotOtp(e.target.value.replace(/[^0-9]/g, ''))}
+                      className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-center tracking-[0.5em] font-mono text-sm text-zinc-900 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 focus:bg-white"
+                      required />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-700 mb-1.5">New Password</label>
+                    <div className="relative">
+                      <input type={forgotShowPassword ? 'text' : 'password'} placeholder="••••••••" value={forgotNewPassword}
+                        onChange={(e) => setForgotNewPassword(e.target.value)}
+                        className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 pr-11 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 focus:bg-white"
+                        required />
+                      <button type="button" onClick={() => setForgotShowPassword(!forgotShowPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 cursor-pointer">
+                        {forgotShowPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+                  <button type="submit" disabled={forgotLoading}
+                    className="w-full rounded-xl bg-orange-500 py-3 text-sm font-semibold text-white transition hover:bg-orange-600 active:scale-[0.98] disabled:opacity-50 cursor-pointer">
+                    {forgotLoading ? 'Resetting...' : 'Reset Password'}
+                  </button>
+                </form>
+              )}
+            </div>
+          ) : (<>
+
           {/* Tab Selection */}
           <div className="mb-6 flex rounded-full border border-zinc-200 bg-zinc-100 p-1 gap-1">
             <button onClick={() => handleTabChange('email')}
@@ -300,7 +412,8 @@ export default function Login() {
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-sm font-medium text-zinc-700">Password</label>
-                  <span className="text-xs font-medium text-orange-500 cursor-pointer hover:text-orange-600">Forgot?</span>
+                  <button type="button" onClick={() => { setForgotStep('email'); setForgotEmail(emailForm.email); setForgotError(''); }}
+                    className="text-xs font-medium text-orange-500 cursor-pointer hover:text-orange-600 transition bg-transparent border-0 p-0">Forgot?</button>
                 </div>
                 <div className="relative">
                   <input type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={emailForm.password}
@@ -319,6 +432,7 @@ export default function Login() {
               </button>
             </form>
           )}
+          </>)}
         </div>
 
         <p className="mt-6 text-sm text-zinc-600">

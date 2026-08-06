@@ -236,7 +236,7 @@ export default function StaffManagement() {
       case 'WAITER':
         return 'bg-emerald-50 text-emerald-700 border-emerald-200';
       case 'KITCHEN_CHEF':
-        return 'bg-violet-50 text-violet-700 border-violet-200';
+        return 'bg-orange-50 text-orange-700 border-orange-200';
       default:
         return 'bg-zinc-50 text-zinc-700 border-zinc-200';
     }
@@ -261,7 +261,7 @@ export default function StaffManagement() {
       <div className="mb-4 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 flex items-center gap-2">
-            <Users className="h-6 w-6 text-coral-500" />
+            <Users className="h-6 w-6 text-orange-500" />
             <span>Staff Administration</span>
           </h1>
           <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
@@ -276,7 +276,7 @@ export default function StaffManagement() {
               setGeneratedInviteLink('');
               setIsInviteOpen(true);
             }}
-            className="flex items-center gap-1.5 self-start rounded-lg bg-coral-500 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-md shadow-coral-100 dark:shadow-none transition-all cursor-pointer hover:bg-coral-600 active:scale-95"
+            className="flex items-center gap-1.5 self-start rounded-lg bg-orange-500 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-md shadow-orange-100 dark:shadow-none transition-all cursor-pointer hover:bg-orange-600 active:scale-95"
           >
             <UserPlus className="h-4.5 w-4.5" />
             <span>Invite Staff Member</span>
@@ -311,20 +311,20 @@ export default function StaffManagement() {
 
       {/* Manual Invite Link Display Card */}
       {generatedInviteLink && (
-        <div className="mb-4 rounded-lg border border-coral-200 dark:border-coral-900 bg-coral-50/20 dark:bg-coral-950/10 p-4 shadow-sm animate-in fade-in slide-in-from-top-4 duration-200">
-          <h3 className="text-xs font-black uppercase tracking-wider text-coral-750 dark:text-coral-450 mb-1">
+        <div className="mb-4 rounded-lg border border-orange-200 dark:border-orange-900 bg-orange-50/20 dark:bg-orange-950/10 p-4 shadow-sm animate-in fade-in slide-in-from-top-4 duration-200">
+          <h3 className="text-xs font-black uppercase tracking-wider text-orange-750 dark:text-orange-450 mb-1">
             Manual Onboarding Link Generated
           </h3>
           <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mb-2 font-semibold">
             Mailgun is unconfigured. Share the security invitation link below with the user to setup their terminal password and security PIN.
           </p>
-          <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 border border-coral-250 dark:border-coral-900 rounded-lg p-2 overflow-x-auto">
+          <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 border border-orange-250 dark:border-orange-900 rounded-lg p-2 overflow-x-auto">
             <span className="text-[11px] font-mono text-zinc-800 dark:text-zinc-100 break-all select-all flex-1 min-w-0 mr-2">
               {generatedInviteLink}
             </span>
             <button
               onClick={handleCopyLink}
-              className="flex items-center gap-1 shrink-0 rounded bg-coral-500 hover:bg-coral-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5 transition-colors cursor-pointer"
+              className="flex items-center gap-1 shrink-0 rounded bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5 transition-colors cursor-pointer"
             >
               {copiedLink ? <ClipboardCheck className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
               <span>{copiedLink ? 'Copied' : 'Copy'}</span>
@@ -359,7 +359,7 @@ export default function StaffManagement() {
       <div className="flex-1 overflow-y-auto rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm">
         {loading ? (
           <div className="flex h-full w-full flex-col items-center justify-center p-8">
-            <div className="h-8 w-8 animate-spin rounded-full border-3 border-coral-500 border-t-transparent"></div>
+            <div className="h-8 w-8 animate-spin rounded-full border-3 border-orange-500 border-t-transparent"></div>
             <p className="mt-3 text-xs font-bold text-zinc-500 dark:text-zinc-400">Querying active staff roster...</p>
           </div>
         ) : filteredStaff.length === 0 ? (
@@ -391,13 +391,13 @@ export default function StaffManagement() {
                     <tr key={staff.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-950/20 transition-colors">
                       <td className="whitespace-nowrap px-4 py-3.5">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-coral-100 dark:bg-coral-950/30 font-black text-coral-600 dark:text-coral-400 uppercase text-xs">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-950/30 font-black text-orange-600 dark:text-orange-400 uppercase text-xs">
                             {staff.name.charAt(0)}
                           </div>
                           <div>
                             <div className="font-extrabold text-zinc-900 dark:text-zinc-100">{staff.name}</div>
                             {staff.id === user?.id && (
-                              <span className="inline-flex items-center text-[9px] font-black uppercase tracking-widest text-coral-600 dark:text-coral-450 bg-coral-50 dark:bg-coral-950/20 px-1.5 py-0.5 rounded border border-coral-200 dark:border-coral-900">
+                              <span className="inline-flex items-center text-[9px] font-black uppercase tracking-widest text-orange-600 dark:text-orange-450 bg-orange-50 dark:bg-orange-950/20 px-1.5 py-0.5 rounded border border-orange-200 dark:border-orange-900">
                                 You
                               </span>
                             )}
@@ -432,7 +432,7 @@ export default function StaffManagement() {
                               title={staff.status === 'ACTIVE' ? 'Disable Terminal' : 'Enable Terminal'}
                             >
                               {staff.status === 'ACTIVE' ? (
-                                <ToggleRight className="h-5 w-5 text-coral-500" />
+                                <ToggleRight className="h-5 w-5 text-orange-500" />
                               ) : (
                                 <ToggleLeft className="h-5 w-5 text-zinc-400" />
                               )}
@@ -471,7 +471,7 @@ export default function StaffManagement() {
       {isInviteOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-2xl animate-in zoom-in-95 duration-150 text-zinc-900 dark:text-zinc-100">
-            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-coral-500 via-amber-500 to-yellow-400"></div>
+            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-400"></div>
             
             <button
               onClick={() => setIsInviteOpen(false)}
@@ -481,7 +481,7 @@ export default function StaffManagement() {
             </button>
 
             <h2 className="text-lg font-black tracking-tight text-zinc-900 dark:text-zinc-50 flex items-center gap-1.5">
-              <UserPlus className="h-5 w-5 text-coral-500" />
+              <UserPlus className="h-5 w-5 text-orange-500" />
               <span>Invite Staff Member</span>
             </h2>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 font-semibold">
@@ -500,7 +500,7 @@ export default function StaffManagement() {
                     placeholder="e.g. staffmember@khaopio.com"
                     value={inviteForm.email}
                     onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
-                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-1 focus:ring-coral-500"
+                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-orange-400/20"
                     required
                   />
                 </div>
@@ -515,7 +515,7 @@ export default function StaffManagement() {
                   <select
                     value={inviteForm.role}
                     onChange={(e) => setInviteForm({ ...inviteForm, role: e.target.value })}
-                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition-all focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-1 focus:ring-coral-500 appearance-none cursor-pointer"
+                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition-all focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-orange-400/20 appearance-none cursor-pointer"
                   >
                     <option value="STORE_MANAGER">Store Manager</option>
                     <option value="CASHIER">Cashier</option>
@@ -536,7 +536,7 @@ export default function StaffManagement() {
                 <button
                   type="submit"
                   disabled={inviteLoading}
-                  className="rounded-lg bg-coral-500 px-4 py-2 text-xs font-black uppercase tracking-wider text-white hover:bg-coral-600 shadow-md transition-all cursor-pointer disabled:opacity-50"
+                  className="rounded-lg bg-orange-500 px-4 py-2 text-xs font-black uppercase tracking-wider text-white hover:bg-orange-600 shadow-md transition-all cursor-pointer disabled:opacity-50"
                 >
                   {inviteLoading ? 'Generating Invitation...' : 'Send Invitation'}
                 </button>
@@ -550,7 +550,7 @@ export default function StaffManagement() {
       {isEditOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-2xl animate-in zoom-in-95 duration-150 text-zinc-900 dark:text-zinc-100">
-            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-coral-500 via-amber-500 to-yellow-400"></div>
+            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-400"></div>
 
             <button
               onClick={() => setIsEditOpen(false)}
@@ -560,7 +560,7 @@ export default function StaffManagement() {
             </button>
 
             <h2 className="text-lg font-black tracking-tight text-zinc-900 dark:text-zinc-50 flex items-center gap-1.5">
-              <Edit2 className="h-5 w-5 text-coral-500" />
+              <Edit2 className="h-5 w-5 text-orange-500" />
               <span>Edit Staff Details</span>
             </h2>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 font-semibold">
@@ -576,7 +576,7 @@ export default function StaffManagement() {
                   type="text"
                   value={editForm.name}
                   onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                  className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-3 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-1 focus:ring-coral-500"
+                  className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-3 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-orange-400/20"
                   required
                 />
               </div>
@@ -591,7 +591,7 @@ export default function StaffManagement() {
                     value={editForm.role}
                     onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
                     disabled={editForm.role === 'SUPER_ADMIN'}
-                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition-all focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-1 focus:ring-coral-500 appearance-none cursor-pointer disabled:opacity-55 disabled:cursor-not-allowed"
+                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition-all focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-orange-400/20 appearance-none cursor-pointer disabled:opacity-55 disabled:cursor-not-allowed"
                   >
                     {editForm.role === 'SUPER_ADMIN' && <option value="SUPER_ADMIN">Super Admin</option>}
                     <option value="STORE_MANAGER">Store Manager</option>
@@ -613,7 +613,7 @@ export default function StaffManagement() {
                 <button
                   type="submit"
                   disabled={editLoading}
-                  className="rounded-lg bg-coral-500 px-4 py-2 text-xs font-black uppercase tracking-wider text-white hover:bg-coral-600 shadow-md transition-all cursor-pointer disabled:opacity-50"
+                  className="rounded-lg bg-orange-500 px-4 py-2 text-xs font-black uppercase tracking-wider text-white hover:bg-orange-600 shadow-md transition-all cursor-pointer disabled:opacity-50"
                 >
                   {editLoading ? 'Updating Profile...' : 'Save Changes'}
                 </button>

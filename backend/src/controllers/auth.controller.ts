@@ -241,6 +241,38 @@ export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      res.status(400).json({ error: 'Field "email" is required.' });
+      return;
+    }
+    const result = await authService.sendPasswordResetOtp(email);
+    res.status(200).json({ message: 'Password reset code sent to your email.', otp: result.otp });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message || 'Error sending reset code.' });
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    if (!email || !otp || !newPassword) {
+      res.status(400).json({ error: 'Fields "email", "otp", and "newPassword" are required.' });
+      return;
+    }
+    if (newPassword.length < 6) {
+      res.status(400).json({ error: 'Password must be at least 6 characters.' });
+      return;
+    }
+    await authService.resetPassword(email, otp, newPassword);
+    res.status(200).json({ message: 'Password reset successfully.' });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message || 'Error resetting password.' });
+  }
+};
+
 export const updateProfile = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).user?.id;

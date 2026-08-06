@@ -184,7 +184,7 @@ export default function CouponsPage() {
     <div className="h-full w-full overflow-y-auto pb-8 pr-1 relative">
       <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3.5 mb-6">
         <div className="flex items-center gap-2">
-          <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-coral-50 dark:bg-coral-950/20 text-coral-500">
+          <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-orange-50 dark:bg-orange-950/20 text-orange-500">
             <Ticket className="h-5 w-5" />
           </div>
           <div>
@@ -196,7 +196,7 @@ export default function CouponsPage() {
         {user?.role === 'SUPER_ADMIN' && (
           <button
             onClick={() => setIsDrawerOpen(true)}
-            className="flex items-center gap-1.5 cursor-pointer rounded-lg bg-coral-500 hover:bg-coral-600 text-white font-black px-4 py-2.5 text-[10px] uppercase shadow-sm tracking-wide transition-all active:scale-[0.98]"
+            className="flex items-center gap-1.5 cursor-pointer rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-black px-4 py-2.5 text-[10px] uppercase shadow-sm tracking-wide transition-all active:scale-[0.98]"
           >
             <Plus className="h-4 w-4" />
             <span>Create Coupon</span>
@@ -240,7 +240,7 @@ export default function CouponsPage() {
                   isExpired 
                     ? 'border-zinc-200 dark:border-zinc-850 opacity-60'
                     : coupon.isActive
-                      ? 'border-zinc-200 dark:border-zinc-800 hover:border-coral-300 dark:hover:border-coral-800'
+                      ? 'border-zinc-200 dark:border-zinc-800 hover:border-orange-300 dark:hover:border-orange-800'
                       : 'border-zinc-200 dark:border-zinc-850 bg-zinc-50/50 dark:bg-zinc-900/50'
                 }`}
               >
@@ -305,7 +305,7 @@ export default function CouponsPage() {
                     ) : (
                       <button
                         onClick={() => handleToggleActive(coupon.id, coupon.isActive)}
-                        className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-zinc-600 dark:text-zinc-300 hover:text-coral-500 transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-zinc-600 dark:text-zinc-300 hover:text-orange-500 transition-colors cursor-pointer"
                       >
                         {coupon.isActive ? (
                           <>
@@ -343,7 +343,7 @@ export default function CouponsPage() {
             <div>
               <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3 mb-5">
                 <h3 className="text-sm font-black uppercase tracking-wider text-zinc-900 dark:text-zinc-50 flex items-center gap-1.5">
-                  <Ticket className="h-4.5 w-4.5 text-coral-500" />
+                  <Ticket className="h-4.5 w-4.5 text-orange-500" />
                   <span>Create Discount Coupon</span>
                 </h3>
                 <button 
@@ -362,7 +362,7 @@ export default function CouponsPage() {
                     placeholder="e.g. MONSOON20"
                     value={code}
                     onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-3 text-xs font-semibold outline-none focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-3 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
                     required
                   />
                 </div>
@@ -374,7 +374,7 @@ export default function CouponsPage() {
                     placeholder="e.g. 20% off on monsoon bookings"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-3 text-xs font-semibold outline-none focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-3 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
                   />
                 </div>
 
@@ -387,7 +387,7 @@ export default function CouponsPage() {
                         setDiscountType(e.target.value as 'PERCENTAGE' | 'FLAT');
                         setMaxDiscount('');
                       }}
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-2 text-xs font-semibold outline-none focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-2 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
                     >
                       <option value="PERCENTAGE">Percentage (%)</option>
                       <option value="FLAT">Flat ({currencySymbol})</option>
@@ -407,7 +407,7 @@ export default function CouponsPage() {
                         placeholder="20"
                         value={discountValue}
                         onChange={(e) => setDiscountValue(e.target.value)}
-                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-55 dark:bg-zinc-950 py-2.5 pr-3 pl-7 text-xs font-semibold outline-none focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
+                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-55 dark:bg-zinc-950 py-2.5 pr-3 pl-7 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
                         required
                       />
                     </div>
@@ -422,7 +422,7 @@ export default function CouponsPage() {
                       min="0"
                       value={minSubtotal}
                       onChange={(e) => setMinSubtotal(e.target.value)}
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-55 dark:bg-zinc-950 py-2.5 px-3 text-xs font-semibold outline-none focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-55 dark:bg-zinc-950 py-2.5 px-3 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
                       required
                     />
                   </div>
@@ -436,7 +436,7 @@ export default function CouponsPage() {
                       value={maxDiscount}
                       onChange={(e) => setMaxDiscount(e.target.value)}
                       disabled={discountType === 'FLAT'}
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-3 text-xs font-semibold outline-none focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-3 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>
@@ -449,7 +449,7 @@ export default function CouponsPage() {
                       value={startDate}
                       min={new Date().toISOString().split('T')[0]}
                       onChange={(e) => setStartDate(e.target.value)}
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-3 text-xs font-semibold outline-none focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-3 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
                       required
                     />
                   </div>
@@ -460,7 +460,7 @@ export default function CouponsPage() {
                       value={endDate}
                       min={startDate || new Date().toISOString().split('T')[0]}
                       onChange={(e) => setEndDate(e.target.value)}
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-3 text-xs font-semibold outline-none focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-3 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
                       required
                     />
                   </div>
@@ -477,7 +477,7 @@ export default function CouponsPage() {
                   <button
                     type="submit"
                     disabled={formLoading}
-                    className="flex-1 rounded-lg bg-coral-500 hover:bg-coral-600 text-white py-2.5 text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50 flex items-center justify-center gap-1 cursor-pointer"
+                    className="flex-1 rounded-lg bg-orange-500 hover:bg-orange-600 text-white py-2.5 text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50 flex items-center justify-center gap-1 cursor-pointer"
                   >
                     {formLoading ? (
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
