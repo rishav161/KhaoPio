@@ -297,7 +297,7 @@ export default function MenuPage() {
       <div className="mb-4 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-black tracking-tight text-zinc-950 dark:text-zinc-50 flex items-center gap-2">
-            <Layers className="h-6 w-6 text-coral-500" />
+            <Layers className="h-6 w-6 text-orange-500" />
             <span>Menu Configuration</span>
           </h1>
           <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
@@ -307,7 +307,7 @@ export default function MenuPage() {
         
         <button
           onClick={handleOpenCreateItem}
-          className="flex items-center gap-1.5 self-start rounded-lg bg-coral-500 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-md shadow-coral-100 dark:shadow-none hover:bg-coral-600 active:scale-95 transition-all cursor-pointer"
+          className="flex items-center gap-1.5 self-start rounded-lg bg-orange-500 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-md shadow-orange-100 dark:shadow-none hover:bg-orange-600 active:scale-95 transition-all cursor-pointer"
         >
           <Plus className="h-4.5 w-4.5" />
           <span>Add Menu Item</span>
@@ -359,11 +359,11 @@ export default function MenuPage() {
                 placeholder="New Category..."
                 value={newCatName}
                 onChange={(e) => setNewCatName(e.target.value)}
-                className="flex-1 rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-1.5 px-3 text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none focus:border-coral-500"
+                className="flex-1 rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-1.5 px-3 text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none focus:border-orange-400"
               />
               <button
                 type="submit"
-                className="rounded-lg bg-coral-500 text-white p-2 hover:bg-coral-600 transition-colors cursor-pointer"
+                className="rounded-lg bg-orange-500 text-white p-2 hover:bg-orange-600 transition-colors cursor-pointer"
                 title="Add Category"
               >
                 <Plus className="h-4 w-4" />
@@ -420,7 +420,7 @@ export default function MenuPage() {
                           setCatEditingId(cat.id);
                           setCatEditingName(cat.name);
                         }}
-                        className="text-zinc-450 hover:text-coral-500 dark:hover:text-coral-400 p-1 transition-colors cursor-pointer"
+                        className="text-zinc-450 hover:text-orange-500 dark:hover:text-orange-400 p-1 transition-colors cursor-pointer"
                         title="Rename"
                       >
                         <Edit3 className="h-3.5 w-3.5" />
@@ -449,7 +449,7 @@ export default function MenuPage() {
               onClick={() => setActiveTab('ALL')}
               className={`rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer shrink-0 ${
                 activeTab === 'ALL'
-                  ? 'bg-coral-500 text-white shadow-sm'
+                  ? 'bg-orange-500 text-white shadow-sm'
                   : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-550 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
               }`}
             >
@@ -461,7 +461,7 @@ export default function MenuPage() {
                 onClick={() => setActiveTab(cat.id)}
                 className={`rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer shrink-0 ${
                   activeTab === cat.id
-                    ? 'bg-coral-500 text-white shadow-sm'
+                    ? 'bg-orange-500 text-white shadow-sm'
                     : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-550 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                 }`}
               >
@@ -516,7 +516,7 @@ export default function MenuPage() {
                       </p>
 
                       <div className="mt-2 flex items-center justify-between">
-                        <span className="text-xs font-black text-coral-500 font-mono">
+                        <span className="text-xs font-black text-orange-500 font-mono">
                           {currencySymbol}{item.price.toFixed(2)}
                         </span>
 
@@ -543,7 +543,7 @@ export default function MenuPage() {
                       </button>
                       <button
                         onClick={() => handleOpenEditItem(item)}
-                        className="p-1 rounded text-zinc-450 hover:text-coral-500 dark:hover:text-coral-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                        className="p-1 rounded text-zinc-450 hover:text-orange-500 dark:hover:text-orange-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                         title="Edit Item"
                       >
                         <Edit3 className="h-3.5 w-3.5" />
@@ -577,7 +577,7 @@ export default function MenuPage() {
             </button>
 
             <h2 className="text-base font-black tracking-tight text-zinc-950 dark:text-zinc-50 border-b border-zinc-100 dark:border-zinc-800 pb-2 mb-4 flex items-center gap-1.5">
-              <Package className="h-5 w-5 text-coral-500" />
+              <Package className="h-5 w-5 text-orange-500" />
               <span>{editingItem ? 'Edit Dish Details' : 'Create New Menu Item'}</span>
             </h2>
 
@@ -592,7 +592,7 @@ export default function MenuPage() {
                     value={itemForm.name}
                     onChange={(e) => setItemForm({ ...itemForm, name: e.target.value })}
                     placeholder="e.g. Garlic Naan"
-                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-coral-500"
+                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-orange-400"
                     required
                   />
                 </div>
@@ -605,7 +605,7 @@ export default function MenuPage() {
                     value={itemForm.code}
                     onChange={(e) => setItemForm({ ...itemForm, code: e.target.value })}
                     placeholder="e.g. G02"
-                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-coral-500 font-mono tracking-widest text-center"
+                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-orange-400 font-mono tracking-widest text-center"
                     required
                   />
                 </div>
@@ -619,7 +619,7 @@ export default function MenuPage() {
                   value={itemForm.description}
                   onChange={(e) => setItemForm({ ...itemForm, description: e.target.value })}
                   placeholder="Provide ingredients, cooking preparation details..."
-                  className="w-full h-18 rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-1.5 px-3 text-xs outline-none focus:border-coral-500 resize-none"
+                  className="w-full h-18 rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-1.5 px-3 text-xs outline-none focus:border-orange-400 resize-none"
                 />
               </div>
 
@@ -633,7 +633,7 @@ export default function MenuPage() {
                     value={itemForm.price}
                     onChange={(e) => setItemForm({ ...itemForm, price: e.target.value.replace(/[^0-9.]/g, '') })}
                     placeholder="5.99"
-                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-coral-500 font-mono"
+                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-orange-400 font-mono"
                     required
                   />
                 </div>
@@ -646,7 +646,7 @@ export default function MenuPage() {
                     value={itemForm.image}
                     onChange={(e) => setItemForm({ ...itemForm, image: e.target.value })}
                     placeholder="🍲"
-                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-coral-500 text-center"
+                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-orange-400 text-center"
                   />
                 </div>
               </div>
@@ -658,7 +658,7 @@ export default function MenuPage() {
                 <select
                   value={itemForm.categoryId || (categories.length > 0 ? categories[0].id : '')}
                   onChange={(e) => setItemForm({ ...itemForm, categoryId: e.target.value })}
-                  className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-coral-500"
+                  className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-orange-400"
                   required
                 >
                   {categories.map((cat) => (
@@ -675,7 +675,7 @@ export default function MenuPage() {
                   id="modalIsAvailable"
                   checked={itemForm.isAvailable}
                   onChange={(e) => setItemForm({ ...itemForm, isAvailable: e.target.checked })}
-                  className="h-4.5 w-4.5 rounded border-zinc-350 bg-zinc-50 dark:bg-zinc-950 text-coral-500 focus:ring-1 focus:ring-coral-500"
+                  className="h-4.5 w-4.5 rounded border-zinc-350 bg-zinc-50 dark:bg-zinc-950 text-orange-500 focus:ring-2 focus:ring-orange-400/20"
                 />
                 <label htmlFor="modalIsAvailable" className="text-xs font-bold text-zinc-700 dark:text-zinc-350 cursor-pointer select-none">
                   Make this dish available for order immediately
@@ -693,7 +693,7 @@ export default function MenuPage() {
                 <button
                   type="submit"
                   disabled={itemLoading}
-                  className="flex-1 rounded-lg bg-coral-500 hover:bg-coral-600 text-white py-2.5 text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer"
+                  className="flex-1 rounded-lg bg-orange-500 hover:bg-orange-600 text-white py-2.5 text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer"
                 >
                   {itemLoading ? 'Saving...' : 'Save Item'}
                 </button>

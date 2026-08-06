@@ -112,7 +112,7 @@ function InvitationForm() {
   if (verifying) {
     return (
       <div className="flex flex-col items-center justify-center py-10">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-coral-500 border-t-transparent"></div>
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-orange-500 border-t-transparent"></div>
         <p className="mt-4 text-xs font-bold text-zinc-500 dark:text-zinc-400">Verifying secure invitation token...</p>
       </div>
     );
@@ -143,14 +143,14 @@ function InvitationForm() {
   return (
     <>
       <div className="mb-6 text-center text-zinc-800 dark:text-zinc-100">
-        <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-coral-50 dark:bg-coral-950/20 text-coral-500 mb-3">
+        <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 dark:bg-orange-950/20 text-orange-500 mb-3">
           <ShieldCheck className="h-6 w-6" />
         </div>
         <h1 className="text-2xl font-black tracking-tight text-zinc-900 dark:text-zinc-50">Accept Invitation</h1>
         <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400 font-semibold">
           Complete your profile to join the KhaoPio staff roster.
         </p>
-        <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-coral-50 dark:bg-coral-950/20 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-coral-700 dark:text-coral-400 border border-coral-200">
+        <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-orange-50 dark:bg-orange-950/20 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-orange-700 dark:text-orange-400 border border-orange-200">
           Role: {invitation?.role.replace('_', ' ')}
         </div>
       </div>
@@ -183,7 +183,7 @@ function InvitationForm() {
                 placeholder="e.g. Rahul Sharma"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-1 focus:ring-coral-500"
+                className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-orange-400/20"
                 required
               />
             </div>
@@ -215,7 +215,7 @@ function InvitationForm() {
                   placeholder="e.g. 123456"
                   value={form.pin}
                   onChange={(e) => setForm({ ...form, pin: e.target.value.replace(/\D/g, '') })}
-                  className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none tracking-widest transition-all focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-1 focus:ring-coral-500"
+                  className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none tracking-widest transition-all focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-orange-400/20"
                   required
                 />
               </div>
@@ -233,7 +233,7 @@ function InvitationForm() {
                   placeholder="e.g. 123456"
                   value={form.confirmPin}
                   onChange={(e) => setForm({ ...form, confirmPin: e.target.value.replace(/\D/g, '') })}
-                  className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none tracking-widest transition-all focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-1 focus:ring-coral-500"
+                  className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none tracking-widest transition-all focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-orange-400/20"
                   required
                 />
               </div>
@@ -246,7 +246,7 @@ function InvitationForm() {
           {/* Admin / Manager Password Fields */}
           {isManagerOrAdmin && (
             <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4 mt-4 space-y-4">
-              <h3 className="text-[10px] font-black uppercase tracking-wider text-coral-500">
+              <h3 className="text-[10px] font-black uppercase tracking-wider text-orange-500">
                 Dashboard Password
               </h3>
               <div>
@@ -260,7 +260,7 @@ function InvitationForm() {
                     placeholder="••••••••"
                     value={form.password}
                     onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-10 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-1 focus:ring-coral-500"
+                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-10 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-orange-400/20"
                     required
                   />
                   <button
@@ -284,7 +284,7 @@ function InvitationForm() {
                     placeholder="••••••••"
                     value={form.confirmPassword}
                     onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-10 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-1 focus:ring-coral-500"
+                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-10 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-orange-400/20"
                     required
                   />
                   <button
@@ -302,7 +302,7 @@ function InvitationForm() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full cursor-pointer rounded-lg bg-coral-500 py-3 text-xs font-black uppercase tracking-wider text-white transition-all hover:bg-coral-600 active:scale-[0.98] disabled:opacity-50 shadow-md shadow-coral-100 dark:shadow-none"
+            className="w-full cursor-pointer rounded-lg bg-orange-500 py-3 text-xs font-black uppercase tracking-wider text-white transition-all hover:bg-orange-600 active:scale-[0.98] disabled:opacity-50 shadow-md shadow-orange-100 dark:shadow-none"
           >
             {submitting ? 'Setting Profile...' : 'Activate Account'}
           </button>
@@ -317,17 +317,17 @@ export default function AcceptInvite() {
     <div className="relative flex min-h-screen w-screen items-center justify-center overflow-hidden bg-zinc-100 dark:bg-zinc-950 px-4 font-sans text-zinc-900 dark:text-zinc-100 transition-colors duration-200">
       
       {/* Background Coral Glows */}
-      <div className="absolute top-1/4 left-1/4 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-coral-500/5 blur-[120px] pointer-events-none"></div>
+      <div className="absolute top-1/4 left-1/4 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-orange-500/5 blur-[120px] pointer-events-none"></div>
       <div className="absolute bottom-1/4 right-1/4 h-[500px] w-[500px] translate-x-1/2 translate-y-1/2 rounded-full bg-amber-500/5 blur-[120px] pointer-events-none"></div>
 
       <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-8 shadow-2xl transition-all duration-300">
         
         {/* Top Glow Bar */}
-        <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-coral-500 via-amber-500 to-yellow-400"></div>
+        <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-400"></div>
 
         <Suspense fallback={
           <div className="flex flex-col items-center justify-center py-10">
-            <div className="h-10 w-10 animate-spin rounded-full border-4 border-coral-500 border-t-transparent"></div>
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-orange-500 border-t-transparent"></div>
             <p className="mt-4 text-xs font-bold text-zinc-500 dark:text-zinc-400">Loading registration context...</p>
           </div>
         }>

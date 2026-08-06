@@ -3,14 +3,23 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { 
-  KeyRound, Mail, User, ShieldAlert, CheckCircle2, 
-  Eye, EyeOff, UtensilsCrossed, ChevronRight, ChevronLeft, Check
+import {
+  Utensils, Flame, CreditCard, BarChart2,
+  ShieldAlert, CheckCircle2, Eye, EyeOff,
+  ChevronRight, ChevronLeft,
 } from 'lucide-react';
 import { apiFetch } from '@/utils/api';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Loader } from '@/components/Loader';
 
+const features = [
+  { icon: <Utensils className="h-4 w-4" />, label: 'Dine-in & Takeaway' },
+  { icon: <Flame className="h-4 w-4" />, label: 'Live Kitchen View' },
+  { icon: <CreditCard className="h-4 w-4" />, label: 'UPI / Cash / Card' },
+  { icon: <BarChart2 className="h-4 w-4" />, label: 'Sales Reports' },
+];
+
+const steps = ['Account', 'Verify Email', 'Restaurant'];
 
 export default function RegisterAdmin() {
   const router = useRouter();
@@ -18,142 +27,91 @@ export default function RegisterAdmin() {
   const token = useAuthStore((state) => state.token);
   const [isMounted, setIsMounted] = useState(false);
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  useEffect(() => { setIsMounted(true); }, []);
 
-  // Redirect if already logged in and onboarding is completed
   useEffect(() => {
     if (isMounted && token) {
       const user = useAuthStore.getState().user;
       if (user && user.restaurantId) {
-        if (user.role === 'SUPER_ADMIN') {
-          router.push('/dashboard');
-        } else {
-          router.push('/billing');
-        }
+        router.push(user.role === 'SUPER_ADMIN' ? '/dashboard' : '/billing');
       }
     }
   }, [token, router, isMounted]);
 
-
-
-  // Setup step
   const [step, setStep] = useState<1 | 2 | 3>(1);
 
-  // Skip to step 3 if logged in but missing restaurantId
   useEffect(() => {
     if (isMounted && token) {
       const user = useAuthStore.getState().user;
-      if (user && !user.restaurantId) {
-        setStep(3);
-      }
+      if (user && !user.restaurantId) setStep(3);
     }
   }, [token, isMounted]);
 
-  // Form fields
   const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [restaurantName, setRestaurantName] = useState('');
   const [otpInput, setOtpInput] = useState('');
   const [debugOtp, setDebugOtp] = useState('');
-  
   const [restaurantPhone, setRestaurantPhone] = useState('');
   const [restaurantAddress, setRestaurantAddress] = useState('');
-
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
-  
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Validate Step 1 credentials & request OTP
   const handleNextStep = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
     if (!form.name || !form.email || !form.password || !form.confirmPassword) {
-      setError('Please fill in all account fields.');
+      setError('Please fill in all fields.');
       return;
     }
-
     if (form.password !== form.confirmPassword) {
       setError('Passwords do not match.');
       return;
     }
-
     if (form.password.length < 6) {
-      setError('Password must be at least 6 characters long.');
+      setError('Password must be at least 6 characters.');
       return;
     }
-
     setLoading(true);
     try {
-      const response = await apiFetch('/auth/register-init', {
-        method: 'POST',
-        body: { email: form.email },
-      });
-
+      const response = await apiFetch('/auth/register-init', { method: 'POST', body: { email: form.email } });
       setDebugOtp(response.otp || '');
       setStep(2);
     } catch (err: unknown) {
-      const error = err as { message?: string };
-      setError(error.message || 'Error sending verification code.');
+      setError((err as { message?: string }).message || 'Error sending verification code.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Validate Step 2 OTP verification code
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
     if (!otpInput || otpInput.length !== 6) {
-      setError('Please enter the 6-digit verification code.');
+      setError('Please enter the 6-digit code.');
       return;
     }
-
     setLoading(true);
     try {
       const response = await apiFetch('/auth/register-verify-otp', {
         method: 'POST',
-        body: {
-          email: form.email,
-          otp: otpInput,
-          name: form.name,
-          password: form.password,
-        },
+        body: { email: form.email, otp: otpInput, name: form.name, password: form.password },
       });
-
-      // Save credentials in Zustand store (logs in the user)
       setAuth(response.user, response.token, response.permissions);
-
       setStep(3);
     } catch (err: unknown) {
-      const error = err as { message?: string };
-      setError(error.message || 'Incorrect verification code. Please check and try again.');
+      setError((err as { message?: string }).message || 'Incorrect code. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-
-
-  // Handle final signup submit
   const handleSubmit = async () => {
     setError('');
-
-    if (!restaurantName.trim()) {
-      setError('Please enter your Restaurant Name.');
-      return;
-    }
-
-    if (!restaurantPhone.trim()) {
-      setError('Please enter your Restaurant Phone Number.');
-      return;
-    }
-
+    if (!restaurantName.trim()) { setError('Please enter your restaurant name.'); return; }
+    if (!restaurantPhone.trim()) { setError('Please enter your restaurant phone number.'); return; }
     setLoading(true);
     try {
       const response = await apiFetch('/auth/register-admin', {
@@ -164,305 +122,252 @@ export default function RegisterAdmin() {
           restaurantAddress: restaurantAddress.trim(),
         },
       });
-
-      // Update credentials in Zustand store with the new session token
       setAuth(response.user, response.token, response.permissions);
       setSuccess(true);
-      
-      // Fetch dynamic navigation menu
       const sidebarItems = await apiFetch('/navigation');
       useAuthStore.getState().setSidebarItems(sidebarItems);
-
-      setTimeout(() => {
-        router.push('/dashboard');
-      }, 1500);
+      setTimeout(() => router.push('/dashboard'), 1500);
     } catch (err: unknown) {
-      const error = err as { message?: string };
-      setError(error.message || 'Super Admin already registered or database is inaccessible.');
+      setError((err as { message?: string }).message || 'Setup failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   if (!isMounted || (token && useAuthStore.getState().user?.restaurantId)) {
-    return (
-      <Loader
-        size="lg"
-        text="Verifying session..."
-        className="h-screen w-screen bg-zinc-50 dark:bg-zinc-950"
-      />
-    );
+    return <Loader size="lg" text="Verifying session..." className="h-screen w-screen bg-zinc-50" />;
   }
 
+  const inputClass = "w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 focus:bg-white";
+
   return (
-    <div className="relative flex min-h-screen w-screen items-center justify-center overflow-y-auto bg-zinc-50 dark:bg-zinc-950 px-4 py-8 font-sans antialiased text-zinc-900 dark:text-zinc-150 transition-colors duration-200">
-      {/* Dynamic Coral Gradients */}
-      <div className="absolute top-1/4 left-1/4 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-coral-500/5 blur-[120px] pointer-events-none"></div>
-      <div className="absolute bottom-1/4 right-1/4 h-[500px] w-[500px] translate-x-1/2 translate-y-1/2 rounded-full bg-amber-500/5 blur-[120px] pointer-events-none"></div>
+    <div className="flex min-h-screen w-screen font-sans antialiased">
 
-      <div className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-8 shadow-2xl transition-all duration-300">
-        
-        {/* Glow Line effect */}
-        <div className="absolute top-0 left-0 right-0 h-[4px] bg-gradient-to-r from-coral-500 via-amber-500 to-yellow-400"></div>
+      {/* ── Left panel: branding ── */}
+      <div className="hidden lg:flex lg:w-[55%] flex-col justify-between p-12 relative overflow-hidden bg-zinc-950 text-white">
+        <div className="absolute inset-0 bg-gradient-to-br from-zinc-950 via-zinc-900/95 to-zinc-950 pointer-events-none" />
+        <div className="absolute top-0 right-0 h-[500px] w-[500px] rounded-full bg-orange-600/8 blur-[140px] pointer-events-none" />
 
-
-
-        <div className="mb-6 text-center">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-coral-50 dark:bg-coral-950/30 text-coral-500 mb-3">
-            <UtensilsCrossed className="h-6 w-6" />
+        {/* Logo */}
+        <div className="relative flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500">
+            <Utensils className="h-5 w-5 text-white" />
           </div>
-          <h1 className="text-2xl font-black tracking-tight text-zinc-950 dark:text-zinc-50">KhaoPio Onboarding</h1>
-          <p className="mt-1 text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-            Set up your administrative system control credentials and create your restaurant profile.
-          </p>
+          <span className="text-xl font-bold tracking-tight">KhaoPio</span>
+          <span className="rounded-full border border-zinc-700 px-2 py-0.5 text-[10px] font-semibold text-zinc-400 tracking-widest">POS</span>
         </div>
 
-        {error && (
-          <div className="mb-6 flex items-start gap-3 rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 p-4 text-xs font-bold text-red-650 dark:text-red-400">
-            <ShieldAlert className="h-4.5 w-4.5 shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
+        {/* Hero copy */}
+        <div className="relative space-y-6 max-w-lg">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-orange-400">Restaurant Command Centre</p>
+          <h2 className="text-5xl font-extrabold leading-[1.1]">
+            Set up your restaurant in{' '}
+            <span className="text-orange-400">minutes.</span>
+          </h2>
+          <p className="text-zinc-400 text-sm leading-relaxed">
+            Create your admin account, verify your email, and configure your restaurant profile to get started.
+          </p>
 
-        {success ? (
-          <div className="flex flex-col items-center justify-center py-6 text-center">
-            <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400">
-              <CheckCircle2 className="h-8 w-8 animate-bounce" />
-            </div>
-            <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">Onboarding Complete!</h2>
-            <p className="mt-1 text-xs text-zinc-500 font-semibold">Creating your workspace & redirecting...</p>
+          <div className="grid grid-cols-2 gap-3 pt-2">
+            {features.map((f) => (
+              <div key={f.label} className="flex items-center gap-2.5 rounded-full bg-white/5 border border-white/8 px-4 py-2.5 text-sm font-medium text-zinc-300">
+                <span className="text-orange-400">{f.icon}</span>
+                {f.label}
+              </div>
+            ))}
           </div>
-        ) : step === 1 ? (
-          /* STEP 1: Account credentials */
-          <form onSubmit={handleNextStep} className="space-y-4">
-            <div>
-              <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
-                Full Name
-              </label>
-              <div className="relative">
-                <User className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-                <input
-                  type="text"
-                  placeholder="e.g. Rahul Sen"
-                  value={form.name}
+        </div>
+
+        <p className="relative text-xs text-zinc-600">© {new Date().getFullYear()} KhaoPio. All rights reserved.</p>
+      </div>
+
+      {/* ── Right panel ── */}
+      <div className="flex w-full lg:w-[45%] flex-col items-center justify-center px-8 py-12 overflow-y-auto"
+        style={{ background: 'linear-gradient(160deg, #fde8d0 0%, #fddbb8 50%, #fce8d5 100%)' }}>
+
+        {/* Heading */}
+        <div className="w-full max-w-md mb-8">
+          <h1 className="text-4xl font-extrabold text-zinc-900 mb-2">Create account</h1>
+          <p className="text-sm text-zinc-500">Get your restaurant up and running</p>
+        </div>
+
+        {/* Card */}
+        <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg shadow-orange-200/40">
+
+          {/* Step indicator */}
+          {!success && (
+            <div className="flex items-center mb-8">
+              {steps.map((label, i) => {
+                const s = i + 1;
+                const isCompleted = step > s;
+                const isActive = step === s;
+                return (
+                  <React.Fragment key={label}>
+                    <div className="flex flex-col items-center">
+                      <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                        isCompleted ? 'bg-orange-500 text-white' :
+                        isActive ? 'bg-orange-500 text-white ring-4 ring-orange-500/20' :
+                        'bg-zinc-100 text-zinc-400'
+                      }`}>
+                        {isCompleted ? '✓' : s}
+                      </div>
+                      <span className={`mt-1 text-[10px] font-medium ${isActive ? 'text-orange-500' : 'text-zinc-400'}`}>
+                        {label}
+                      </span>
+                    </div>
+                    {i < steps.length - 1 && (
+                      <div className={`flex-1 h-[2px] mb-5 mx-2 transition-all ${step > s ? 'bg-orange-500' : 'bg-zinc-200'}`} />
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Error */}
+          {error && (
+            <div className="mb-5 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+              <ShieldAlert className="h-4 w-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Success */}
+          {success ? (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-500">
+                <CheckCircle2 className="h-8 w-8 animate-bounce" />
+              </div>
+              <h2 className="text-lg font-bold text-zinc-900">You&apos;re all set!</h2>
+              <p className="mt-1 text-sm text-zinc-500">Setting up your workspace...</p>
+            </div>
+
+          ) : step === 1 ? (
+            /* STEP 1: Account */
+            <form onSubmit={handleNextStep} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-zinc-700 mb-1.5">Full Name</label>
+                <input type="text" placeholder="e.g. Rahul Sen" value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value.replace(/[^a-zA-Z\s'\-]/g, '') })}
-                  className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-1 focus:ring-coral-500"
-                  required
-                />
+                  className={inputClass} required />
               </div>
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-                <input
-                  type="email"
-                  placeholder="e.g. admin@yourrestaurant.com"
-                  value={form.email}
+              <div>
+                <label className="block text-sm font-medium text-zinc-700 mb-1.5">Email</label>
+                <input type="email" placeholder="admin@yourrestaurant.com" value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-1 focus:ring-coral-500"
-                  required
-                />
+                  className={inputClass} required />
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
-                  Password
-                </label>
-                <div className="relative">
-                  <KeyRound className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    value={form.password}
-                    onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-10 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-1 focus:ring-coral-500"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400 hover:text-zinc-650 cursor-pointer"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-zinc-700 mb-1.5">Password</label>
+                  <div className="relative">
+                    <input type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={form.password}
+                      onChange={(e) => setForm({ ...form, password: e.target.value })}
+                      className={inputClass} required />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 cursor-pointer">
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-zinc-700 mb-1.5">Confirm</label>
+                  <div className="relative">
+                    <input type={showConfirmPassword ? 'text' : 'password'} placeholder="••••••••" value={form.confirmPassword}
+                      onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                      className={inputClass} required />
+                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 cursor-pointer">
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
               </div>
-
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <KeyRound className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-                  <input
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    value={form.confirmPassword}
-                    onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-10 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-1 focus:ring-coral-500"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400 hover:text-zinc-650 cursor-pointer"
-                  >
-                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-1.5 cursor-pointer rounded-lg bg-coral-500 py-3 text-xs font-black uppercase tracking-wider text-white transition-all hover:bg-coral-600 active:scale-[0.98] shadow-md shadow-coral-100 dark:shadow-none mt-4"
-            >
-              <span>{loading ? 'Sending Code...' : 'Continue to OTP Verification'}</span>
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </form>
-        ) : step === 2 ? (
-          /* STEP 2: OTP Verification Code */
-          <form onSubmit={handleVerifyOtp} className="space-y-4">
-            <div className="text-center py-2">
-              <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-400">
-                A 6-digit verification code has been dispatched to
-              </p>
-              <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mt-1">
-                {form.email}
-              </p>
-            </div>
-
-            {debugOtp && (
-              <div className="bg-coral-50/30 dark:bg-coral-950/20 border border-coral-200 dark:border-coral-900 rounded-lg p-3 text-center mb-4">
-                <span className="text-[10px] font-black uppercase tracking-wider text-coral-500 block mb-1">
-                  Debug OTP Code (Copy/Paste)
-                </span>
-                <span className="text-2xl font-black tracking-widest text-coral-600 dark:text-coral-400 font-mono">
-                  {debugOtp}
-                </span>
-              </div>
-            )}
-
-            <div>
-              <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5 text-center">
-                Enter 6-Digit OTP Code
-              </label>
-              <input
-                type="text"
-                placeholder="••••••"
-                maxLength={6}
-                value={otpInput}
-                onChange={(e) => setOtpInput(e.target.value.replace(/[^0-9]/g, ''))}
-                className="w-full text-center tracking-[0.75em] font-mono text-xl rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-3 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-1 focus:ring-coral-500"
-                required
-              />
-            </div>
-
-            <div className="flex gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setStep(1)}
-                className="flex items-center justify-center gap-1 px-4 py-3 rounded-lg border border-zinc-300 dark:border-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100/50 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                <span>Back</span>
-              </button>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex-1 flex items-center justify-center gap-1.5 cursor-pointer rounded-lg bg-coral-500 hover:bg-coral-600 py-3 text-xs font-black uppercase tracking-wider text-white transition-all active:scale-[0.98] disabled:opacity-50 shadow-md shadow-coral-100 dark:shadow-none"
-              >
-                <span>{loading ? 'Verifying OTP...' : 'Verify Code'}</span>
+              <button type="submit" disabled={loading}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-orange-500 py-3 text-sm font-semibold text-white transition hover:bg-orange-600 active:scale-[0.98] disabled:opacity-50 cursor-pointer mt-2">
+                {loading ? 'Sending code...' : 'Continue'}
                 <ChevronRight className="h-4 w-4" />
               </button>
-            </div>
-          </form>
-        ) : (
-          /* STEP 3: Restaurant Details */
-          <div className="space-y-4">
-            <div>
-              <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
-                Restaurant Name
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. KhaoPio Restaurant"
-                value={restaurantName}
-                onChange={(e) => setRestaurantName(e.target.value)}
-                className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-3.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-1 focus:ring-coral-500"
-                required
-              />
-            </div>
+            </form>
 
-            <div>
-              <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
-                Restaurant Phone Number
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. +91 98765 43210"
-                value={restaurantPhone}
-                onChange={(e) => setRestaurantPhone(e.target.value.replace(/[^0-9+\-\s()]/g, ''))}
-                className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-3.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-1 focus:ring-coral-500"
-                required
-              />
-            </div>
+          ) : step === 2 ? (
+            /* STEP 2: OTP */
+            <form onSubmit={handleVerifyOtp} className="space-y-5">
+              <div className="text-center">
+                <p className="text-sm text-zinc-500">A 6-digit code was sent to</p>
+                <p className="text-sm font-semibold text-zinc-900 mt-0.5">{form.email}</p>
+              </div>
 
-            <div>
-              <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
-                Restaurant Address
-              </label>
-              <textarea
-                placeholder="e.g. 123 Main Street, City Name, Pin Code"
-                value={restaurantAddress}
-                onChange={(e) => setRestaurantAddress(e.target.value)}
-                rows={3}
-                className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-3.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-coral-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-1 focus:ring-coral-500 resize-none"
-              />
-            </div>
+              {debugOtp && (
+                <div className="rounded-xl border border-orange-200 bg-orange-50 p-3 text-center">
+                  <span className="text-[10px] font-semibold uppercase tracking-widest text-orange-500 block mb-1">Debug OTP</span>
+                  <span className="text-2xl font-bold tracking-[0.5em] text-orange-600 font-mono">{debugOtp}</span>
+                </div>
+              )}
 
-            {/* Back and Submit Actions */}
-            <div className="flex gap-3 border-t border-zinc-200 dark:border-zinc-800 pt-4 mt-6">
-              <button
-                type="button"
-                onClick={() => setStep(2)}
-                className="flex items-center justify-center gap-1 px-4 py-3 rounded-lg border border-zinc-300 dark:border-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100/50 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                <span>Back</span>
-              </button>
-              
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={loading}
-                className="flex-1 flex items-center justify-center gap-1.5 cursor-pointer rounded-lg bg-coral-500 py-3 text-xs font-black uppercase tracking-wider text-white transition-all hover:bg-coral-600 active:scale-[0.98] disabled:opacity-50 shadow-md shadow-coral-100 dark:shadow-none"
-              >
-                <span>{loading ? 'Creating Workspace...' : 'Complete Onboarding & Setup'}</span>
-                <CheckCircle2 className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        )}
+              <div>
+                <label className="block text-sm font-medium text-zinc-700 mb-1.5 text-center">Enter verification code</label>
+                <input type="text" placeholder="••••••" maxLength={6} value={otpInput}
+                  onChange={(e) => setOtpInput(e.target.value.replace(/[^0-9]/g, ''))}
+                  className={`${inputClass} text-center tracking-[0.75em] font-mono text-xl`} required />
+              </div>
 
-        {step < 3 && (
-          <div className="mt-6 border-t border-zinc-200 dark:border-zinc-800 pt-5 text-center">
-            <Link
-              href="/login"
-              className="text-xs font-bold text-coral-500 hover:text-coral-600 transition-colors"
-            >
-              System already active? Log In
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setStep(1)}
+                  className="flex items-center gap-1 px-4 py-3 rounded-xl border border-zinc-200 text-sm font-medium text-zinc-600 hover:bg-zinc-50 transition cursor-pointer">
+                  <ChevronLeft className="h-4 w-4" /> Back
+                </button>
+                <button type="submit" disabled={loading}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-orange-500 py-3 text-sm font-semibold text-white transition hover:bg-orange-600 active:scale-[0.98] disabled:opacity-50 cursor-pointer">
+                  {loading ? 'Verifying...' : 'Verify Code'}
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </form>
+
+          ) : (
+            /* STEP 3: Restaurant details */
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-zinc-700 mb-1.5">Restaurant Name</label>
+                <input type="text" placeholder="e.g. KhaoPio Restaurant" value={restaurantName}
+                  onChange={(e) => setRestaurantName(e.target.value)}
+                  className={inputClass} required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-zinc-700 mb-1.5">Phone Number</label>
+                <input type="text" placeholder="+91 98765 43210" value={restaurantPhone}
+                  onChange={(e) => setRestaurantPhone(e.target.value.replace(/[^0-9+\-\s()]/g, ''))}
+                  className={inputClass} required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-zinc-700 mb-1.5">Address <span className="text-zinc-400 font-normal">(optional)</span></label>
+                <textarea placeholder="123 Main Street, City, Pin Code" value={restaurantAddress}
+                  onChange={(e) => setRestaurantAddress(e.target.value)} rows={3}
+                  className={`${inputClass} resize-none`} />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setStep(2)}
+                  className="flex items-center gap-1 px-4 py-3 rounded-xl border border-zinc-200 text-sm font-medium text-zinc-600 hover:bg-zinc-50 transition cursor-pointer">
+                  <ChevronLeft className="h-4 w-4" /> Back
+                </button>
+                <button type="button" onClick={handleSubmit} disabled={loading}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-orange-500 py-3 text-sm font-semibold text-white transition hover:bg-orange-600 active:scale-[0.98] disabled:opacity-50 cursor-pointer">
+                  {loading ? 'Creating workspace...' : 'Complete Setup'}
+                  <CheckCircle2 className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {step < 3 && !success && (
+          <p className="mt-6 text-sm text-zinc-600">
+            Already have an account?{' '}
+            <Link href="/login" className="font-semibold text-orange-500 hover:text-orange-600 transition-colors">
+              Sign in
             </Link>
-          </div>
+          </p>
         )}
       </div>
     </div>

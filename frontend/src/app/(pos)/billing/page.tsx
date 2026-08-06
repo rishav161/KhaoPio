@@ -207,7 +207,7 @@ export default function BillingPage() {
       {/* SUCCESS POPUP ALERT */}
       <div
         id="kitchen-alert"
-        className="pointer-events-none fixed right-4 top-16 z-50 flex items-center gap-2 rounded-lg bg-coral-500 px-4 py-3 font-bold text-white shadow-lg opacity-0 transition-opacity duration-300"
+        className="pointer-events-none fixed right-4 top-16 z-50 flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-3 font-bold text-white shadow-lg opacity-0 transition-opacity duration-300"
       >
         <Send className="h-5 w-5 animate-bounce" />
         <span>Order successfully sent to kitchen!</span>
@@ -235,14 +235,14 @@ export default function BillingPage() {
                 onClick={() => setSelectedCategory(category)}
                 className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-xs font-extrabold transition-all duration-150 ${
                   isActive
-                    ? 'bg-coral-500 text-white shadow-sm'
+                    ? 'bg-orange-500 text-white shadow-sm'
                     : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                 }`}
               >
                 <span>{category}</span>
                 <span
                   className={`rounded-full px-2 py-0.5 text-[10px] font-black ${
-                    isActive ? 'bg-coral-600 text-white' : 'bg-zinc-200 dark:bg-zinc-950 text-zinc-650 dark:text-zinc-450'
+                    isActive ? 'bg-orange-600 text-white' : 'bg-zinc-200 dark:bg-zinc-950 text-zinc-650 dark:text-zinc-450'
                   }`}
                 >
                   {categoryCounts[category] || 0}
@@ -265,7 +265,7 @@ export default function BillingPage() {
               placeholder="Search dishes or item short codes (e.g. B01) [F2 or /]..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-lg border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 py-2 pl-9 pr-4 text-xs font-medium placeholder-zinc-400 dark:placeholder-zinc-500 outline-none transition-all focus:border-coral-500 focus:ring-1 focus:ring-coral-500 text-zinc-900 dark:text-zinc-100"
+              className="w-full rounded-lg border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 py-2 pl-9 pr-4 text-xs font-medium placeholder-zinc-400 dark:placeholder-zinc-500 outline-none transition-all focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 text-zinc-900 dark:text-zinc-100"
             />
           </div>
           {searchQuery && (
@@ -295,7 +295,7 @@ export default function BillingPage() {
                     onClick={() => addToCart(item)}
                     className={`relative flex flex-col justify-between rounded-xl border p-2.5 text-left cursor-pointer transition-all duration-150 select-none ${
                       countInCart > 0
-                        ? 'border-coral-400 bg-coral-50/40 dark:bg-coral-950/15 ring-1 ring-coral-400'
+                        ? 'border-orange-400 bg-orange-50/40 dark:bg-orange-950/15 ring-1 ring-orange-400'
                         : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-850'
                     }`}
                   >
@@ -305,7 +305,7 @@ export default function BillingPage() {
                         {item.code}
                       </span>
                       {countInCart > 0 && (
-                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-coral-500 text-[10px] font-black text-white">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-[10px] font-black text-white">
                           {countInCart}
                         </span>
                       )}
@@ -328,7 +328,7 @@ export default function BillingPage() {
                       <span className="text-xs font-black text-zinc-900 dark:text-zinc-100">
                         {currencySymbol}{item.price.toFixed(2)}
                       </span>
-                      <span className="rounded-md bg-zinc-900 dark:bg-zinc-950 px-2 py-1 text-[9px] font-black text-white dark:text-zinc-350 hover:bg-coral-500 transition-colors">
+                      <span className="rounded-md bg-zinc-900 dark:bg-zinc-950 px-2 py-1 text-[9px] font-black text-white dark:text-zinc-350 hover:bg-orange-500 transition-colors">
                         ADD +
                       </span>
                     </div>
@@ -345,7 +345,7 @@ export default function BillingPage() {
         {/* Cart Header */}
         <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-3">
           <div className="flex items-center gap-1.5">
-            <ShoppingCart className="h-4 w-4 text-coral-500" />
+            <ShoppingCart className="h-4 w-4 text-orange-500" />
             <h2 className="text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Active Cart</h2>
           </div>
           {cartItems.length > 0 && (
@@ -367,7 +367,7 @@ export default function BillingPage() {
           <select
             value={selectedTableId || ''}
             onChange={(e) => setSelectedTableId(e.target.value || null)}
-            className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-2.5 py-2 text-xs font-bold outline-none focus:border-coral-500 dark:text-zinc-100 cursor-pointer"
+            className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-2.5 py-2 text-xs font-bold outline-none focus:border-orange-400 dark:text-zinc-100 cursor-pointer"
           >
             <option value="">Takeaway / Direct POS (No Table)</option>
             {tables.map((table) => {
@@ -473,7 +473,7 @@ export default function BillingPage() {
             </div>
             <div className="flex justify-between border-t border-zinc-200 dark:border-zinc-800 pt-2 text-sm font-black text-zinc-900 dark:text-zinc-100">
               <span>Total Payable</span>
-              <span className="text-coral-500 text-base">{currencySymbol}{cartTotals.total}</span>
+              <span className="text-orange-500 text-base">{currencySymbol}{cartTotals.total}</span>
             </div>
           </div>
 
@@ -483,7 +483,7 @@ export default function BillingPage() {
             className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 text-xs font-black text-white transition-all shadow-md ${
               cartItems.length === 0 || isSendingToKitchen
                 ? 'bg-zinc-300 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-505 cursor-not-allowed shadow-none'
-                : 'bg-coral-500 hover:bg-coral-600 active:scale-[0.98] cursor-pointer'
+                : 'bg-orange-500 hover:bg-orange-600 active:scale-[0.98] cursor-pointer'
             }`}
           >
             {isSendingToKitchen ? (
