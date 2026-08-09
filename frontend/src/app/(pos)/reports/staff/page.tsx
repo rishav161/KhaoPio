@@ -44,7 +44,7 @@ export default function StaffActivityReport() {
       <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-black tracking-tight text-zinc-950 dark:text-zinc-50 flex items-center gap-2">
-            <Users className="h-6 w-6 text-coral-500" />
+            <Users className="h-6 w-6 text-orange-500" />
             <span>Staff Activity Log</span>
           </h1>
           <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
@@ -76,7 +76,7 @@ export default function StaffActivityReport() {
           renderRow={(user) => (
             <tr key={user.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-950/20 text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition-colors">
               <td className="px-5 py-3 font-bold text-zinc-950 dark:text-zinc-100 flex items-center gap-2">
-                <div className="h-6 w-6 rounded-full bg-coral-50 dark:bg-coral-950/20 text-coral-500 flex items-center justify-center font-black text-[10px]">
+                <div className="h-6 w-6 rounded-full bg-orange-50 dark:bg-orange-950/20 text-orange-500 flex items-center justify-center font-black text-[10px]">
                   {user.name.charAt(0).toUpperCase()}
                 </div>
                 <span>{user.name}</span>

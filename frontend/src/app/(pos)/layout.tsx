@@ -131,10 +131,10 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Logo / Brand */}
-        <div className="flex h-16 w-full items-center justify-center border-b border-zinc-250 dark:border-zinc-800 bg-coral-500 text-white shadow-inner">
+        <div className="flex h-16 w-full items-center justify-center border-b border-zinc-250 dark:border-zinc-800 bg-orange-500 text-white shadow-inner">
           <div className="flex flex-col items-center">
             <span className="text-sm font-black tracking-wider">Khao</span>
-            <span className="text-[10px] font-bold text-coral-100 leading-none">Pio</span>
+            <span className="text-[10px] font-bold text-orange-100 leading-none">Pio</span>
           </div>
         </div>
 
@@ -149,7 +149,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
 
             if (item.path === '/kitchen') {
               badgeCount = kdsCount > 0 ? kdsCount : null;
-              badgeColor = 'bg-coral-500 text-white animate-pulse';
+              badgeColor = 'bg-orange-500 text-white animate-pulse';
             } else if (item.path === '/checkout') {
               badgeCount = readyCount > 0 ? readyCount : null;
               badgeColor = 'bg-emerald-600 dark:bg-emerald-700 text-white font-bold';
@@ -164,7 +164,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
                 }}
                 className={`relative flex flex-col items-center justify-center rounded-xl py-3 text-center transition-all duration-150 cursor-pointer ${
                   isActive
-                    ? 'bg-coral-500 text-white shadow-md shadow-coral-100 dark:shadow-none'
+                    ? 'bg-orange-500 text-white shadow-md shadow-orange-100 dark:shadow-none'
                     : 'text-zinc-550 dark:text-zinc-405 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100'
                 }`}
               >
@@ -210,6 +210,18 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
             >
               <LucideIcons.Menu className="h-4.5 w-4.5" />
             </button>
+
+            {/* Back button — shown only on sub-pages (path not in sidebar) */}
+            {!sidebarItems.some((item) => item.path === pathname) && (
+              <button
+                onClick={() => router.back()}
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-500 dark:text-zinc-400 hover:bg-orange-50 dark:hover:bg-orange-950/20 hover:text-orange-500 hover:border-orange-200 dark:hover:border-orange-800 active:scale-95 transition-all cursor-pointer"
+                title="Go back"
+              >
+                <LucideIcons.ArrowLeft className="h-4 w-4" />
+              </button>
+            )}
+
             <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0"></span>
             <span className="text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-200 truncate max-w-[80px] sm:max-w-none">
               {user?.restaurantName || 'KhaoPio'}
@@ -230,7 +242,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
             {/* Orders Badge */}
             <div className="border-r border-zinc-200 dark:border-zinc-800 pr-2.5 sm:pr-4 flex items-center">
               <span className="hidden sm:inline text-zinc-400 dark:text-zinc-500 mr-1">Orders: </span>
-              <span className="font-extrabold text-coral-500 bg-coral-50 dark:bg-coral-950/20 border border-coral-200 dark:border-coral-900 rounded-md px-1.5 py-0.5 text-[10px]">
+              <span className="font-extrabold text-orange-500 bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-900 rounded-md px-1.5 py-0.5 text-[10px]">
                 {activeOrders.length}
               </span>
             </div>
@@ -239,8 +251,8 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
             <div className="relative">
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className={`flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-coral-500 active:scale-95 transition-all cursor-pointer ${
-                  isDropdownOpen ? 'text-coral-500 border-coral-200 dark:border-coral-800' : ''
+                className={`flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-orange-500 active:scale-95 transition-all cursor-pointer ${
+                  isDropdownOpen ? 'text-orange-500 border-orange-200 dark:border-orange-800' : ''
                 }`}
                 title="Settings"
               >
@@ -259,7 +271,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
                         router.push('/settings');
                         setIsDropdownOpen(false);
                       }}
-                      className="flex w-full items-center gap-2 px-3.5 py-2.5 text-left text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-350 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-coral-500 transition-colors cursor-pointer"
+                      className="flex w-full items-center gap-2 px-3.5 py-2.5 text-left text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-350 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-orange-500 transition-colors cursor-pointer"
                     >
                       <LucideIcons.User className="h-4 w-4" />
                       <span>Profile Settings</span>
@@ -270,7 +282,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
                           router.push('/coupons');
                           setIsDropdownOpen(false);
                         }}
-                        className="flex w-full items-center gap-2 px-3.5 py-2.5 text-left text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-350 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-coral-500 transition-colors cursor-pointer border-t border-zinc-100 dark:border-zinc-800"
+                        className="flex w-full items-center gap-2 px-3.5 py-2.5 text-left text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-350 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-orange-500 transition-colors cursor-pointer border-t border-zinc-100 dark:border-zinc-800"
                       >
                         <LucideIcons.Ticket className="h-4 w-4" />
                         <span>Coupons & Promo</span>

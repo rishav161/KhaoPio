@@ -153,7 +153,7 @@ export default function Dashboard() {
           <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2 mb-4 font-semibold">{error}</p>
           <button 
             onClick={() => fetchStats(1)}
-            className="rounded-lg bg-coral-500 hover:bg-coral-600 text-white px-4 py-2 text-xs font-black uppercase tracking-wider transition-all"
+            className="rounded-lg bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 text-xs font-black uppercase tracking-wider transition-all"
           >
             Retry Sync
           </button>
@@ -200,7 +200,7 @@ export default function Dashboard() {
       <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-black tracking-tight text-zinc-950 dark:text-zinc-50 flex items-center gap-2">
-            <TrendingUp className="h-6 w-6 text-coral-500" />
+            <TrendingUp className="h-6 w-6 text-orange-500" />
             <span>Executive Dashboard</span>
           </h1>
           <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
@@ -242,34 +242,34 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
             <div>
               <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 mb-1.5 flex items-center gap-1 font-bold">
-                <Calendar className="h-3.5 w-3.5 text-coral-500" />
+                <Calendar className="h-3.5 w-3.5 text-orange-500" />
                 <span>Start Date</span>
               </label>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full rounded-lg border border-zinc-250 dark:border-zinc-850 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-coral-500 font-semibold text-zinc-900 dark:text-zinc-100"
+                className="w-full rounded-lg border border-zinc-250 dark:border-zinc-850 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-orange-400 font-semibold text-zinc-900 dark:text-zinc-100"
               />
             </div>
 
             <div>
               <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 mb-1.5 flex items-center gap-1 font-bold">
-                <Calendar className="h-3.5 w-3.5 text-coral-500" />
+                <Calendar className="h-3.5 w-3.5 text-orange-500" />
                 <span>End Date</span>
               </label>
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full rounded-lg border border-zinc-250 dark:border-zinc-850 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-coral-500 font-semibold text-zinc-900 dark:text-zinc-100"
+                className="w-full rounded-lg border border-zinc-250 dark:border-zinc-850 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-orange-400 font-semibold text-zinc-900 dark:text-zinc-100"
               />
             </div>
 
             <div>
               <button
                 type="submit"
-                className="w-full rounded-lg bg-coral-500 hover:bg-coral-600 text-white py-2.5 text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-coral-100 dark:shadow-none"
+                className="w-full rounded-lg bg-orange-500 hover:bg-orange-600 text-white py-2.5 text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-orange-100 dark:shadow-none"
               >
                 Apply Filters
               </button>
@@ -288,7 +288,7 @@ export default function Dashboard() {
               {currencySymbol}{metricsData.totalSales.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
-          <div className="h-10 w-10 rounded-xl bg-coral-50 dark:bg-coral-950/20 text-coral-500 flex items-center justify-center">
+          <div className="h-10 w-10 rounded-xl bg-orange-50 dark:bg-orange-950/20 text-orange-500 flex items-center justify-center">
             <Coins className="h-5 w-5" />
           </div>
         </div>
@@ -301,7 +301,7 @@ export default function Dashboard() {
               {metricsData.ordersCount}
             </span>
           </div>
-          <div className="h-10 w-10 rounded-xl bg-coral-50 dark:bg-coral-950/20 text-coral-500 flex items-center justify-center">
+          <div className="h-10 w-10 rounded-xl bg-orange-50 dark:bg-orange-950/20 text-orange-500 flex items-center justify-center">
             <ShoppingBag className="h-5 w-5" />
           </div>
         </div>
@@ -314,7 +314,7 @@ export default function Dashboard() {
               {currencySymbol}{metricsData.aov.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
-          <div className="h-10 w-10 rounded-xl bg-coral-50 dark:bg-coral-950/20 text-coral-500 flex items-center justify-center">
+          <div className="h-10 w-10 rounded-xl bg-orange-50 dark:bg-orange-950/20 text-orange-500 flex items-center justify-center">
             <BadgeCent className="h-5 w-5" />
           </div>
         </div>
@@ -323,11 +323,11 @@ export default function Dashboard() {
         <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-sm flex items-center justify-between transition-all duration-200">
           <div>
             <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block mb-1">Active KOT Queue</span>
-            <span className="text-2xl font-black tracking-tight font-mono text-zinc-900 dark:text-zinc-50 text-coral-500">
+            <span className="text-2xl font-black tracking-tight font-mono text-zinc-900 dark:text-zinc-50 text-orange-500">
               {metricsData.activeOrdersCount}
             </span>
           </div>
-          <div className="h-10 w-10 rounded-xl bg-coral-500 text-white flex items-center justify-center shadow-lg shadow-coral-100 dark:shadow-none animate-pulse">
+          <div className="h-10 w-10 rounded-xl bg-orange-500 text-white flex items-center justify-center shadow-lg shadow-orange-100 dark:shadow-none animate-pulse">
             <Flame className="h-5 w-5" />
           </div>
         </div>
@@ -343,7 +343,7 @@ export default function Dashboard() {
             </div>
           )}
           <h3 className="text-xs font-black uppercase tracking-wider text-zinc-400 mb-4 flex items-center gap-1.5">
-            <Clock className="h-4.5 w-4.5 text-coral-500" />
+            <Clock className="h-4.5 w-4.5 text-orange-500" />
             <span>Sales Trend (Date Filtered)</span>
           </h3>
           
@@ -375,10 +375,10 @@ export default function Dashboard() {
                     className="absolute group"
                     style={{ left: `${pt.x}%`, top: `${pt.y}%`, transform: 'translate(-50%, -50%)' }}
                   >
-                    <div className="h-3.5 w-3.5 rounded-full border-2 border-white dark:border-zinc-900 bg-coral-500 shadow-md group-hover:scale-125 transition-all cursor-pointer"></div>
+                    <div className="h-3.5 w-3.5 rounded-full border-2 border-white dark:border-zinc-900 bg-orange-500 shadow-md group-hover:scale-125 transition-all cursor-pointer"></div>
                     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 pointer-events-none rounded-lg bg-zinc-950/95 dark:bg-zinc-900 border border-zinc-800 dark:border-zinc-800 text-[10px] font-black text-white p-2.5 shadow-2xl transition-all duration-150 z-10 whitespace-nowrap space-y-0.5">
                       <p className="text-zinc-400 font-bold">{new Date(pt.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-                      <p className="text-coral-500 font-black text-[11px]">Sales: {currencySymbol}{pt.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                      <p className="text-orange-500 font-black text-[11px]">Sales: {currencySymbol}{pt.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                       <p className="text-emerald-400 font-bold">Orders: {pt.count}</p>
                     </div>
                   </div>
@@ -408,7 +408,7 @@ export default function Dashboard() {
             </div>
           )}
           <h3 className="text-xs font-black uppercase tracking-wider text-zinc-400 mb-4 flex items-center gap-1.5">
-            <ArrowUpRight className="h-4.5 w-4.5 text-coral-500" />
+            <ArrowUpRight className="h-4.5 w-4.5 text-orange-500" />
             <span>Top Dishes (Units Sold)</span>
           </h3>
 
@@ -428,7 +428,7 @@ export default function Dashboard() {
                     </div>
                     <div className="h-3 w-full rounded-full bg-zinc-100 dark:bg-zinc-950 overflow-hidden">
                       <div 
-                        className="h-full rounded-full bg-gradient-to-r from-coral-400 to-coral-600 transition-all duration-500 ease-out"
+                        className="h-full rounded-full bg-gradient-to-r from-orange-400 to-orange-600 transition-all duration-500 ease-out"
                         style={{ width: `${widthPercent}%` }}
                       ></div>
                     </div>

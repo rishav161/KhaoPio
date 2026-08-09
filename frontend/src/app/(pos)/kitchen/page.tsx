@@ -138,7 +138,7 @@ export default function KitchenPage() {
       {/* KDS Header & Filter bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3">
         <div className="flex items-center gap-2 flex-wrap">
-          <ChefHat className="h-5 w-5 text-coral-500" />
+          <ChefHat className="h-5 w-5 text-orange-500" />
           <h1 className="text-xs sm:text-sm font-black uppercase tracking-wider text-zinc-800 dark:text-zinc-100">
             Kitchen Display System (KDS)
           </h1>
@@ -184,14 +184,14 @@ export default function KitchenPage() {
                   key={order.id}
                   className={`flex w-72 flex-col rounded-xl border-2 bg-white dark:bg-zinc-900 shadow-md transition-all duration-200 shrink-0 ${
                     isPending
-                      ? 'border-coral-500 ring-2 ring-coral-500/20'
+                      ? 'border-orange-500 ring-2 ring-orange-500/20'
                       : 'border-blue-500 ring-2 ring-blue-500/20'
                   }`}
                 >
                   {/* Order Ticket Header */}
                   <div
                     className={`flex items-center justify-between border-b dark:border-zinc-805 px-3 py-2 rounded-t-lg ${
-                      isPending ? 'bg-coral-50/80 dark:bg-coral-950/20 border-coral-200 dark:border-coral-800' : 'bg-blue-50/80 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800'
+                      isPending ? 'bg-orange-50/80 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800' : 'bg-blue-50/80 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800'
                     }`}
                   >
                     <div>
@@ -237,7 +237,7 @@ export default function KitchenPage() {
                       <button
                         onClick={() => handleUpdateStatus(order.id, 'PREPARING')}
                         disabled={submittingOrderIds[order.id]}
-                        className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-coral-500 hover:bg-coral-600 py-2.5 text-xs font-black text-white transition-all shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 py-2.5 text-xs font-black text-white transition-all shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {submittingOrderIds[order.id] ? (
                           <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>

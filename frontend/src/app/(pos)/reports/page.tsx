@@ -176,7 +176,7 @@ export default function Reports() {
       <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-black tracking-tight text-zinc-950 dark:text-zinc-50 flex items-center gap-2">
-            <BarChart3 className="h-6 w-6 text-coral-500" />
+            <BarChart3 className="h-6 w-6 text-orange-500" />
             <span>Sales & Activity Reports</span>
           </h1>
           <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
@@ -220,39 +220,39 @@ export default function Reports() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div>
               <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 mb-1.5 flex items-center gap-1">
-                <Calendar className="h-3.5 w-3.5 text-coral-500" />
+                <Calendar className="h-3.5 w-3.5 text-orange-500" />
                 <span>Start Date</span>
               </label>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full rounded-lg border border-zinc-250 dark:border-zinc-850 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-coral-500 font-semibold"
+                className="w-full rounded-lg border border-zinc-250 dark:border-zinc-850 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-orange-400 font-semibold"
               />
             </div>
 
             <div>
               <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 mb-1.5 flex items-center gap-1">
-                <Calendar className="h-3.5 w-3.5 text-coral-500" />
+                <Calendar className="h-3.5 w-3.5 text-orange-500" />
                 <span>End Date</span>
               </label>
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full rounded-lg border border-zinc-250 dark:border-zinc-850 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-coral-500 font-semibold"
+                className="w-full rounded-lg border border-zinc-250 dark:border-zinc-850 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-orange-400 font-semibold"
               />
             </div>
 
             <div>
               <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 mb-1.5 flex items-center gap-1">
-                <CreditCard className="h-3.5 w-3.5 text-coral-500" />
+                <CreditCard className="h-3.5 w-3.5 text-orange-500" />
                 <span>Payment Method</span>
               </label>
               <select
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
-                className="w-full rounded-lg border border-zinc-250 dark:border-zinc-850 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-3 text-xs outline-none focus:border-coral-500 font-semibold"
+                className="w-full rounded-lg border border-zinc-250 dark:border-zinc-850 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-3 text-xs outline-none focus:border-orange-400 font-semibold"
               >
                 <option value="ALL">All Transactions</option>
                 <option value="CASH">Cash Payments</option>
@@ -264,7 +264,7 @@ export default function Reports() {
             <div>
               <button
                 type="submit"
-                className="w-full rounded-lg bg-coral-500 hover:bg-coral-600 text-white py-2.5 text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-coral-100 dark:shadow-none"
+                className="w-full rounded-lg bg-orange-500 hover:bg-orange-600 text-white py-2.5 text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-orange-100 dark:shadow-none"
               >
                 Apply Filters
               </button>
@@ -286,7 +286,7 @@ export default function Reports() {
           {/* Summary Mini-Widgets */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-sm flex items-center gap-4">
-              <div className="h-10 w-10 rounded-xl bg-coral-50 dark:bg-coral-950/20 text-coral-500 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-xl bg-orange-50 dark:bg-orange-950/20 text-orange-500 flex items-center justify-center">
                 <Coins className="h-5 w-5" />
               </div>
               <div>
@@ -298,7 +298,7 @@ export default function Reports() {
             </div>
 
             <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-sm flex items-center gap-4">
-              <div className="h-10 w-10 rounded-xl bg-coral-50 dark:bg-coral-950/20 text-coral-500 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-xl bg-orange-50 dark:bg-orange-950/20 text-orange-500 flex items-center justify-center">
                 <ShoppingBag className="h-5 w-5" />
               </div>
               <div>
@@ -310,7 +310,7 @@ export default function Reports() {
             </div>
 
             <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-sm flex items-center gap-4">
-              <div className="h-10 w-10 rounded-xl bg-coral-50 dark:bg-coral-950/20 text-coral-500 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-xl bg-orange-50 dark:bg-orange-950/20 text-orange-500 flex items-center justify-center">
                 <Percent className="h-5 w-5" />
               </div>
               <div>
