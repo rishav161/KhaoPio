@@ -201,6 +201,9 @@ export default function KitchenPage() {
                       <div className="text-[9px] font-extrabold text-zinc-500 dark:text-zinc-400 mt-0.5">
                         Items: {order.items.reduce((acc, ci) => acc + ci.quantity, 0)}
                       </div>
+                      <div className="text-[8px] font-black text-zinc-450 dark:text-zinc-550 leading-tight uppercase mt-0.5">
+                        By: {order.waiterName} ({order.waiterRole?.replace('_', ' ')})
+                      </div>
                     </div>
                     {/* Live Timer */}
                     <ElapsedTimer createdAt={order.createdAt} />

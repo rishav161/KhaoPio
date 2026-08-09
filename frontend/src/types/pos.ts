@@ -43,6 +43,8 @@ export interface Order {
   payments?: Payment[];
   tableId?: string | null;
   table?: DiningTable | null;
+  waiterName?: string;
+  waiterRole?: string;
 }
 
 export interface DiningTable {

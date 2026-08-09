@@ -55,8 +55,21 @@ export class OrderService {
       },
       include: {
         items: true,
-        payments: true,
-        table: true
+        payments: {
+          include: {
+            cashier: {
+              include: {
+                role: true
+              }
+            }
+          }
+        },
+        table: true,
+        waiter: {
+          include: {
+            role: true
+          }
+        }
       }
     });
 
@@ -125,8 +138,21 @@ export class OrderService {
       where: whereClause,
       include: {
         items: true,
-        payments: true,
-        table: true
+        payments: {
+          include: {
+            cashier: {
+              include: {
+                role: true
+              }
+            }
+          }
+        },
+        table: true,
+        waiter: {
+          include: {
+            role: true
+          }
+        }
       },
       orderBy: {
         createdAt: 'desc'
@@ -146,8 +172,21 @@ export class OrderService {
         data: { status: newStatus },
         include: {
           items: true,
-          payments: true,
-          table: true
+          payments: {
+            include: {
+              cashier: {
+                include: {
+                  role: true
+                }
+              }
+            }
+          },
+          table: true,
+          waiter: {
+            include: {
+              role: true
+            }
+          }
         }
       });
 
@@ -285,8 +324,21 @@ export class OrderService {
         },
         include: {
           items: true,
-          payments: true,
-          table: true
+          payments: {
+            include: {
+              cashier: {
+                include: {
+                  role: true
+                }
+              }
+            }
+          },
+          table: true,
+          waiter: {
+            include: {
+              role: true
+            }
+          }
         }
       });
 

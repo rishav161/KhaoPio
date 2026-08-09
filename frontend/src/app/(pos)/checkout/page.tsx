@@ -720,6 +720,8 @@ export default function CheckoutPage() {
                       <div className="capitalize">
                         PAY STATUS: <span className="font-extrabold">{selectedOrderForBill.status.replace('_', ' ')}</span>
                       </div>
+                      <div>SERVED BY: {selectedOrderForBill.waiterName?.toUpperCase()} ({selectedOrderForBill.waiterRole?.replace('_', ' ').toUpperCase()})</div>
+                      <div>CASHIER: {user?.name.toUpperCase()} ({user?.role.replace('_', ' ').toUpperCase()})</div>
                     </div>
 
                     {/* Dashed line separator */}

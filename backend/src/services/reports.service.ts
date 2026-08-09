@@ -78,10 +78,28 @@ export class ReportsService {
       skip,
       take: limit,
       include: {
-        waiter: { select: { name: true } },
+        waiter: {
+          select: {
+            name: true,
+            role: {
+              select: {
+                name: true
+              }
+            }
+          }
+        },
         payments: {
           include: {
-            cashier: { select: { name: true } }
+            cashier: {
+              select: {
+                name: true,
+                role: {
+                  select: {
+                    name: true
+                  }
+                }
+              }
+            }
           }
         },
         items: true,
@@ -97,11 +115,18 @@ export class ReportsService {
         totalOrders,
       },
       orders: orders.map(o => {
-        const cashiers = o.payments?.map(p => p.cashier?.name).filter(Boolean) || [];
+        const cashiers = o.payments?.map(p => 
+          p.cashier 
+            ? `${p.cashier.name} (${p.cashier.role?.name.replace('_', ' ')})` 
+            : ''
+        ).filter(Boolean) || [];
         const cashierNameStr = cashiers.length > 0 ? Array.from(new Set(cashiers)).join(', ') : 'N/A';
 
         const methods = o.payments?.map(p => p.paymentMethod) || [];
         const paymentMethodStr = methods.length > 0 ? methods.join(', ') : 'N/A';
+
+        const waiterRoleName = o.waiter?.role?.name ? o.waiter.role.name.replace('_', ' ') : 'N/A';
+        const waiterNameStr = o.waiter ? `${o.waiter.name} (${waiterRoleName})` : 'N/A';
 
         return {
           id: o.id,
@@ -111,7 +136,7 @@ export class ReportsService {
           subtotal: o.subtotal,
           status: o.status,
           paymentMethod: paymentMethodStr,
-          waiterName: o.waiter.name,
+          waiterName: waiterNameStr,
           cashierName: cashierNameStr,
           createdAt: o.createdAt,
           itemCount: o.items.reduce((sum, item) => sum + item.quantity, 0),

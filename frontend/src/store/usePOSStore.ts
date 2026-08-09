@@ -173,6 +173,8 @@ export const usePOSStore = create<POSState>((set, get) => ({
           payments: order.payments,
           tableId: order.tableId,
           table: order.table,
+          waiterName: order.waiter?.name || 'N/A',
+          waiterRole: order.waiter?.role?.name || 'N/A',
         };
       });
 
