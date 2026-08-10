@@ -4,11 +4,20 @@ import React, { useState, useMemo } from 'react';
 import { usePOSStore } from '@/store/usePOSStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Order } from '@/types/pos';
-import { Banknote, CreditCard, Receipt, CheckCircle, Printer, X, ShoppingBag, Trash2, Tag, Percent, Plus } from 'lucide-react';
+import {
+  Banknote, CreditCard, Receipt, CheckCircle, Printer, X,
+  ShoppingBag, Trash2, Tag, Percent, Plus, Smartphone, Clock,
+} from 'lucide-react';
 import confettiExplosion from 'canvas-confetti';
 import { Loader } from '@/components/Loader';
 import { apiFetch } from '@/utils/api';
 import { useCurrencySymbol } from '@/utils/currency';
+
+const METHOD_OPTIONS: { key: 'CASH' | 'CARD' | 'UPI'; label: string; icon: React.ReactNode }[] = [
+  { key: 'CASH', label: 'Cash', icon: <Banknote className="h-4 w-4" /> },
+  { key: 'CARD', label: 'Card', icon: <CreditCard className="h-4 w-4" /> },
+  { key: 'UPI', label: 'UPI', icon: <Smartphone className="h-4 w-4" /> },
+];
 
 export default function CheckoutPage() {
   const { activeOrders, completePayment, fetchActiveOrders, fetchMenuItems } = usePOSStore();
@@ -19,24 +28,16 @@ export default function CheckoutPage() {
   const [loadingCompleted, setLoadingCompleted] = useState(false);
   const [loadingActive, setLoadingActive] = useState(false);
 
-  // Restaurant settings state for invoice header/footer styling
   const [restaurantSettings, setRestaurantSettings] = useState<{
-    name: string;
-    defaultTaxRate: number;
-    defaultServiceCharge: number;
-    address: string | null;
-    phone: string | null;
-    gstin: string | null;
-    logo: string | null;
-    thankYouMessage: string | null;
+    name: string; defaultTaxRate: number; defaultServiceCharge: number;
+    address: string | null; phone: string | null; gstin: string | null;
+    logo: string | null; thankYouMessage: string | null;
   } | null>(null);
 
-  // Local checkout inputs
   const [localPayments, setLocalPayments] = useState<{ paymentMethod: 'CASH' | 'CARD' | 'UPI'; amount: number; transactionReference?: string }[]>([]);
   const [paymentAmountInput, setPaymentAmountInput] = useState('');
   const [paymentMethodInput, setPaymentMethodInput] = useState<'CASH' | 'CARD' | 'UPI'>('CASH');
   const [paymentRefInput, setPaymentRefInput] = useState('');
-
   const [couponCodeInput, setCouponCodeInput] = useState('');
   const [manualDiscountInput, setManualDiscountInput] = useState('');
   const [couponError, setCouponError] = useState('');
@@ -44,15 +45,8 @@ export default function CheckoutPage() {
   const [payingOrderId, setPayingOrderId] = useState<string | null>(null);
   const [loadingDiscounts, setLoadingDiscounts] = useState(false);
 
-  // Fetch restaurant configuration on mount
   React.useEffect(() => {
-    apiFetch<any>('/auth/restaurant')
-      .then((data: any) => {
-        setRestaurantSettings(data);
-      })
-      .catch((err: any) => {
-        console.error('Failed to load restaurant settings for checkout print:', err);
-      });
+    apiFetch<any>('/auth/restaurant').then(setRestaurantSettings).catch(() => {});
   }, []);
 
   React.useEffect(() => {
@@ -64,23 +58,17 @@ export default function CheckoutPage() {
         setLoadingCompleted(false);
       });
     });
-    const interval = setInterval(() => {
-      fetchActiveOrders(true, completedFilter);
-    }, 5000);
+    const interval = setInterval(() => fetchActiveOrders(true, completedFilter), 5000);
     return () => clearInterval(interval);
   }, [fetchActiveOrders, fetchMenuItems, completedFilter]);
 
-  // Synchronize selectedOrderForBill with reactive activeOrders list from store
   React.useEffect(() => {
     if (selectedOrderForBill) {
       const updated = activeOrders.find((o) => o.id === selectedOrderForBill.id);
-      if (updated) {
-        setSelectedOrderForBill(updated);
-      }
+      if (updated) setSelectedOrderForBill(updated);
     }
   }, [activeOrders, selectedOrderForBill?.id]);
 
-  // Reset local states when active order selection changes
   React.useEffect(() => {
     if (selectedOrderForBill) {
       setCouponCodeInput(selectedOrderForBill.couponCode || '');
@@ -88,39 +76,28 @@ export default function CheckoutPage() {
       setLocalPayments([]);
       setCouponError('');
       setCouponSuccess('');
-      
-      const alreadyPaid = selectedOrderForBill.payments?.reduce((sum, p) => sum + p.amount, 0) || 0;
+      const alreadyPaid = selectedOrderForBill.payments?.reduce((s, p) => s + p.amount, 0) || 0;
       const rem = Math.max(0, parseFloat(selectedOrderForBill.totals.total) - alreadyPaid);
       setPaymentAmountInput(rem > 0 ? rem.toFixed(2) : '');
     } else {
-      setCouponCodeInput('');
-      setManualDiscountInput('');
-      setLocalPayments([]);
-      setCouponError('');
-      setCouponSuccess('');
-      setPaymentAmountInput('');
+      setCouponCodeInput(''); setManualDiscountInput(''); setLocalPayments([]);
+      setCouponError(''); setCouponSuccess(''); setPaymentAmountInput('');
     }
   }, [selectedOrderForBill?.id]);
 
-  // Filter orders with READY/BILL_REQUESTED/PARTIALLY_PAID status for active queue
-  const readyOrders = useMemo(() => {
-    return activeOrders.filter((order) => order.status === 'READY' || order.status === 'BILL_REQUESTED' || order.status === 'PARTIALLY_PAID');
-  }, [activeOrders]);
+  const readyOrders = useMemo(() =>
+    activeOrders.filter(o => o.status === 'READY' || o.status === 'BILL_REQUESTED' || o.status === 'PARTIALLY_PAID'),
+    [activeOrders]);
 
-  // Filter completed/PAID orders
-  const completedOrders = useMemo(() => {
-    return activeOrders.filter((order) => order.status === 'PAID');
-  }, [activeOrders]);
+  const completedOrders = useMemo(() =>
+    activeOrders.filter(o => o.status === 'PAID'),
+    [activeOrders]);
 
-  // Compute total paid so far
-  const alreadyPaid = useMemo(() => {
-    return selectedOrderForBill?.payments?.reduce((sum, p) => sum + p.amount, 0) || 0;
-  }, [selectedOrderForBill?.payments]);
+  const alreadyPaid = useMemo(() =>
+    selectedOrderForBill?.payments?.reduce((s, p) => s + p.amount, 0) || 0,
+    [selectedOrderForBill?.payments]);
 
-  const localPaid = useMemo(() => {
-    return localPayments.reduce((sum, p) => sum + p.amount, 0);
-  }, [localPayments]);
-
+  const localPaid = useMemo(() => localPayments.reduce((s, p) => s + p.amount, 0), [localPayments]);
   const totalPaid = alreadyPaid + localPaid;
 
   const remainingBalance = useMemo(() => {
@@ -128,327 +105,233 @@ export default function CheckoutPage() {
     return Math.max(0, parseFloat(selectedOrderForBill.totals.total) - totalPaid);
   }, [selectedOrderForBill?.totals?.total, totalPaid]);
 
-  // Dynamically update the default payment amount input
   React.useEffect(() => {
-    if (selectedOrderForBill) {
-      setPaymentAmountInput(remainingBalance > 0 ? remainingBalance.toFixed(2) : '');
-    }
+    if (selectedOrderForBill) setPaymentAmountInput(remainingBalance > 0 ? remainingBalance.toFixed(2) : '');
   }, [remainingBalance, selectedOrderForBill?.id]);
 
-  // Add a split payment locally
   const handleAddPayment = () => {
     const amt = parseFloat(paymentAmountInput);
     if (isNaN(amt) || amt <= 0) return;
-    
-    setLocalPayments([...localPayments, {
-      paymentMethod: paymentMethodInput,
-      amount: amt,
-      transactionReference: paymentRefInput || undefined
-    }]);
+    setLocalPayments([...localPayments, { paymentMethod: paymentMethodInput, amount: amt, transactionReference: paymentRefInput || undefined }]);
     setPaymentRefInput('');
   };
 
-  // Remove a local split payment
-  const handleRemovePayment = (index: number) => {
-    setLocalPayments(localPayments.filter((_, i) => i !== index));
-  };
+  const handleRemovePayment = (i: number) => setLocalPayments(localPayments.filter((_, idx) => idx !== i));
 
-  // Recalculate and apply coupon / manual discount on backend
   const handleApplyDiscountAndCoupon = async () => {
     if (!selectedOrderForBill) return;
-    setCouponError('');
-    setCouponSuccess('');
-
+    setCouponError(''); setCouponSuccess('');
     const discountVal = manualDiscountInput ? parseFloat(manualDiscountInput) : 0;
     if (manualDiscountInput) {
-      if (isNaN(discountVal) || discountVal < 0) {
-        setCouponError('Manual discount must be a valid positive number.');
-        return;
-      }
-      const orderSubtotal = parseFloat(selectedOrderForBill.totals.subtotal) || 0;
-      if (discountVal > orderSubtotal) {
-        setCouponError('Manual discount cannot exceed the order subtotal.');
-        return;
-      }
+      if (isNaN(discountVal) || discountVal < 0) { setCouponError('Discount must be a valid positive number.'); return; }
+      if (discountVal > parseFloat(selectedOrderForBill.totals.subtotal)) { setCouponError('Discount cannot exceed subtotal.'); return; }
     }
-
     setLoadingDiscounts(true);
     try {
-      await completePayment(selectedOrderForBill.id, {
-        couponCode: couponCodeInput || undefined,
-        manualDiscount: manualDiscountInput ? discountVal : undefined,
-        payments: []
-      });
-      setCouponSuccess('Discount / Coupon applied successfully!');
-    } catch (err: any) {
-      setCouponError(err.message || 'Failed to apply discount/coupon.');
-    } finally {
-      setLoadingDiscounts(false);
-    }
+      await completePayment(selectedOrderForBill.id, { couponCode: couponCodeInput || undefined, manualDiscount: manualDiscountInput ? discountVal : undefined, payments: [] });
+      setCouponSuccess('Discount applied!');
+    } catch (err: any) { setCouponError(err.message || 'Failed to apply discount.'); }
+    finally { setLoadingDiscounts(false); }
   };
 
-  // Finalize payment transaction
   const handleFinalizeCheckout = async () => {
     if (!selectedOrderForBill) return;
-    setCouponError('');
-    setCouponSuccess('');
-
+    setCouponError(''); setCouponSuccess('');
     const discountVal = manualDiscountInput ? parseFloat(manualDiscountInput) : 0;
     if (manualDiscountInput) {
-      if (isNaN(discountVal) || discountVal < 0) {
-        setCouponError('Manual discount must be a valid positive number.');
-        return;
-      }
-      const orderSubtotal = parseFloat(selectedOrderForBill.totals.subtotal) || 0;
-      if (discountVal > orderSubtotal) {
-        setCouponError('Manual discount cannot exceed the order subtotal.');
-        return;
-      }
+      if (isNaN(discountVal) || discountVal < 0) { setCouponError('Discount must be a valid positive number.'); return; }
+      if (discountVal > parseFloat(selectedOrderForBill.totals.subtotal)) { setCouponError('Discount cannot exceed subtotal.'); return; }
     }
-
     setPayingOrderId(selectedOrderForBill.id);
     try {
       let finalPayments = [...localPayments];
-
-      // If split builder is empty but there's a remaining balance,
-      // default to paying the full remaining balance using the selected inputs
       if (finalPayments.length === 0 && remainingBalance > 0) {
-        finalPayments = [{
-          paymentMethod: paymentMethodInput,
-          amount: remainingBalance,
-          transactionReference: paymentRefInput || undefined
-        }];
+        finalPayments = [{ paymentMethod: paymentMethodInput, amount: remainingBalance, transactionReference: paymentRefInput || undefined }];
       }
-
-      await completePayment(selectedOrderForBill.id, {
-        couponCode: couponCodeInput || undefined,
-        manualDiscount: manualDiscountInput ? discountVal : undefined,
-        payments: finalPayments
-      });
-
-      const totalPaidAfter = alreadyPaid + finalPayments.reduce((sum, p) => sum + p.amount, 0);
-      const grandTotalAfter = parseFloat(selectedOrderForBill.totals.total);
-      if (totalPaidAfter >= grandTotalAfter) {
-        confettiExplosion({
-          particleCount: 80,
-          spread: 60,
-          origin: { y: 0.7 },
-          colors: ['#f97316', '#10b981', '#3b82f6', '#f59e0b'],
-        });
-        setCouponSuccess('Order fully paid and checkout completed!');
-        
-        // Auto launch browser native print screen pre-formatted specifically for rolls
-        setTimeout(() => {
-          window.print();
-        }, 800);
+      await completePayment(selectedOrderForBill.id, { couponCode: couponCodeInput || undefined, manualDiscount: manualDiscountInput ? discountVal : undefined, payments: finalPayments });
+      const paidAfter = alreadyPaid + finalPayments.reduce((s, p) => s + p.amount, 0);
+      if (paidAfter >= parseFloat(selectedOrderForBill.totals.total)) {
+        confettiExplosion({ particleCount: 80, spread: 60, origin: { y: 0.7 }, colors: ['#f97316', '#10b981', '#3b82f6', '#f59e0b'] });
+        setCouponSuccess('Order fully paid!');
+        setTimeout(() => triggerPrint(), 800);
       } else {
-        setCouponSuccess('Partial payment recorded successfully!');
+        setCouponSuccess('Partial payment recorded!');
       }
-
       setLocalPayments([]);
-    } catch (err: any) {
-      setCouponError(err.message || 'Failed to finalize checkout.');
-    } finally {
-      setPayingOrderId(null);
-    }
+    } catch (err: any) { setCouponError(err.message || 'Failed to finalize checkout.'); }
+    finally { setPayingOrderId(null); }
   };
 
-  const handlePrintAction = () => {
+  const triggerPrint = () => {
+    const source = document.getElementById('thermal-receipt-print-area');
+    if (!source) return;
+    const portal = document.createElement('div');
+    portal.id = 'receipt-print-portal';
+    portal.innerHTML = source.innerHTML;
+    document.body.appendChild(portal);
+    const cleanup = () => { if (document.body.contains(portal)) document.body.removeChild(portal); window.onafterprint = null; };
+    window.onafterprint = cleanup;
     window.print();
+    setTimeout(cleanup, 3000);
   };
 
-  // Compute checkout button text dynamically
   const checkoutButtonText = useMemo(() => {
     if (payingOrderId !== null) return 'SAVING...';
-    if (localPayments.length === 0) {
-      if (remainingBalance > 0) {
-        return `FINALIZE PAYMENT (${paymentMethodInput})`;
-      }
-      return 'SAVE DISCOUNTS / UPDATE';
-    }
-    return remainingBalance === 0 ? 'FINALIZE CHECKOUT' : 'SAVE PARTIAL PAYMENTS';
-  }, [payingOrderId, localPayments.length, remainingBalance, paymentMethodInput]);
+    if (localPayments.length === 0) return remainingBalance > 0 ? `CHARGE ${currencySymbol}${remainingBalance.toFixed(2)} (${paymentMethodInput})` : 'SAVE CHANGES';
+    return remainingBalance === 0 ? 'COMPLETE CHECKOUT' : 'SAVE PARTIAL PAYMENTS';
+  }, [payingOrderId, localPayments.length, remainingBalance, paymentMethodInput, currencySymbol]);
+
+  const getStatusStyle = (status: string) => {
+    if (status === 'READY') return 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800';
+    if (status === 'BILL_REQUESTED') return 'bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800';
+    if (status === 'PARTIALLY_PAID') return 'bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800';
+    return 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 border-zinc-200 dark:border-zinc-700';
+  };
 
   return (
     <div className="flex flex-col lg:flex-row h-full w-full gap-3 overflow-y-auto lg:overflow-hidden">
-      {/* Print-only CSS style injection (Bulletproof selective rendering) */}
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
-          @page {
-            size: 80mm auto;
-            margin: 0mm;
-          }
-          body {
-            background: white !important;
-            color: black !important;
-            margin: 0 !important;
-            padding: 0 !important;
-          }
-          /* Hide everything by default */
-          body * {
-            visibility: hidden !important;
-          }
-          /* Make the print preview layout and all children visible */
-          #thermal-receipt-print-area,
-          #thermal-receipt-print-area * {
-            visibility: visible !important;
-          }
-          /* Absolute position the print area at top-left to avoid spacing blank spaces */
-          #thermal-receipt-print-area {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 80mm !important;
-            margin: 0 !important;
-            padding: 4mm !important;
-            box-sizing: border-box !important;
-            border: none !important;
-            box-shadow: none !important;
-            display: block !important;
-          }
-          .print-exclude {
-            display: none !important;
+          @page { size: 80mm auto; margin: 0mm; }
+          body { background: white !important; color: black !important; margin: 0 !important; padding: 0 !important; }
+          body > *:not(#receipt-print-portal) { display: none !important; }
+          #receipt-print-portal {
+            display: block !important; position: absolute !important; left: 0 !important; top: 0 !important;
+            width: 80mm !important; margin: 0 !important; padding: 4mm !important;
+            box-sizing: border-box !important; font-family: 'Courier New', Courier, monospace !important;
+            font-size: 11px !important; color: black !important; background: white !important;
           }
         }
       `}} />
 
-      {/* LEFT COLUMN: Ready Orders (55% width) */}
-      <div className="flex w-full lg:w-[55%] flex-col border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-xl shadow-sm overflow-hidden shrink-0">
-        <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-955 p-3">
-          <div className="flex items-center gap-2">
-            <ShoppingBag className="h-5 w-5 text-orange-500" />
-            <h2 className="text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
-              Ready for Checkout ({readyOrders.length})
-            </h2>
-          </div>
+      {/* ── LEFT: Ready for checkout ── */}
+      <div className="flex w-full lg:w-[55%] flex-col rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm overflow-hidden shrink-0">
+        <div className="flex items-center gap-2.5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-4 py-3">
+          <ShoppingBag className="h-4 w-4 text-orange-500" />
+          <h2 className="text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Ready for Checkout</h2>
+          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-black text-white">{readyOrders.length}</span>
         </div>
 
-        <div className="relative flex-1 overflow-y-auto p-3 space-y-2.5 bg-zinc-50/50 dark:bg-zinc-950/20">
+        <div className="relative flex-1 overflow-y-auto p-3 space-y-2.5">
           {loadingActive && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xs">
-              <Loader size="md" text="Syncing checkout queue..." />
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 dark:bg-zinc-900/70 backdrop-blur-sm">
+              <Loader size="md" text="Syncing queue..." />
             </div>
           )}
           {readyOrders.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center text-zinc-400 p-8 text-center bg-white dark:bg-zinc-900 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800">
-              <CheckCircle className="h-10 w-10 stroke-[1.2] text-zinc-300 mb-2" />
-              <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400">No pending payments</p>
-              <p className="text-[10px] text-zinc-400 mt-1 max-w-[200px]">
-                Complete orders in KDS first, then process payments here.
-              </p>
+            <div className="flex h-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 p-8 text-center">
+              <CheckCircle className="h-10 w-10 stroke-[1.2] text-zinc-300" />
+              <p className="text-xs font-bold text-zinc-500">No pending payments</p>
+              <p className="text-[10px] text-zinc-400 max-w-[200px]">Orders marked ready in KDS will appear here.</p>
             </div>
           ) : (
             readyOrders.map((order) => (
-              <div
-                key={order.id}
-                className="flex flex-col border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 rounded-lg shadow-sm"
-              >
-                {/* Header */}
-                <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-2 mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-black text-zinc-950 dark:text-zinc-100">
-                      Order {order.orderNumber} {order.table ? `(${order.table.name})` : '(Takeaway)'}
+              <div key={order.id} className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                {/* Card header */}
+                <div className="flex items-center justify-between bg-zinc-50 dark:bg-zinc-950 px-3 py-2.5 border-b border-zinc-100 dark:border-zinc-800">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-xs font-black text-zinc-900 dark:text-zinc-100">
+                      #{order.orderNumber}
                     </span>
-                    <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-bold">
+                    <span className="text-[10px] text-zinc-500 font-bold">
+                      {order.table ? order.table.name : 'Takeaway'}
+                    </span>
+                    <span className={`rounded-full border px-2 py-0.5 text-[8px] font-black uppercase ${getStatusStyle(order.status)}`}>
+                      {order.status.replace('_', ' ')}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Clock className="h-3 w-3 text-zinc-400" />
+                    <span className="text-[10px] font-bold text-zinc-400">
                       {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
-                    {order.status === 'PARTIALLY_PAID' && (
-                      <span className="rounded bg-amber-50 dark:bg-amber-950/20 px-1.5 py-0.5 text-[8px] font-black text-amber-700 dark:text-amber-450 border border-amber-200 dark:border-amber-900 uppercase">
-                        Partially Paid
-                      </span>
-                    )}
                   </div>
-                  <span className="text-sm font-black text-orange-500">
-                    {currencySymbol}{order.totals.total}
-                  </span>
                 </div>
 
-                {/* Items Summary */}
-                <div className="space-y-1 text-[11px] font-bold text-zinc-650 dark:text-zinc-400 mb-3">
+                {/* Items */}
+                <div className="px-3 py-2 space-y-0.5">
                   {order.items.map((item) => (
-                    <div key={item.menuItem.id} className="flex justify-between">
-                      <span>
-                        {item.menuItem.name} <span className="text-[10px] text-zinc-400 dark:text-zinc-500">x{item.quantity}</span>
+                    <div key={item.menuItem.id} className="flex justify-between text-[11px]">
+                      <span className="text-zinc-600 dark:text-zinc-400 font-semibold">
+                        {item.menuItem.name} <span className="text-zinc-400">×{item.quantity}</span>
                       </span>
-                      <span>{currencySymbol}{(item.menuItem.price * item.quantity).toFixed(2)}</span>
+                      <span className="font-bold text-zinc-700 dark:text-zinc-300">
+                        {currencySymbol}{(item.menuItem.price * item.quantity).toFixed(2)}
+                      </span>
                     </div>
                   ))}
                 </div>
 
-                {/* Action buttons */}
-                <button
-                  onClick={() => setSelectedOrderForBill(order)}
-                  className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 py-2.5 text-xs font-black text-white transition-all shadow-sm cursor-pointer"
-                >
-                  <Receipt className="h-4 w-4" />
-                  CHECKOUT & PRINT
-                </button>
+                {/* Footer */}
+                <div className="flex items-center justify-between px-3 py-2.5 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/20">
+                  <span className="text-base font-black text-orange-500">
+                    {currencySymbol}{order.totals.total}
+                  </span>
+                  <button
+                    onClick={() => setSelectedOrderForBill(order)}
+                    className="flex items-center gap-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 active:scale-[0.98] px-4 py-2 text-[11px] font-black text-white transition-all shadow-sm shadow-orange-200 cursor-pointer"
+                  >
+                    <Receipt className="h-3.5 w-3.5" />
+                    CHECKOUT
+                  </button>
+                </div>
               </div>
             ))
           )}
         </div>
       </div>
 
-      {/* RIGHT COLUMN: Completed Orders (45% width) */}
-      <div className="flex w-full lg:w-[45%] flex-col border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-xl shadow-sm overflow-hidden shrink-0">
-        <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-955 p-3">
+      {/* ── RIGHT: Completed orders ── */}
+      <div className="flex w-full lg:w-[45%] flex-col rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm overflow-hidden shrink-0">
+        <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-4 py-3">
           <div className="flex items-center gap-2">
-            <CheckCircle className="h-5 w-5 text-emerald-600" />
-            <h2 className="text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
-              Completed Orders ({completedOrders.length})
-            </h2>
+            <CheckCircle className="h-4 w-4 text-emerald-500" />
+            <h2 className="text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Completed</h2>
+            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-black text-white">{completedOrders.length}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <select
-              value={completedFilter}
-              onChange={(e) => setCompletedFilter(e.target.value as any)}
-              className="rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-[9px] font-black uppercase py-1 px-1.5 outline-none focus:border-orange-400 cursor-pointer text-zinc-700 dark:text-zinc-350"
-            >
-              <option value="today">Today</option>
-              <option value="yesterday">Yesterday</option>
-              <option value="7days">Last 7 Days</option>
-              <option value="all">All Time</option>
-            </select>
-          </div>
+          <select
+            value={completedFilter}
+            onChange={(e) => setCompletedFilter(e.target.value as any)}
+            className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2 py-1 text-[10px] font-black outline-none focus:border-orange-400 cursor-pointer text-zinc-700 dark:text-zinc-300"
+          >
+            <option value="today">Today</option>
+            <option value="yesterday">Yesterday</option>
+            <option value="7days">Last 7 Days</option>
+            <option value="all">All Time</option>
+          </select>
         </div>
 
-        <div className="relative flex-1 overflow-y-auto p-3 space-y-2 bg-zinc-50/30">
+        <div className="relative flex-1 overflow-y-auto p-3 space-y-2">
           {loadingCompleted && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xs">
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 dark:bg-zinc-900/70 backdrop-blur-sm">
               <Loader size="md" text="Syncing history..." />
             </div>
           )}
           {completedOrders.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center text-zinc-400 text-center">
-              <Receipt className="h-10 w-10 stroke-[1.2] text-zinc-300 mb-2" />
-              <p className="text-xs font-bold text-zinc-500">No completed orders yet</p>
+            <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
+              <Receipt className="h-10 w-10 stroke-[1.2] text-zinc-300" />
+              <p className="text-xs font-bold text-zinc-500">No completed orders</p>
             </div>
           ) : (
             completedOrders.map((order) => (
-              <div
-                key={order.id}
-                className="flex items-center justify-between border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2.5 rounded-lg shadow-sm"
-              >
-                <div className="min-w-0 pr-2">
+              <div key={order.id} className="flex items-center justify-between rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2.5 shadow-sm hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors">
+                <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-black text-zinc-950 dark:text-zinc-100">
-                      {order.orderNumber} {order.table ? `(${order.table.name})` : '(Takeaway)'}
-                    </span>
-                    <span className="rounded bg-emerald-50 dark:bg-emerald-950/20 px-1.5 py-0.5 text-[8px] font-black text-emerald-700 dark:text-emerald-450 border border-emerald-200 dark:border-emerald-900 uppercase">
-                      PAID
-                    </span>
+                    <span className="text-xs font-black text-zinc-900 dark:text-zinc-100">#{order.orderNumber}</span>
+                    <span className="text-[10px] text-zinc-500 font-bold">{order.table ? order.table.name : 'Takeaway'}</span>
+                    <span className="rounded-full bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 text-[8px] font-black text-emerald-700 dark:text-emerald-400 uppercase">PAID</span>
                   </div>
-                  <div className="text-[10px] text-zinc-500 dark:text-zinc-400 font-bold mt-0.5">
-                    Total: <span className="font-extrabold text-zinc-800 dark:text-zinc-200">${order.totals.total}</span>
+                  <div className="mt-0.5 text-[10px] text-zinc-400">
+                    {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    <span className="mx-1">·</span>
+                    <span className="font-black text-zinc-700 dark:text-zinc-300">{currencySymbol}{order.totals.total}</span>
                   </div>
                 </div>
-
                 <button
                   onClick={() => setSelectedOrderForBill(order)}
-                  className="flex items-center gap-1 rounded bg-zinc-100 dark:bg-zinc-955 border border-zinc-350 dark:border-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-800 px-2.5 py-1.5 text-[10px] font-black text-zinc-700 dark:text-zinc-300 transition-colors"
+                  className="flex items-center gap-1 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 hover:border-orange-300 hover:text-orange-500 px-2.5 py-1.5 text-[10px] font-black text-zinc-600 dark:text-zinc-400 transition-colors cursor-pointer"
                 >
-                  <Printer className="h-3.5 w-3.5" />
-                  VIEW RECEIPT
+                  <Printer className="h-3.5 w-3.5" />REPRINT
                 </button>
               </div>
             ))
@@ -456,346 +339,258 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      {/* SHADCN-STYLE THERMAL PRINTER INVOICE DIALOG */}
+      {/* ── Checkout Modal ── */}
       {selectedOrderForBill && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in print-modal-container animate-fade-in">
-          <div className={`relative flex flex-col bg-white dark:bg-zinc-905 rounded-xl shadow-2xl border border-zinc-200 dark:border-zinc-800 w-full ${selectedOrderForBill.status === 'PAID' ? 'max-w-sm' : 'max-w-4xl'} max-h-[90vh] overflow-hidden print-modal-dialog`}>
-            {/* Modal Header */}
-            <div className="flex justify-between items-center bg-zinc-50 dark:bg-zinc-955 border-b border-zinc-200 dark:border-zinc-800 px-4 py-3 print-exclude">
-              <span className="text-xs font-black uppercase tracking-wider text-zinc-650 dark:text-zinc-400">
-                {selectedOrderForBill.status === 'PAID' ? 'Invoice Print Preview' : 'Checkout Order details'}
-              </span>
-              <button
-                onClick={() => setSelectedOrderForBill(null)}
-                className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-zinc-655 dark:hover:text-zinc-100 transition-all cursor-pointer"
-              >
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className={`relative flex flex-col bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-200 dark:border-zinc-800 w-full ${selectedOrderForBill.status === 'PAID' ? 'max-w-sm' : 'max-w-4xl'} max-h-[92vh] overflow-hidden`}>
+
+            {/* Modal header */}
+            <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-5 py-3.5">
+              <div className="flex items-center gap-2.5">
+                <Receipt className="h-4 w-4 text-orange-500" />
+                <span className="text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
+                  {selectedOrderForBill.status === 'PAID' ? 'Invoice Preview' : `Order #${selectedOrderForBill.orderNumber} · ${selectedOrderForBill.table?.name || 'Takeaway'}`}
+                </span>
+              </div>
+              <button onClick={() => setSelectedOrderForBill(null)}
+                className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-zinc-700 dark:hover:text-zinc-100 transition-all cursor-pointer">
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            {/* Receipt Content Scroll Area */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-zinc-100 dark:bg-zinc-950/40 print-modal-content">
-              <div className="flex flex-col md:flex-row gap-6 justify-center items-start">
-                
-                {/* Left Column: Editor (Only show if not paid) */}
+            {/* Modal body */}
+            <div className="flex-1 overflow-hidden">
+              <div className="flex h-full flex-col md:flex-row">
+
+                {/* ── LEFT PANEL: Payment editor (only for non-paid orders) ── */}
                 {selectedOrderForBill.status !== 'PAID' && (
-                  <div className="w-full md:w-1/2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 space-y-4 print-exclude shrink-0 shadow-sm">
-                    
-                    {/* Discounts & Coupons Section */}
-                    <div className="bg-zinc-50 dark:bg-zinc-950/40 p-3 border border-zinc-200 dark:border-zinc-850 rounded-lg space-y-3">
-                      <h5 className="text-[10px] font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-800 pb-1 flex items-center gap-1.5">
-                        <Tag className="h-3.5 w-3.5 text-orange-500" />
-                        <span>Discounts & Coupons</span>
-                      </h5>
-                      
-                      <div>
-                        <label className="block text-[8px] font-black uppercase text-zinc-400 dark:text-zinc-500 mb-1">
-                          Manual Discount ($)
-                        </label>
-                        <div className="relative flex items-center">
-                          <Percent className="absolute left-2.5 h-3.5 w-3.5 text-zinc-400" />
-                          <input
-                            type="number"
-                            step="0.01"
-                            placeholder="Enter discount amount"
-                            value={manualDiscountInput}
-                            onChange={(e) => setManualDiscountInput(e.target.value)}
-                            className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-white dark:bg-zinc-950 py-1.5 pl-8 pr-3 text-xs outline-none focus:border-orange-400 dark:text-zinc-100 font-bold"
-                          />
-                        </div>
+                  <div className="w-full md:w-[340px] shrink-0 flex flex-col border-b md:border-b-0 md:border-r border-zinc-200 dark:border-zinc-800 overflow-y-auto">
+
+                    {/* Balance summary — TOP of panel, always visible */}
+                    <div className="bg-zinc-900 dark:bg-zinc-950 px-4 py-4 space-y-2">
+                      <div className="flex justify-between text-[10px] font-bold text-zinc-400">
+                        <span>Grand Total</span>
+                        <span className="text-white font-black">{currencySymbol}{selectedOrderForBill.totals.total}</span>
                       </div>
-
-                      <div>
-                        <label className="block text-[8px] font-black uppercase text-zinc-400 dark:text-zinc-500 mb-1">
-                          Coupon Code
-                        </label>
-                        <div className="relative flex items-center">
-                          <Tag className="absolute left-2.5 h-3.5 w-3.5 text-zinc-400" />
-                          <input
-                            type="text"
-                            placeholder="e.g. WELCOME10"
-                            value={couponCodeInput}
-                            onChange={(e) => setCouponCodeInput(e.target.value)}
-                            className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-white dark:bg-zinc-950 py-1.5 pl-8 pr-3 text-xs outline-none focus:border-orange-400 uppercase dark:text-zinc-100 font-bold"
-                          />
-                        </div>
-                      </div>
-                      
-                      <button
-                        onClick={handleApplyDiscountAndCoupon}
-                        disabled={loadingDiscounts || payingOrderId !== null}
-                        className="w-full py-2 bg-zinc-900 dark:bg-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-900 text-[10px] font-black text-white rounded-lg transition-all cursor-pointer shadow-sm flex items-center justify-center gap-1.5 disabled:opacity-50"
-                      >
-                        {loadingDiscounts ? (
-                          <>
-                            <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                            <span>APPLYING...</span>
-                          </>
-                        ) : (
-                          <span>APPLY DISCOUNTS / COUPONS</span>
-                        )}
-                      </button>
-
-                      {couponError && <p className="text-[10px] font-bold text-red-500">{couponError}</p>}
-                      {couponSuccess && <p className="text-[10px] font-bold text-emerald-500">{couponSuccess}</p>}
-                    </div>
-
-                    {/* Split Payments Builder */}
-                    <div className="border-t border-zinc-200 dark:border-zinc-800 pt-3 space-y-3">
-                      <h5 className="text-[10px] font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-800 pb-1 flex items-center gap-1.5">
-                        <Banknote className="h-3.5 w-3.5 text-orange-500" />
-                        <span>Record Payments</span>
-                      </h5>
-                      
-                      {/* Existing payments already stored in db */}
-                      {selectedOrderForBill.payments && selectedOrderForBill.payments.length > 0 && (
-                        <div className="space-y-1">
-                          <p className="text-[8px] font-black text-zinc-400 uppercase">Received Transactions:</p>
-                          {selectedOrderForBill.payments.map((p, idx) => (
-                            <div key={p.id || idx} className="flex justify-between items-center bg-zinc-50 dark:bg-zinc-955 border border-zinc-200 dark:border-zinc-850 rounded px-2 py-1 text-[10px] font-bold text-zinc-650 dark:text-zinc-400">
-                              <span className="uppercase text-[9px]">{p.paymentMethod} {p.transactionReference ? `(${p.transactionReference})` : ''}</span>
-                              <span className="font-extrabold text-zinc-900 dark:text-zinc-100">{currencySymbol}{p.amount.toFixed(2)}</span>
-                            </div>
-                          ))}
+                      {alreadyPaid > 0 && (
+                        <div className="flex justify-between text-[10px] font-bold text-emerald-400">
+                          <span>Already Paid</span>
+                          <span>{currencySymbol}{alreadyPaid.toFixed(2)}</span>
                         </div>
                       )}
+                      {localPaid > 0 && (
+                        <div className="flex justify-between text-[10px] font-bold text-blue-400">
+                          <span>Pending (this session)</span>
+                          <span>{currencySymbol}{localPaid.toFixed(2)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center border-t border-zinc-700 pt-2">
+                        <span className="text-xs font-black text-zinc-300">Remaining</span>
+                        <span className={`text-xl font-black ${remainingBalance === 0 ? 'text-emerald-400' : 'text-orange-400'}`}>
+                          {currencySymbol}{remainingBalance.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
 
-                      {/* Local pending payments to be added */}
-                      {localPayments.length > 0 && (
-                        <div className="space-y-1">
-                          <p className="text-[8px] font-black text-orange-500 uppercase">Pending Finalization:</p>
-                          {localPayments.map((p, idx) => (
-                            <div key={idx} className="flex justify-between items-center bg-orange-50/50 dark:bg-orange-955/10 border border-orange-200 dark:border-orange-900 rounded px-2 py-1 text-[10px] font-bold text-orange-650 dark:text-orange-450">
-                              <span className="uppercase text-[9px]">{p.paymentMethod} {p.transactionReference ? `(${p.transactionReference})` : ''}</span>
-                              <div className="flex items-center gap-1.5">
-                                <span className="font-extrabold">{currencySymbol}{p.amount.toFixed(2)}</span>
-                                <button
-                                  onClick={() => handleRemovePayment(idx)}
-                                  className="text-zinc-450 hover:text-red-500 rounded p-0.5"
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </button>
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+
+                      {/* Payment method selector */}
+                      <div>
+                        <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-2">Payment Method</p>
+                        <div className="grid grid-cols-3 gap-2">
+                          {METHOD_OPTIONS.map((m) => (
+                            <button key={m.key} onClick={() => setPaymentMethodInput(m.key)}
+                              className={`flex flex-col items-center justify-center gap-1 rounded-xl border py-3 text-[11px] font-black transition-all cursor-pointer ${
+                                paymentMethodInput === m.key
+                                  ? 'border-orange-400 bg-orange-50 dark:bg-orange-950/20 text-orange-500'
+                                  : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-500 hover:border-zinc-300 dark:hover:border-zinc-700'
+                              }`}>
+                              {m.icon}
+                              {m.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Amount + add to split */}
+                      <div>
+                        <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-2">Amount</p>
+                        <div className="flex gap-2">
+                          <input type="number" step="0.01" placeholder="0.00" value={paymentAmountInput}
+                            onChange={(e) => setPaymentAmountInput(e.target.value)}
+                            className="flex-1 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2.5 text-sm font-black outline-none focus:border-orange-400 dark:text-zinc-100" />
+                          <button onClick={handleAddPayment}
+                            className="flex items-center gap-1 rounded-xl bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-700 text-white px-3 text-[11px] font-black transition-all cursor-pointer">
+                            <Plus className="h-3.5 w-3.5" />SPLIT
+                          </button>
+                        </div>
+                        <input type="text" placeholder="Reference / UTR / Last 4 digits (optional)" value={paymentRefInput}
+                          onChange={(e) => setPaymentRefInput(e.target.value)}
+                          className="mt-2 w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-[10px] font-bold outline-none focus:border-orange-400 dark:text-zinc-100" />
+                      </div>
+
+                      {/* Pending split payments */}
+                      {(selectedOrderForBill.payments?.length || 0) > 0 || localPayments.length > 0 ? (
+                        <div className="space-y-1.5">
+                          <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Payments</p>
+                          {selectedOrderForBill.payments?.map((p, i) => (
+                            <div key={p.id || i} className="flex justify-between items-center rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 px-3 py-2 text-[11px]">
+                              <span className="font-bold text-zinc-600 dark:text-zinc-400 uppercase">{p.paymentMethod}{p.transactionReference ? ` · ${p.transactionReference}` : ''}</span>
+                              <span className="font-black text-emerald-600 dark:text-emerald-400">{currencySymbol}{p.amount.toFixed(2)}</span>
+                            </div>
+                          ))}
+                          {localPayments.map((p, i) => (
+                            <div key={i} className="flex justify-between items-center rounded-lg bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-900 px-3 py-2 text-[11px]">
+                              <span className="font-bold text-orange-700 dark:text-orange-400 uppercase">{p.paymentMethod}{p.transactionReference ? ` · ${p.transactionReference}` : ''}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="font-black text-orange-700 dark:text-orange-400">{currencySymbol}{p.amount.toFixed(2)}</span>
+                                <button onClick={() => handleRemovePayment(i)} className="text-zinc-400 hover:text-red-500 cursor-pointer"><Trash2 className="h-3 w-3" /></button>
                               </div>
                             </div>
                           ))}
                         </div>
-                      )}
+                      ) : null}
 
-                      {/* Add payment inputs */}
-                      <div className="grid grid-cols-12 gap-2 bg-zinc-50 dark:bg-zinc-950/40 p-2 border border-zinc-200 dark:border-zinc-850 rounded-lg">
-                        <div className="col-span-5">
-                          <label className="block text-[8px] font-black uppercase text-zinc-400 dark:text-zinc-500 mb-0.5">Amount ({currencySymbol})</label>
-                          <input
-                            type="number"
-                            step="0.01"
-                            placeholder="Amount"
-                            value={paymentAmountInput}
-                            onChange={(e) => setPaymentAmountInput(e.target.value)}
-                            className="w-full rounded border border-zinc-250 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-2 py-1 text-xs font-bold outline-none focus:border-orange-400 dark:text-zinc-100"
-                          />
+                      {/* Discounts */}
+                      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-3 space-y-3">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400 flex items-center gap-1.5">
+                          <Tag className="h-3 w-3 text-orange-500" />Discounts & Coupons
+                        </p>
+                        <div className="relative">
+                          <Percent className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
+                          <input type="number" step="0.01" placeholder="Manual discount amount" value={manualDiscountInput}
+                            onChange={(e) => setManualDiscountInput(e.target.value)}
+                            className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 pl-8 pr-3 text-xs font-bold outline-none focus:border-orange-400 dark:text-zinc-100" />
                         </div>
-                        <div className="col-span-4">
-                          <label className="block text-[8px] font-black uppercase text-zinc-400 dark:text-zinc-500 mb-0.5">Method</label>
-                          <select
-                            value={paymentMethodInput}
-                            onChange={(e) => setPaymentMethodInput(e.target.value as any)}
-                            className="w-full rounded border border-zinc-250 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-2 py-1 text-xs font-bold outline-none focus:border-orange-400 dark:text-zinc-100"
-                          >
-                            <option value="CASH">CASH</option>
-                            <option value="CARD">CARD</option>
-                            <option value="UPI">UPI</option>
-                          </select>
+                        <div className="relative">
+                          <Tag className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
+                          <input type="text" placeholder="Coupon code (e.g. WELCOME10)" value={couponCodeInput}
+                            onChange={(e) => setCouponCodeInput(e.target.value)}
+                            className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 pl-8 pr-3 text-xs font-bold outline-none focus:border-orange-400 uppercase dark:text-zinc-100" />
                         </div>
-                        <div className="col-span-3 flex items-end">
-                          <button
-                            onClick={handleAddPayment}
-                            className="w-full h-[26px] flex items-center justify-center gap-1 rounded bg-orange-500 hover:bg-orange-600 text-white font-black text-xs transition-colors cursor-pointer"
-                          >
-                            <Plus className="h-3.5 w-3.5" />
-                            ADD
-                          </button>
-                        </div>
-                        <div className="col-span-12">
-                          <input
-                            type="text"
-                            placeholder="Transaction reference (Optional)"
-                            value={paymentRefInput}
-                            onChange={(e) => setPaymentRefInput(e.target.value)}
-                            className="w-full rounded border border-zinc-250 dark:border-zinc-800 bg-white dark:bg-zinc-955 px-2 py-1 text-[10px] font-bold outline-none focus:border-orange-400 dark:text-zinc-100"
-                          />
-                        </div>
+                        <button onClick={handleApplyDiscountAndCoupon} disabled={loadingDiscounts}
+                          className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 py-2 text-[11px] font-black text-zinc-600 dark:text-zinc-400 hover:border-orange-300 hover:text-orange-500 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5">
+                          {loadingDiscounts ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-zinc-400 border-t-transparent" /> : null}
+                          APPLY DISCOUNT / COUPON
+                        </button>
+                        {couponError && <p className="text-[10px] font-bold text-red-500">{couponError}</p>}
+                        {couponSuccess && <p className="text-[10px] font-bold text-emerald-500">{couponSuccess}</p>}
                       </div>
                     </div>
 
-                    {/* Pay Status Summary */}
-                    <div className="border-t border-zinc-200 dark:border-zinc-800 pt-3 text-xs font-bold text-zinc-650 dark:text-zinc-400 space-y-1.5">
-                      <div className="flex justify-between text-zinc-900 dark:text-zinc-100">
-                        <span>Grand Total:</span>
-                        <span className="font-extrabold">{currencySymbol}{selectedOrderForBill.totals.total}</span>
-                      </div>
-                      <div className="flex justify-between text-emerald-600">
-                        <span>Total Paid:</span>
-                        <span className="font-extrabold">{currencySymbol}{totalPaid.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between border-t border-zinc-200 dark:border-zinc-800 pt-2 text-sm font-black text-zinc-900 dark:text-zinc-100">
-                        <span>Remaining Balance:</span>
-                        <span className="text-orange-500 text-base">{currencySymbol}{remainingBalance.toFixed(2)}</span>
-                      </div>
-                    </div>
-
-                    {/* Action buttons */}
-                    <div className="pt-2 flex gap-2">
-                      <button
-                        onClick={handleFinalizeCheckout}
-                        disabled={payingOrderId !== null}
-                        className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 py-2.5 text-xs font-black text-white transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
-                      >
-                        {payingOrderId ? (
-                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                        ) : (
-                          <CheckCircle className="h-4 w-4" />
-                        )}
+                    {/* Finalize button — sticky at bottom of left panel */}
+                    <div className="border-t border-zinc-200 dark:border-zinc-800 p-3">
+                      <button onClick={handleFinalizeCheckout} disabled={payingOrderId !== null}
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] py-3.5 text-xs font-black text-white transition-all shadow-md shadow-emerald-200 dark:shadow-none disabled:opacity-50 cursor-pointer">
+                        {payingOrderId ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> : <CheckCircle className="h-4 w-4" />}
                         {checkoutButtonText}
                       </button>
                     </div>
                   </div>
                 )}
-                
-                {/* Right column: Monospace Thermal Invoice Preview */}
-                <div className="w-full md:w-auto flex justify-center">
+
+                {/* ── RIGHT PANEL: Thermal receipt preview ── */}
+                <div className="flex-1 overflow-y-auto bg-zinc-100 dark:bg-zinc-950/60 p-4 flex justify-center">
                   <div
                     id="thermal-receipt-print-area"
-                    className="w-full max-w-[80mm] sm:w-[80mm] bg-white border border-zinc-300 shadow-sm p-4 text-zinc-950 font-mono text-[11px] leading-relaxed"
+                    className="w-full max-w-[80mm] bg-white border border-zinc-300 shadow-sm p-4 text-zinc-950 font-mono text-[11px] leading-relaxed"
                     style={{ fontFamily: 'Courier New, Courier, monospace' }}
                   >
-                    {/* Header Info */}
                     <div className="text-center space-y-1">
                       {restaurantSettings?.logo && (
-                        <div className="text-sm font-bold mb-1">
-                          {restaurantSettings.logo.startsWith('http') ? (
-                            <img src={restaurantSettings.logo} alt="logo" className="mx-auto h-8 object-contain" />
-                          ) : (
-                            <span className="text-base">{restaurantSettings.logo}</span>
-                          )}
+                        <div className="mb-1">
+                          {restaurantSettings.logo.startsWith('http')
+                            ? <img src={restaurantSettings.logo} alt="logo" className="mx-auto h-8 object-contain" />
+                            : <span className="text-base">{restaurantSettings.logo}</span>}
                         </div>
                       )}
                       <h3 className="text-sm font-extrabold tracking-wide uppercase">
                         {restaurantSettings?.name || user?.restaurantName || 'KHAOPIO RESTAURANT'}
                       </h3>
-                      <p className="text-[10px] text-zinc-650">
-                        {restaurantSettings?.address || '123 Agentic Way, Silicon Valley'}
-                      </p>
-                      <p className="text-[10px] text-zinc-650">
-                        PH: {restaurantSettings?.phone || '+1 (555) 019-9000'}
-                      </p>
-                      {restaurantSettings?.gstin && (
-                        <p className="text-[9px] text-zinc-600 font-bold uppercase tracking-wider">
-                          GSTIN: {restaurantSettings.gstin}
-                        </p>
-                      )}
-                      
-                      {selectedOrderForBill.status === 'PAID' ? (
-                        <div className="inline-block font-extrabold text-[9px] bg-zinc-100 text-zinc-800 px-2 py-0.5 rounded border border-zinc-300 uppercase tracking-widest mt-1">
-                          TAX INVOICE
-                        </div>
-                      ) : (
-                        <div className="inline-block font-extrabold text-[9px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded border border-amber-300 uppercase tracking-widest mt-1">
-                          ESTIMATE / PRE-BILL
-                        </div>
-                      )}
+                      <p className="text-[10px] text-zinc-600">{restaurantSettings?.address || '123 Agentic Way, Silicon Valley'}</p>
+                      <p className="text-[10px] text-zinc-600">PH: {restaurantSettings?.phone || '+1 (555) 019-9000'}</p>
+                      {restaurantSettings?.gstin && <p className="text-[9px] font-bold uppercase tracking-wider">GSTIN: {restaurantSettings.gstin}</p>}
+                      <div className={`inline-block font-extrabold text-[9px] px-2 py-0.5 rounded border uppercase tracking-widest mt-1 ${
+                        selectedOrderForBill.status === 'PAID' ? 'bg-zinc-100 text-zinc-800 border-zinc-300' : 'bg-amber-100 text-amber-800 border-amber-300'
+                      }`}>
+                        {selectedOrderForBill.status === 'PAID' ? 'TAX INVOICE' : 'ESTIMATE / PRE-BILL'}
+                      </div>
                     </div>
 
-                    {/* Dashed line separator */}
-                    <div className="my-2 border-t border-dashed border-zinc-900"></div>
+                    <div className="my-2 border-t border-dashed border-zinc-900" />
 
-                    {/* Transaction Metadata */}
-                    <div className="space-y-0.5">
-                      <div className="flex justify-between text-[10px]">
+                    <div className="space-y-0.5 text-[10px]">
+                      <div className="flex justify-between">
                         <span>DATE: {new Date(selectedOrderForBill.createdAt).toLocaleDateString()}</span>
                         <span>TIME: {new Date(selectedOrderForBill.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
                       <div>ORDER NO: {selectedOrderForBill.orderNumber}</div>
                       <div>TABLE: {selectedOrderForBill.table ? selectedOrderForBill.table.name.toUpperCase() : 'TAKEAWAY'}</div>
                       <div>INVOICE ID: INV-{selectedOrderForBill.id.split('-')[0]?.toUpperCase()}</div>
-                      <div className="capitalize">
-                        PAY STATUS: <span className="font-extrabold">{selectedOrderForBill.status.replace('_', ' ')}</span>
-                      </div>
+                      <div>PAY STATUS: <span className="font-extrabold">{selectedOrderForBill.status.replace('_', ' ')}</span></div>
                       <div>SERVED BY: {selectedOrderForBill.waiterName?.toUpperCase()} ({selectedOrderForBill.waiterRole?.replace('_', ' ').toUpperCase()})</div>
                       <div>CASHIER: {user?.name.toUpperCase()} ({user?.role.replace('_', ' ').toUpperCase()})</div>
                     </div>
 
-                    {/* Dashed line separator */}
-                    <div className="my-2 border-t border-dashed border-zinc-900"></div>
+                    <div className="my-2 border-t border-dashed border-zinc-900" />
 
-                    {/* Itemized Table Headers */}
-                    <div className="grid grid-cols-12 font-extrabold mb-1">
-                      <span className="col-span-6">ITEM DESCRIPTION</span>
+                    <div className="grid grid-cols-12 font-extrabold mb-1 text-[10px]">
+                      <span className="col-span-6">ITEM</span>
                       <span className="col-span-2 text-center">QTY</span>
-                      <span className="col-span-4 text-right">AMOUNT</span>
+                      <span className="col-span-4 text-right">AMT</span>
                     </div>
+                    <div className="my-1 border-t border-dashed border-zinc-400" />
 
-                    {/* Dashed line separator */}
-                    <div className="my-1 border-t border-dashed border-zinc-400"></div>
-
-                    {/* Itemized Rows */}
                     <div className="space-y-1">
                       {selectedOrderForBill.items.map((item) => (
                         <div key={item.menuItem.id} className="grid grid-cols-12 text-[10px]">
                           <span className="col-span-6 truncate uppercase">{item.menuItem.name}</span>
                           <span className="col-span-2 text-center">{item.quantity}</span>
-                          <span className="col-span-4 text-right">
-                            {currencySymbol}{(item.menuItem.price * item.quantity).toFixed(2)}
-                          </span>
+                          <span className="col-span-4 text-right">{currencySymbol}{(item.menuItem.price * item.quantity).toFixed(2)}</span>
                         </div>
                       ))}
                     </div>
 
-                    {/* Dashed line separator */}
-                    <div className="my-2 border-t border-dashed border-zinc-900"></div>
+                    <div className="my-2 border-t border-dashed border-zinc-900" />
 
-                    {/* Financial Summary */}
-                    <div className="space-y-0.5">
-                      <div className="flex justify-between font-medium">
-                        <span>SUBTOTAL:</span>
-                        <span>{currencySymbol}{selectedOrderForBill.totals.subtotal}</span>
-                      </div>
+                    <div className="space-y-0.5 text-[10px]">
+                      <div className="flex justify-between"><span>SUBTOTAL:</span><span>{currencySymbol}{selectedOrderForBill.totals.subtotal}</span></div>
                       {parseFloat(selectedOrderForBill.totals.discount) > 0 && (
-                        <div className="flex justify-between font-medium text-[10px] text-red-650">
-                          <span>DISCOUNT {selectedOrderForBill.couponCode ? `(${selectedOrderForBill.couponCode})` : ''}:</span>
-                          <span>-{currencySymbol}{parseFloat(selectedOrderForBill.totals.discount).toFixed(2)}</span>
-                        </div>
+                        <>
+                          <div className="flex justify-between text-red-700">
+                            <span>DISCOUNT {selectedOrderForBill.couponCode ? `(${selectedOrderForBill.couponCode})` : '(MANUAL)'}:</span>
+                            <span>-{currencySymbol}{parseFloat(selectedOrderForBill.totals.discount).toFixed(2)}</span>
+                          </div>
+                          <div className="my-0.5 border-t border-dashed border-zinc-300" />
+                          <div className="flex justify-between font-extrabold">
+                            <span>AFTER DISCOUNT:</span>
+                            <span>{currencySymbol}{(parseFloat(selectedOrderForBill.totals.subtotal) - parseFloat(selectedOrderForBill.totals.discount)).toFixed(2)}</span>
+                          </div>
+                        </>
                       )}
                       {parseFloat(selectedOrderForBill.totals.serviceCharge) > 0 && (
-                        <div className="flex justify-between font-medium text-[10px]">
+                        <div className="flex justify-between">
                           <span>SERVICE CHARGE @ {parseFloat(selectedOrderForBill.totals.serviceChargeRate)}%:</span>
                           <span>{currencySymbol}{parseFloat(selectedOrderForBill.totals.serviceCharge).toFixed(2)}</span>
                         </div>
                       )}
-                      <div className="flex justify-between font-medium text-[10px]">
+                      <div className="flex justify-between">
                         <span>CGST @ {(parseFloat(selectedOrderForBill.totals.taxRate) / 2).toFixed(1)}%:</span>
                         <span>{currencySymbol}{(parseFloat(selectedOrderForBill.totals.tax) / 2).toFixed(2)}</span>
                       </div>
-                      <div className="flex justify-between font-medium text-[10px]">
+                      <div className="flex justify-between">
                         <span>SGST @ {(parseFloat(selectedOrderForBill.totals.taxRate) / 2).toFixed(1)}%:</span>
                         <span>{currencySymbol}{(parseFloat(selectedOrderForBill.totals.tax) / 2).toFixed(2)}</span>
                       </div>
-                      
-                      {/* Dashed line separator */}
-                      <div className="my-1 border-t border-dashed border-zinc-400"></div>
-
-                      <div className="flex justify-between font-black text-xs pt-0.5">
-                        <span>TOTAL AMOUNT:</span>
-                        <span>{currencySymbol}{selectedOrderForBill.totals.total}</span>
-                      </div>
-
-                      {/* Display transactions list if available */}
+                      <div className="my-1 border-t border-dashed border-zinc-400" />
+                      <div className="flex justify-between font-black text-xs"><span>TOTAL:</span><span>{currencySymbol}{selectedOrderForBill.totals.total}</span></div>
                       {selectedOrderForBill.payments && selectedOrderForBill.payments.length > 0 && (
                         <>
-                          <div className="my-1.5 border-t border-dashed border-zinc-400"></div>
-                          <div className="text-[9px] font-extrabold uppercase mb-0.5">TRANSACTIONS MADE:</div>
-                          {selectedOrderForBill.payments.map((p, idx) => (
-                            <div key={p.id || idx} className="flex justify-between text-[10px]">
-                              <span className="uppercase text-[9px]">- {p.paymentMethod} {p.transactionReference ? `(${p.transactionReference})` : ''}:</span>
+                          <div className="my-1.5 border-t border-dashed border-zinc-400" />
+                          <div className="font-extrabold uppercase mb-0.5">TRANSACTIONS:</div>
+                          {selectedOrderForBill.payments.map((p, i) => (
+                            <div key={p.id || i} className="flex justify-between">
+                              <span className="uppercase text-[9px]">- {p.paymentMethod}{p.transactionReference ? ` (${p.transactionReference})` : ''}:</span>
                               <span>{currencySymbol}{p.amount.toFixed(2)}</span>
                             </div>
                           ))}
@@ -803,35 +598,16 @@ export default function CheckoutPage() {
                       )}
                     </div>
 
-                    {/* Dashed line separator */}
-                    <div className="my-2 border-t border-dashed border-zinc-900"></div>
+                    <div className="my-2 border-t border-dashed border-zinc-900" />
 
-                    {/* Footer Message */}
                     <div className="text-center space-y-1 mt-3">
-                      <p className="text-[10px] font-bold uppercase">
-                        {restaurantSettings?.thankYouMessage || 'THANK YOU FOR DINE IN!'}
-                      </p>
-                      <p className="text-[9px] text-zinc-500 italic">
-                        Powered by KhaoPio POS
-                      </p>
-                      {/* Barcode representation */}
+                      <p className="text-[10px] font-bold uppercase">{restaurantSettings?.thankYouMessage || 'THANK YOU FOR DINING WITH US!'}</p>
+                      <p className="text-[9px] text-zinc-500 italic">Powered by KhaoPio POS</p>
                       <div className="flex flex-col items-center pt-2">
                         <div className="flex h-7 bg-zinc-950 w-32 items-stretch justify-around px-2.5">
-                          <span className="w-[1px] bg-white"></span>
-                          <span className="w-[2px] bg-white"></span>
-                          <span className="w-[1px] bg-white"></span>
-                          <span className="w-[3px] bg-white"></span>
-                          <span className="w-[1px] bg-white"></span>
-                          <span className="w-[2px] bg-white"></span>
-                          <span className="w-[1px] bg-white"></span>
-                          <span className="w-[4px] bg-white"></span>
-                          <span className="w-[2px] bg-white"></span>
-                          <span className="w-[1px] bg-white"></span>
-                          <span className="w-[3px] bg-white"></span>
+                          {[1,2,1,3,1,2,1,4,2,1,3].map((w, i) => <span key={i} style={{ width: `${w}px` }} className="bg-white" />)}
                         </div>
-                        <span className="text-[7px] text-zinc-500 tracking-[0.2em] mt-0.5">
-                          *{selectedOrderForBill.id.substring(0, 8).toUpperCase()}*
-                        </span>
+                        <span className="text-[7px] text-zinc-500 tracking-[0.2em] mt-0.5">*{selectedOrderForBill.id.substring(0, 8).toUpperCase()}*</span>
                       </div>
                     </div>
                   </div>
@@ -840,20 +616,15 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* Modal Actions */}
-            <div className="flex gap-2 bg-zinc-50 dark:bg-zinc-955 border-t border-zinc-200 dark:border-zinc-800 px-4 py-3 print-exclude">
-              <button
-                onClick={() => setSelectedOrderForBill(null)}
-                className="flex-1 py-2 text-xs font-black text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer"
-              >
+            {/* Modal footer */}
+            <div className="flex gap-2 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-4 py-3">
+              <button onClick={() => setSelectedOrderForBill(null)}
+                className="flex-1 rounded-xl border border-zinc-200 dark:border-zinc-800 py-2.5 text-xs font-black text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
                 CLOSE
               </button>
-              <button
-                onClick={handlePrintAction}
-                className="flex-1 py-2 text-xs font-black text-white bg-zinc-900 dark:bg-zinc-950 hover:bg-zinc-850 dark:hover:bg-zinc-900 rounded-lg transition-colors flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
-              >
-                <Printer className="h-4 w-4" />
-                PRINT INVOICE
+              <button onClick={triggerPrint}
+                className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-700 dark:hover:bg-zinc-700 py-2.5 text-xs font-black text-white transition-colors cursor-pointer">
+                <Printer className="h-4 w-4" />PRINT INVOICE
               </button>
             </div>
           </div>
