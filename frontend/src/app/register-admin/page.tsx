@@ -33,7 +33,7 @@ export default function RegisterAdmin() {
     if (isMounted && token) {
       const user = useAuthStore.getState().user;
       if (user && user.restaurantId) {
-        router.push(user.role === 'SUPER_ADMIN' ? '/dashboard' : '/billing');
+        router.push(user.role === 'SUPER_ADMIN' ? '/dashboard' : '/orders');
       }
     }
   }, [token, router, isMounted]);

@@ -29,7 +29,7 @@ export default function Login() {
       } else if (user?.role === 'SUPER_ADMIN') {
         router.push('/dashboard');
       } else {
-        router.push('/billing');
+        router.push('/orders');
       }
     }
   }, [token, router, isMounted]);
@@ -139,7 +139,7 @@ export default function Login() {
       } else if (response.user.role === 'SUPER_ADMIN') {
         router.push('/dashboard');
       } else {
-        router.push('/billing');
+        router.push('/orders');
       }
     } catch (err: any) {
       setEmailError(err.message || 'Login failed. Please check credentials.');

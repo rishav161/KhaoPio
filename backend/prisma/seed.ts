@@ -141,11 +141,11 @@ async function main() {
   // 4. Create Sidebar Items aligned with existing frontend Next.js directory routes
   const sidebarData = [
     { label: 'Dashboard', icon: 'LayoutDashboard', path: '/dashboard', order: 1, permissionName: 'view:dashboard' },
-    { label: 'Billing (POS)', icon: 'Receipt', path: '/billing', order: 2, permissionName: 'create:kot' },
+    { label: 'Orders', icon: 'Receipt', path: '/orders', order: 2, permissionName: 'create:kot' },
     { label: 'Tables', icon: 'TableProperties', path: '/tables', order: 3, permissionName: 'view:tables' },
     { label: 'Checkout', icon: 'CreditCard', path: '/checkout', order: 4, permissionName: 'pay:order' },
-    { label: 'Kitchen (KDS)', icon: 'ChefHat', path: '/kitchen', order: 5, permissionName: 'update:order-status' },
-    { label: 'Staff Management', icon: 'Users', path: '/staff', order: 6, permissionName: 'view:staff' },
+    { label: 'Kitchen', icon: 'ChefHat', path: '/kitchen', order: 5, permissionName: 'update:order-status' },
+    { label: 'Staff', icon: 'Users', path: '/staff', order: 6, permissionName: 'view:staff' },
     { label: 'Set Menu', icon: 'Layers', path: '/menu', order: 7, permissionName: 'view:staff' },
     { label: 'Reports', icon: 'BarChart3', path: '/reports', order: 8, permissionName: 'view:sales-reports' },
   ];

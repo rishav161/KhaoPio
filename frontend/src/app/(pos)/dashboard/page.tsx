@@ -1,10 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  TrendingUp, ShoppingBag, Coins, Flame, RefreshCw, 
-  ArrowUpRight, Clock, ShieldAlert, BadgeCent, Calendar
+import {
+  TrendingUp, ShoppingBag, RefreshCw, ArrowUpRight, ShieldAlert,
+  BadgeCent, Flame, Calendar, IndianRupee, Trophy,
 } from 'lucide-react';
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
 import { apiFetch } from '@/utils/api';
 import { Table } from '@/components/Table';
 import { Pagination } from '@/components/Pagination';
@@ -29,449 +33,350 @@ interface DashboardStats {
     waiterName: string;
     createdAt: string;
   }[];
-  pagination: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  };
+  pagination: { total: number; page: number; limit: number; totalPages: number };
 }
+
+const PRESETS = [
+  { key: 'today', label: 'Today' },
+  { key: 'yesterday', label: 'Yesterday' },
+  { key: '7days', label: '7 Days' },
+  { key: '30days', label: '30 Days' },
+] as const;
 
 export default function Dashboard() {
   const currencySymbol = useCurrencySymbol();
-  // Query Filters State
+
   const [startDate, setStartDate] = useState(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 7); // Default to last 7 days for dashboard
-    return d.toISOString().split('T')[0];
+    const d = new Date(); d.setDate(d.getDate() - 7); return d.toISOString().split('T')[0];
   });
   const [endDate, setEndDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [activePreset, setActivePreset] = useState<string>('7days');
   const [page, setPage] = useState(1);
-
-  // States
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const fetchStats = async (targetPage = page) => {
-    setLoading(true);
-    setError('');
+  const fetchStats = async (sd = startDate, ed = endDate, pg = page) => {
+    setLoading(true); setError('');
     try {
-      const queryParams = new URLSearchParams({
-        startDate,
-        endDate,
-        page: targetPage.toString(),
-        limit: '5',
-      });
-      const data = await apiFetch<DashboardStats>(`/dashboard/stats?${queryParams.toString()}`);
-      setStats(data);
-      setPage(targetPage);
+      const q = new URLSearchParams({ startDate: sd, endDate: ed, page: pg.toString(), limit: '5' });
+      const data = await apiFetch<DashboardStats>(`/dashboard/stats?${q}`);
+      setStats(data); setPage(pg);
     } catch (err: any) {
-      setError(err.message || 'Failed to synchronize dashboard statistics.');
+      setError(err.message || 'Failed to load dashboard statistics.');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchStats(page);
-  }, [page]);
+  useEffect(() => { fetchStats(); }, []);
 
-  const handleApplyFilters = (e: React.FormEvent) => {
-    e.preventDefault();
-    fetchStats(1);
-  };
-
-  // Quick Presets
-  const applyPreset = (preset: 'today' | 'yesterday' | '7days' | '30days') => {
+  const applyPreset = (preset: typeof PRESETS[number]['key']) => {
     const today = new Date();
-    let start = new Date();
-    let end = new Date();
-
-    switch (preset) {
-      case 'today':
-        start = today;
-        end = today;
-        break;
-      case 'yesterday':
-        const yesterday = new Date();
-        yesterday.setDate(today.getDate() - 1);
-        start = yesterday;
-        end = yesterday;
-        break;
-      case '7days':
-        const last7 = new Date();
-        last7.setDate(today.getDate() - 6);
-        start = last7;
-        end = today;
-        break;
-      case '30days':
-        const last30 = new Date();
-        last30.setDate(today.getDate() - 29);
-        start = last30;
-        end = today;
-        break;
-    }
-
-    const startStr = start.toISOString().split('T')[0];
-    const endStr = end.toISOString().split('T')[0];
-    setStartDate(startStr);
-    setEndDate(endStr);
-    
-    setLoading(true);
-    const queryParams = new URLSearchParams({
-      startDate: startStr,
-      endDate: endStr,
-      page: '1',
-      limit: '5',
-    });
-    apiFetch<DashboardStats>(`/dashboard/stats?${queryParams.toString()}`)
-      .then(data => {
-        setStats(data);
-        setPage(1);
-      })
-      .catch(err => setError(err.message || 'Failed to fetch preset statistics.'))
-      .finally(() => setLoading(false));
+    let start = new Date(), end = new Date();
+    if (preset === 'today') { start = today; end = today; }
+    else if (preset === 'yesterday') { start.setDate(today.getDate() - 1); end.setDate(today.getDate() - 1); }
+    else if (preset === '7days') { start.setDate(today.getDate() - 6); end = today; }
+    else if (preset === '30days') { start.setDate(today.getDate() - 29); end = today; }
+    const sd = start.toISOString().split('T')[0];
+    const ed = end.toISOString().split('T')[0];
+    setStartDate(sd); setEndDate(ed); setActivePreset(preset);
+    fetchStats(sd, ed, 1);
   };
 
-  if (loading && !stats) {
-    return (
-      <Loader
-        size="lg"
-        text="Compiling store analytics..."
-        className="h-full w-full bg-zinc-50 dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800"
-      />
-    );
-  }
+  const handleApplyFilters = (e: React.FormEvent) => { e.preventDefault(); setActivePreset(''); fetchStats(startDate, endDate, 1); };
 
-  if (error && !stats) {
-    return (
-      <div className="flex h-full w-full items-center justify-center p-8 text-center text-zinc-800 dark:text-zinc-100">
-        <div className="max-w-md">
-          <ShieldAlert className="mx-auto h-12 w-12 text-red-500 mb-3" />
-          <h2 className="text-lg font-black uppercase tracking-wider">Analytics Error</h2>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2 mb-4 font-semibold">{error}</p>
-          <button 
-            onClick={() => fetchStats(1)}
-            className="rounded-lg bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 text-xs font-black uppercase tracking-wider transition-all"
-          >
-            Retry Sync
-          </button>
-        </div>
+  if (loading && !stats) return (
+    <Loader size="lg" text="Compiling analytics..." className="h-full w-full bg-zinc-50 dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800" />
+  );
+
+  if (error && !stats) return (
+    <div className="flex h-full items-center justify-center p-8 text-center">
+      <div className="max-w-sm">
+        <ShieldAlert className="mx-auto h-12 w-12 text-red-400 mb-3" />
+        <h2 className="text-sm font-black text-zinc-800 dark:text-zinc-100">Failed to load dashboard</h2>
+        <p className="text-xs text-zinc-500 mt-1 mb-4">{error}</p>
+        <button onClick={() => fetchStats()} className="rounded-lg bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 text-xs font-black cursor-pointer">Retry</button>
       </div>
-    );
-  }
+    </div>
+  );
 
-  const salesTrendData = stats?.salesTrend || [];
-  const topItemsData = stats?.topItems || [];
-  const recentOrdersData = stats?.recentOrders || [];
-  const metricsData = stats?.metrics || { totalSales: 0, ordersCount: 0, aov: 0, activeOrdersCount: 0 };
+  const metrics = stats?.metrics ?? { totalSales: 0, ordersCount: 0, aov: 0, activeOrdersCount: 0 };
+  const salesTrend = stats?.salesTrend ?? [];
+  const topItems = stats?.topItems ?? [];
+  const recentOrders = stats?.recentOrders ?? [];
 
-  // Draw Line Chart variables
-  const maxSale = Math.max(...salesTrendData.map(s => s.amount), 1);
-  const trendPoints = salesTrendData.map((s, idx) => {
-    const x = salesTrendData.length > 1 ? (idx / (salesTrendData.length - 1)) * 100 : 50;
-    const y = 100 - (s.amount / maxSale) * 80 - 10;
-    return { x, y, date: s.date, amount: s.amount, count: s.count };
-  });
+  // Format trend data for Recharts
+  const chartData = salesTrend.map(s => ({
+    date: new Date(s.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+    amount: s.amount,
+    orders: s.count,
+  }));
 
-  const linePath = trendPoints.map(p => `${p.x},${p.y}`).join(' L ');
-  const areaPath = trendPoints.length > 0 ? `M 0,100 L ${linePath} L 100,100 Z` : '';
+  // Bar chart
+  const maxQty = Math.max(...topItems.map(i => i.quantity), 1);
+  const medalColors = ['text-amber-500', 'text-zinc-400', 'text-amber-700', 'text-zinc-500', 'text-zinc-400'];
+  const barColors = ['from-orange-400 to-orange-500', 'from-orange-300 to-orange-400', 'from-orange-200 to-orange-300', 'from-zinc-300 to-zinc-400', 'from-zinc-200 to-zinc-300'];
 
-  // Draw Bar Chart variables
-  const maxQty = Math.max(...topItemsData.map(i => i.quantity), 1);
-
-  // Status Badge Colors helper
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'PAID':
-        return <span className="inline-flex items-center rounded-md bg-emerald-50 dark:bg-emerald-950/20 px-2 py-1 text-[10px] font-black text-emerald-700 dark:text-emerald-450">PAID</span>;
-      case 'CANCELLED':
-        return <span className="inline-flex items-center rounded-md bg-red-50 dark:bg-red-950/20 px-2 py-1 text-[10px] font-black text-red-750 dark:text-red-400">CANCELLED</span>;
-      default:
-        return <span className="inline-flex items-center rounded-md bg-amber-50 dark:bg-amber-950/20 px-2 py-1 text-[10px] font-black text-amber-700 dark:text-amber-450">{status}</span>;
-    }
+    if (status === 'PAID') return <span className="rounded-md bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 text-[10px] font-black text-emerald-700 dark:text-emerald-400">PAID</span>;
+    if (status === 'CANCELLED') return <span className="rounded-md bg-red-50 dark:bg-red-950/30 px-2 py-0.5 text-[10px] font-black text-red-600 dark:text-red-400">CANCELLED</span>;
+    return <span className="rounded-md bg-amber-50 dark:bg-amber-950/30 px-2 py-0.5 text-[10px] font-black text-amber-700 dark:text-amber-400">{status}</span>;
   };
 
   return (
-    <div className="flex h-full flex-col overflow-y-auto bg-zinc-50 dark:bg-zinc-950 p-4 transition-colors duration-250 font-sans">
-      
-      {/* Title Header */}
-      <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-zinc-950 dark:text-zinc-50 flex items-center gap-2">
-            <TrendingUp className="h-6 w-6 text-orange-500" />
-            <span>Executive Dashboard</span>
+    <div className="flex h-full flex-col gap-4 overflow-y-auto bg-zinc-50 dark:bg-zinc-950 p-1 pr-2">
+
+      {/* ── Header + Filter toolbar ── */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex-1 min-w-0">
+          <h1 className="flex items-center gap-2 text-lg font-black text-zinc-900 dark:text-zinc-50">
+            <TrendingUp className="h-5 w-5 text-orange-500 shrink-0" />
+            Dashboard
           </h1>
-          <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-            Real-time billing statistics, performance metrics, and sales trend summaries.
-          </p>
         </div>
-        
-        <button
-          onClick={() => fetchStats(page)}
-          className="flex items-center gap-1.5 self-start rounded-lg border border-zinc-250 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3.5 py-2 text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100/50 dark:hover:bg-zinc-800 active:scale-95 transition-all cursor-pointer shadow-sm"
-        >
+
+        {/* Preset pills */}
+        <div className="flex items-center gap-1.5">
+          {PRESETS.map(p => (
+            <button key={p.key} onClick={() => applyPreset(p.key)}
+              className={`rounded-lg px-3 py-1.5 text-[11px] font-black transition-all cursor-pointer ${
+                activePreset === p.key
+                  ? 'bg-orange-500 text-white shadow-sm shadow-orange-200'
+                  : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-orange-300 hover:text-orange-500'
+              }`}>
+              {p.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Custom date range */}
+        <form onSubmit={handleApplyFilters} className="flex items-center gap-2">
+          <input type="date" value={startDate} onChange={e => { setStartDate(e.target.value); setActivePreset(''); }}
+            className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 py-1.5 text-[11px] font-bold text-zinc-700 dark:text-zinc-300 outline-none focus:border-orange-400 cursor-pointer" />
+          <span className="text-xs text-zinc-400">→</span>
+          <input type="date" value={endDate} onChange={e => { setEndDate(e.target.value); setActivePreset(''); }}
+            className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 py-1.5 text-[11px] font-bold text-zinc-700 dark:text-zinc-300 outline-none focus:border-orange-400 cursor-pointer" />
+          <button type="submit"
+            className="flex items-center gap-1 rounded-lg bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-700 dark:hover:bg-zinc-300 text-white dark:text-zinc-900 px-3 py-1.5 text-[11px] font-black transition-all cursor-pointer">
+            <Calendar className="h-3 w-3" />Apply
+          </button>
+        </form>
+
+        <button onClick={() => fetchStats()}
+          className="flex items-center gap-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-1.5 text-[11px] font-black text-zinc-600 dark:text-zinc-400 hover:text-orange-500 hover:border-orange-300 transition-all cursor-pointer">
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
-          <span>Refresh Stats</span>
         </button>
       </div>
 
-      {/* Date Filter & Presets Console */}
-      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-sm mb-6 transition-all">
-        <form onSubmit={handleApplyFilters} className="space-y-4">
-          <div>
-            <span className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 mb-2 font-bold">Quick Date Presets</span>
-            <div className="flex flex-wrap gap-2">
-              {['today', 'yesterday', '7days', '30days'].map((preset) => {
-                const label = preset === '7days' ? 'Last 7 Days' : preset === '30days' ? 'Last 30 Days' : preset.charAt(0).toUpperCase() + preset.slice(1);
-                return (
-                  <button
-                    key={preset}
-                    type="button"
-                    onClick={() => applyPreset(preset as any)}
-                    className="rounded-lg bg-zinc-100 hover:bg-zinc-200/70 dark:bg-zinc-955 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 px-3 py-1.5 text-xs font-bold text-zinc-750 dark:text-zinc-300 transition-all cursor-pointer"
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
+      {/* ── KPI Cards ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {/* Total Sales */}
+        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-sm flex items-center gap-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-500 shadow-md shadow-orange-200 dark:shadow-none">
+            <IndianRupee className="h-5 w-5 text-white" />
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-            <div>
-              <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 mb-1.5 flex items-center gap-1 font-bold">
-                <Calendar className="h-3.5 w-3.5 text-orange-500" />
-                <span>Start Date</span>
-              </label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full rounded-lg border border-zinc-250 dark:border-zinc-850 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-orange-400 font-semibold text-zinc-900 dark:text-zinc-100"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 mb-1.5 flex items-center gap-1 font-bold">
-                <Calendar className="h-3.5 w-3.5 text-orange-500" />
-                <span>End Date</span>
-              </label>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full rounded-lg border border-zinc-250 dark:border-zinc-850 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-orange-400 font-semibold text-zinc-900 dark:text-zinc-100"
-              />
-            </div>
-
-            <div>
-              <button
-                type="submit"
-                className="w-full rounded-lg bg-orange-500 hover:bg-orange-600 text-white py-2.5 text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-orange-100 dark:shadow-none"
-              >
-                Apply Filters
-              </button>
-            </div>
-          </div>
-        </form>
-      </div>
-
-      {/* Grid KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {/* Card 1: Total Sales */}
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-sm flex items-center justify-between transition-all duration-200">
-          <div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block mb-1">Total Sales</span>
-            <span className="text-2xl font-black tracking-tight font-mono text-zinc-900 dark:text-zinc-50">
-              {currencySymbol}{metricsData.totalSales.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </span>
-          </div>
-          <div className="h-10 w-10 rounded-xl bg-orange-50 dark:bg-orange-950/20 text-orange-500 flex items-center justify-center">
-            <Coins className="h-5 w-5" />
+          <div className="min-w-0">
+            <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Total Sales</p>
+            <p className="text-xl font-black font-mono text-zinc-900 dark:text-zinc-50 truncate">
+              {currencySymbol}{metrics.totalSales.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
           </div>
         </div>
 
-        {/* Card 2: Paid Orders */}
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-sm flex items-center justify-between transition-all duration-200">
-          <div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block mb-1">Paid Orders</span>
-            <span className="text-2xl font-black tracking-tight font-mono text-zinc-900 dark:text-zinc-50">
-              {metricsData.ordersCount}
-            </span>
+        {/* Paid Orders */}
+        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-sm flex items-center gap-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-500 shadow-md shadow-blue-200 dark:shadow-none">
+            <ShoppingBag className="h-5 w-5 text-white" />
           </div>
-          <div className="h-10 w-10 rounded-xl bg-orange-50 dark:bg-orange-950/20 text-orange-500 flex items-center justify-center">
-            <ShoppingBag className="h-5 w-5" />
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Paid Orders</p>
+            <p className="text-xl font-black font-mono text-zinc-900 dark:text-zinc-50">{metrics.ordersCount}</p>
           </div>
         </div>
 
-        {/* Card 3: AOV */}
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-sm flex items-center justify-between transition-all duration-200">
-          <div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block mb-1">Avg Order Value</span>
-            <span className="text-2xl font-black tracking-tight font-mono text-zinc-900 dark:text-zinc-50">
-              {currencySymbol}{metricsData.aov.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </span>
+        {/* AOV */}
+        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-sm flex items-center gap-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-500 shadow-md shadow-violet-200 dark:shadow-none">
+            <BadgeCent className="h-5 w-5 text-white" />
           </div>
-          <div className="h-10 w-10 rounded-xl bg-orange-50 dark:bg-orange-950/20 text-orange-500 flex items-center justify-center">
-            <BadgeCent className="h-5 w-5" />
+          <div className="min-w-0">
+            <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Avg Order Value</p>
+            <p className="text-xl font-black font-mono text-zinc-900 dark:text-zinc-50 truncate">
+              {currencySymbol}{metrics.aov.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
           </div>
         </div>
 
-        {/* Card 4: Active Orders */}
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-sm flex items-center justify-between transition-all duration-200">
-          <div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block mb-1">Active KOT Queue</span>
-            <span className="text-2xl font-black tracking-tight font-mono text-zinc-900 dark:text-zinc-50 text-orange-500">
-              {metricsData.activeOrdersCount}
-            </span>
+        {/* Active KOT */}
+        <div className={`rounded-xl border p-4 shadow-sm flex items-center gap-4 transition-colors ${
+          metrics.activeOrdersCount > 0
+            ? 'border-orange-200 dark:border-orange-900/40 bg-orange-50 dark:bg-orange-950/20'
+            : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'
+        }`}>
+          <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl shadow-md ${
+            metrics.activeOrdersCount > 0 ? 'bg-orange-500 shadow-orange-200 dark:shadow-none animate-pulse' : 'bg-zinc-200 dark:bg-zinc-800 shadow-none'
+          }`}>
+            <Flame className={`h-5 w-5 ${metrics.activeOrdersCount > 0 ? 'text-white' : 'text-zinc-400'}`} />
           </div>
-          <div className="h-10 w-10 rounded-xl bg-orange-500 text-white flex items-center justify-center shadow-lg shadow-orange-100 dark:shadow-none animate-pulse">
-            <Flame className="h-5 w-5" />
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Active KOT</p>
+            <p className={`text-xl font-black font-mono ${metrics.activeOrdersCount > 0 ? 'text-orange-500' : 'text-zinc-900 dark:text-zinc-50'}`}>
+              {metrics.activeOrdersCount}
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* CHART 1: Sales Trend (Line Chart) */}
-        <div className="relative lg:col-span-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-sm">
+      {/* ── Charts row ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+
+        {/* Sales Trend line chart */}
+        <div className="relative lg:col-span-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-sm">
           {loading && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xs rounded-xl">
-              <Loader size="md" text="Syncing trend..." />
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm">
+              <Loader size="sm" text="Loading trend..." />
             </div>
           )}
-          <h3 className="text-xs font-black uppercase tracking-wider text-zinc-400 mb-4 flex items-center gap-1.5">
-            <Clock className="h-4.5 w-4.5 text-orange-500" />
-            <span>Sales Trend (Date Filtered)</span>
-          </h3>
-          
-          <div className="relative h-64 w-full">
-            {salesTrendData.length === 0 ? (
-              <div className="flex h-full w-full items-center justify-center text-xs font-bold text-zinc-400">
-                No trend data available for this range.
-              </div>
-            ) : (
-              <>
-                <svg className="h-full w-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 100 100">
-                  <defs>
-                    <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="rgb(249, 115, 22)" stopOpacity="0.2" />
-                      <stop offset="100%" stopColor="rgb(249, 115, 22)" stopOpacity="0.0" />
-                    </linearGradient>
-                  </defs>
-                  <line x1="0" y1="90" x2="100" y2="90" stroke="rgba(228,228,231,0.5)" strokeWidth="0.5" strokeDasharray="2,2" />
-                  <line x1="0" y1="50" x2="100" y2="50" stroke="rgba(228,228,231,0.5)" strokeWidth="0.5" strokeDasharray="2,2" />
-                  <line x1="0" y1="10" x2="100" y2="10" stroke="rgba(228,228,231,0.5)" strokeWidth="0.5" strokeDasharray="2,2" />
-
-                  {areaPath && <path d={areaPath} fill="url(#chartGradient)" />}
-                  {linePath && <path d={`M ${linePath}`} fill="none" stroke="rgb(249, 115, 22)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />}
-                </svg>
-                
-                {trendPoints.map((pt, idx) => (
-                  <div 
-                    key={idx} 
-                    className="absolute group"
-                    style={{ left: `${pt.x}%`, top: `${pt.y}%`, transform: 'translate(-50%, -50%)' }}
-                  >
-                    <div className="h-3.5 w-3.5 rounded-full border-2 border-white dark:border-zinc-900 bg-orange-500 shadow-md group-hover:scale-125 transition-all cursor-pointer"></div>
-                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 pointer-events-none rounded-lg bg-zinc-950/95 dark:bg-zinc-900 border border-zinc-800 dark:border-zinc-800 text-[10px] font-black text-white p-2.5 shadow-2xl transition-all duration-150 z-10 whitespace-nowrap space-y-0.5">
-                      <p className="text-zinc-400 font-bold">{new Date(pt.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-                      <p className="text-orange-500 font-black text-[11px]">Sales: {currencySymbol}{pt.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                      <p className="text-emerald-400 font-bold">Orders: {pt.count}</p>
-                    </div>
-                  </div>
-                ))}
-              </>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              <TrendingUp className="h-4 w-4 text-orange-500" />Sales Trend
+            </h3>
+            {salesTrend.length > 0 && (
+              <span className="text-[10px] font-bold text-zinc-400">
+                {new Date(salesTrend[0].date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                {' → '}
+                {new Date(salesTrend[salesTrend.length - 1].date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+              </span>
             )}
           </div>
-          
-          <div className="flex justify-between mt-3 text-[10px] font-bold text-zinc-400 font-mono px-2 overflow-x-auto gap-2">
-            {salesTrendData.map((s, idx) => {
-              // Only render dates selectively if there are too many items to prevent overlap
-              const renderLabel = salesTrendData.length <= 10 || idx === 0 || idx === salesTrendData.length - 1 || idx === Math.floor(salesTrendData.length / 2);
-              return (
-                <span key={idx} className={renderLabel ? '' : 'invisible'}>
-                  {new Date(s.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                </span>
-              );
-            })}
-          </div>
+
+          {chartData.length === 0 ? (
+            <div className="flex h-52 items-center justify-center text-xs text-zinc-400 font-semibold">
+              No data for this range
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={208}>
+              <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="rgb(249,115,22)" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="rgb(249,115,22)" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(161,161,170,0.15)" vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 10, fontWeight: 700, fill: 'rgb(161,161,170)' }}
+                  axisLine={false}
+                  tickLine={false}
+                  interval="preserveStartEnd"
+                />
+                <YAxis
+                  tick={{ fontSize: 10, fontWeight: 700, fill: 'rgb(161,161,170)' }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={52}
+                  tickFormatter={(v) => `${currencySymbol}${v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v}`}
+                />
+                <Tooltip
+                  contentStyle={{
+                    background: 'rgb(24,24,27)',
+                    border: '1px solid rgb(63,63,70)',
+                    borderRadius: '10px',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    color: 'white',
+                    padding: '8px 12px',
+                  }}
+                  labelStyle={{ color: 'rgb(161,161,170)', marginBottom: 4 }}
+                  formatter={(value, name) => [
+                    name === 'amount' ? `${currencySymbol}${Number(value).toFixed(2)}` : value,
+                    name === 'amount' ? 'Sales' : 'Orders',
+                  ]}
+                  cursor={{ stroke: 'rgb(249,115,22)', strokeWidth: 1, strokeDasharray: '4 2' }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="amount"
+                  stroke="rgb(249,115,22)"
+                  strokeWidth={2.5}
+                  fill="url(#salesGrad)"
+                  dot={{ fill: 'rgb(249,115,22)', strokeWidth: 2, stroke: 'white', r: 3 }}
+                  activeDot={{ r: 5, fill: 'rgb(249,115,22)', stroke: 'white', strokeWidth: 2 }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
         </div>
 
-        {/* CHART 2: Top Selling Items (Bar Chart) */}
-        <div className="relative rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-sm flex flex-col">
+        {/* Top dishes bar chart */}
+        <div className="relative rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-sm flex flex-col">
           {loading && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xs rounded-xl">
-              <Loader size="md" text="Syncing dishes..." />
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm">
+              <Loader size="sm" text="Loading dishes..." />
             </div>
           )}
-          <h3 className="text-xs font-black uppercase tracking-wider text-zinc-400 mb-4 flex items-center gap-1.5">
-            <ArrowUpRight className="h-4.5 w-4.5 text-orange-500" />
-            <span>Top Dishes (Units Sold)</span>
+          <h3 className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-4">
+            <Trophy className="h-4 w-4 text-orange-500" />Top Dishes
           </h3>
 
-          <div className="flex-1 flex flex-col justify-center space-y-4">
-            {topItemsData.length === 0 ? (
-              <div className="text-center text-xs font-bold text-zinc-400 py-12">
-                No paid orders recorded in this range.
-              </div>
-            ) : (
-              topItemsData.map((item, idx) => {
-                const widthPercent = (item.quantity / maxQty) * 100;
-                return (
-                  <div key={idx} className="space-y-1">
-                    <div className="flex justify-between text-xs font-bold text-zinc-700 dark:text-zinc-300">
-                      <span className="truncate">{item.name}</span>
-                      <span className="font-mono">{item.quantity} units</span>
+          {topItems.length === 0 ? (
+            <div className="flex flex-1 items-center justify-center text-xs text-zinc-400 font-semibold py-12">
+              No orders in this range
+            </div>
+          ) : (
+            <div className="flex-1 flex flex-col justify-center gap-3.5">
+              {topItems.map((item, i) => (
+                <div key={i} className="space-y-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className={`text-[11px] font-black shrink-0 ${medalColors[i] || 'text-zinc-400'}`}>#{i + 1}</span>
+                      <span className="truncate text-[11px] font-bold text-zinc-700 dark:text-zinc-300">{item.name}</span>
                     </div>
-                    <div className="h-3 w-full rounded-full bg-zinc-100 dark:bg-zinc-950 overflow-hidden">
-                      <div 
-                        className="h-full rounded-full bg-gradient-to-r from-orange-400 to-orange-600 transition-all duration-500 ease-out"
-                        style={{ width: `${widthPercent}%` }}
-                      ></div>
-                    </div>
+                    <span className="text-[10px] font-black font-mono text-zinc-500 shrink-0">{item.quantity}</span>
                   </div>
-                );
-              })
-            )}
-          </div>
+                  <div className="h-2 w-full rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full bg-gradient-to-r ${barColors[i] || 'from-zinc-300 to-zinc-400'} transition-all duration-700 ease-out`}
+                      style={{ width: `${(item.quantity / maxQty) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Recent Activity Table */}
-      <div className="mb-4 flex-1">
-        <h3 className="text-xs font-black uppercase tracking-wider text-zinc-400 mb-3 pl-1">
-          Recent Orders Log
-        </h3>
-        
+      {/* ── Recent orders table ── */}
+      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100 dark:border-zinc-800">
+          <h3 className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+            <ArrowUpRight className="h-4 w-4 text-orange-500" />Recent Orders
+          </h3>
+          {stats && <span className="text-[10px] font-bold text-zinc-400">{stats.pagination.total} total</span>}
+        </div>
+
         <Table
-          headers={['Order ID', 'Date & Time', 'Waiter', 'Method', 'Status', 'Grand Total']}
-          data={recentOrdersData}
+          headers={['Order', 'Date & Time', 'Waiter', 'Method', 'Status', 'Total']}
+          data={recentOrders}
           loading={loading}
-          emptyMessage="No recent orders found matching criteria."
+          emptyMessage="No orders found for this date range."
           renderRow={(order) => (
-            <tr key={order.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-950/20 text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition-colors">
-              <td className="px-5 py-3 font-mono font-black text-zinc-950 dark:text-zinc-100">
-                #{order.orderNumber}
+            <tr key={order.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-950/20 transition-colors">
+              <td className="px-4 py-3 text-xs font-black font-mono text-zinc-900 dark:text-zinc-100">#{order.orderNumber}</td>
+              <td className="px-4 py-3 text-xs font-mono text-zinc-400">
+                {new Date(order.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
               </td>
-              <td className="px-5 py-3 text-zinc-400 font-mono">
-                {new Date(order.createdAt).toLocaleString(undefined, {
-                  month: 'short',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </td>
-              <td className="px-5 py-3 font-bold">{order.waiterName}</td>
-              <td className="px-5 py-3">
-                <span className="font-bold text-[10px] tracking-wider bg-zinc-100 dark:bg-zinc-950 px-2 py-0.5 rounded-full border border-zinc-200 dark:border-zinc-800">
+              <td className="px-4 py-3 text-xs font-bold text-zinc-700 dark:text-zinc-300">{order.waiterName}</td>
+              <td className="px-4 py-3">
+                <span className="rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-2 py-0.5 text-[10px] font-black text-zinc-600 dark:text-zinc-300">
                   {order.paymentMethod}
                 </span>
               </td>
-              <td className="px-5 py-3">{getStatusBadge(order.status)}</td>
-              <td className="px-5 py-3 font-mono font-black text-zinc-950 dark:text-zinc-50">
+              <td className="px-4 py-3">{getStatusBadge(order.status)}</td>
+              <td className="px-4 py-3 text-xs font-black font-mono text-zinc-900 dark:text-zinc-50">
                 {currencySymbol}{order.grandTotal.toFixed(2)}
               </td>
             </tr>
@@ -479,11 +384,9 @@ export default function Dashboard() {
         />
 
         {stats && (
-          <Pagination
-            currentPage={page}
-            totalPages={stats.pagination.totalPages}
-            onPageChange={setPage}
-          />
+          <div className="border-t border-zinc-100 dark:border-zinc-800 px-4 py-2">
+            <Pagination currentPage={page} totalPages={stats.pagination.totalPages} onPageChange={setPage} />
+          </div>
         )}
       </div>
     </div>

@@ -22,7 +22,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
   
   // Zustand Store States
   const activeOrders = usePOSStore((state) => state.activeOrders);
-  const { user, token, sidebarItems, logout } = useAuthStore();
+  const { user, token, sidebarItems, setSidebarItems, logout } = useAuthStore();
   
   // Settings dropdown state
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -45,6 +45,15 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
       }
     }
   }, [token, user, router, isMounted]);
+
+  // Always re-fetch navigation on mount so sidebar labels stay in sync with DB
+  useEffect(() => {
+    if (isMounted && token) {
+      apiFetch<any[]>('/navigation')
+        .then((items) => setSidebarItems(items))
+        .catch(() => {});
+    }
+  }, [isMounted, token]);
 
   // Load and apply theme on mount
   useEffect(() => {
@@ -117,7 +126,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Dynamic left sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-50 flex w-24 flex-col items-center border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-md transition-transform duration-300 md:static md:translate-x-0 shrink-0 ${
+      <aside className={`fixed inset-y-0 left-0 z-50 flex w-20 md:w-28 flex-col items-center border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-md transition-transform duration-300 md:static md:translate-x-0 shrink-0 ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         {/* Mobile Close Button */}
@@ -169,7 +178,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
                 }`}
               >
                 <DynamicIcon name={item.icon || 'HelpCircle'} className={`h-5.5 w-5.5 ${isActive ? 'scale-110' : ''}`} />
-                <span className="mt-1 text-[9px] font-black uppercase tracking-tight truncate max-w-full px-1">
+                <span className="mt-1 text-[9px] font-black uppercase tracking-tight text-center leading-tight px-1">
                   {item.label}
                 </span>
 
@@ -206,7 +215,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsSidebarOpen(true)}
-              className="md:hidden flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 active:scale-95 transition-all cursor-pointer"
+              className="md:hidden flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 active:scale-95 transition-all cursor-pointer"
             >
               <LucideIcons.Menu className="h-4.5 w-4.5" />
             </button>
@@ -215,7 +224,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
             {!sidebarItems.some((item) => item.path === pathname) && (
               <button
                 onClick={() => router.back()}
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-500 dark:text-zinc-400 hover:bg-orange-50 dark:hover:bg-orange-950/20 hover:text-orange-500 hover:border-orange-200 dark:hover:border-orange-800 active:scale-95 transition-all cursor-pointer"
+                className="flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-500 dark:text-zinc-400 hover:bg-orange-50 dark:hover:bg-orange-950/20 hover:text-orange-500 hover:border-orange-200 dark:hover:border-orange-800 active:scale-95 transition-all cursor-pointer"
                 title="Go back"
               >
                 <LucideIcons.ArrowLeft className="h-4 w-4" />
