@@ -168,6 +168,9 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
               <button
                 key={item.id}
                 onClick={() => {
+                  if (item.path === '/help') {
+                    sessionStorage.setItem('help_return_path', pathname);
+                  }
                   router.push(item.path);
                   setIsSidebarOpen(false);
                 }}
@@ -297,6 +300,17 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
                         <span>Coupons & Promo</span>
                       </button>
                     )}
+                    <button
+                      onClick={() => {
+                        sessionStorage.setItem('help_return_path', pathname);
+                        router.push('/help');
+                        setIsDropdownOpen(false);
+                      }}
+                      className="flex w-full items-center gap-2 px-3.5 py-2.5 text-left text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-350 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-orange-500 transition-colors cursor-pointer border-t border-zinc-100 dark:border-zinc-800"
+                    >
+                      <LucideIcons.CircleHelp className="h-4 w-4" />
+                      <span>Help Center</span>
+                    </button>
                   </div>
                 </>
               )}

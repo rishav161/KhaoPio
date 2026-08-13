@@ -148,6 +148,7 @@ async function main() {
     { label: 'Staff', icon: 'Users', path: '/staff', order: 6, permissionName: 'view:staff' },
     { label: 'Set Menu', icon: 'Layers', path: '/menu', order: 7, permissionName: 'view:staff' },
     { label: 'Reports', icon: 'BarChart3', path: '/reports', order: 8, permissionName: 'view:sales-reports' },
+    { label: 'Help', icon: 'HelpCircle', path: '/help', order: 9, permissionName: null },
   ];
 
   const sidebarItems: Record<string, any> = {};
