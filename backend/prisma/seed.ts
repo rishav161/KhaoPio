@@ -3,30 +3,26 @@ import { PrismaClient, RoleName } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  // Clear existing database entries to ensure a clean seed
-  await prisma.booking.deleteMany({});
+  // Clear non-destructive items to prevent duplicates while seeding
   await prisma.rolePermission.deleteMany({});
   await prisma.sidebarItem.deleteMany({});
-  await prisma.invitation.deleteMany({});
-  await prisma.orderItem.deleteMany({});
-  await prisma.order.deleteMany({});
-  await prisma.user.deleteMany({});
-  await prisma.menuItem.deleteMany({});
-  await prisma.menuCategory.deleteMany({});
-  await prisma.diningTable.deleteMany({});
-  await prisma.restaurant.deleteMany({});
-  await prisma.permission.deleteMany({});
-  await prisma.role.deleteMany({});
 
-  console.log('Database cleared.');
+  console.log('Database configuration tables cleared.');
 
-  // Create default Restaurant
-  const restaurant = await prisma.restaurant.create({
-    data: { name: 'KhaoPio Restaurant' },
+  // Find or create default Restaurant
+  let restaurant = await prisma.restaurant.findFirst({
+    where: { name: 'KhaoPio Restaurant' },
   });
-  console.log('Default Restaurant created.');
+  if (!restaurant) {
+    restaurant = await prisma.restaurant.create({
+      data: { name: 'KhaoPio Restaurant' },
+    });
+    console.log('Default Restaurant created.');
+  } else {
+    console.log('Default Restaurant already exists.');
+  }
 
-  // 1. Create Granular Permissions
+  // 1. Create/Update Granular Permissions
   const permissionsData = [
     // Dashboard & Reports
     { name: 'view:dashboard', description: 'Can view administrative dashboard analytics' },
@@ -53,22 +49,26 @@ async function main() {
 
   const permissions: Record<string, any> = {};
   for (const item of permissionsData) {
-    permissions[item.name] = await prisma.permission.create({
-      data: item,
+    permissions[item.name] = await prisma.permission.upsert({
+      where: { name: item.name },
+      update: { description: item.description },
+      create: item,
     });
   }
-  console.log('Granular Permissions seeded successfully.');
+  console.log('Granular Permissions seeded/updated successfully.');
 
-  // 2. Create Roles
+  // 2. Create/Update Roles
   const roles: Record<RoleName, any> = {} as any;
   const roleNames: RoleName[] = ['SUPER_ADMIN', 'STORE_MANAGER', 'CASHIER', 'WAITER', 'KITCHEN_CHEF'];
 
   for (const name of roleNames) {
-    roles[name] = await prisma.role.create({
-      data: { name },
+    roles[name] = await prisma.role.upsert({
+      where: { name },
+      update: {},
+      create: { name },
     });
   }
-  console.log('Roles seeded successfully.');
+  console.log('Roles seeded/updated successfully.');
 
   // 3. Define Granular Role Permissions mappings
   const rolePermissionsMap: Record<RoleName, string[]> = {
@@ -191,8 +191,15 @@ async function main() {
   const categoriesData = ['Burgers', 'Pizzas', 'Sides', 'Drinks', 'Desserts'];
   const menuCategoriesMap: Record<string, any> = {};
   for (const catName of categoriesData) {
-    menuCategoriesMap[catName] = await prisma.menuCategory.create({
-      data: {
+    menuCategoriesMap[catName] = await prisma.menuCategory.upsert({
+      where: {
+        name_restaurantId: {
+          name: catName,
+          restaurantId: restaurant.id,
+        }
+      },
+      update: {},
+      create: {
         name: catName,
         restaurantId: restaurant.id,
       }
@@ -218,8 +225,21 @@ async function main() {
   ];
 
   for (const item of seedMenuItemsData) {
-    await prisma.menuItem.create({
-      data: {
+    await prisma.menuItem.upsert({
+      where: {
+        code_restaurantId: {
+          code: item.code,
+          restaurantId: restaurant.id,
+        }
+      },
+      update: {
+        name: item.name,
+        description: item.description,
+        price: item.price,
+        image: item.image,
+        categoryId: menuCategoriesMap[item.category].id,
+      },
+      create: {
         name: item.name,
         description: item.description,
         price: item.price,
@@ -238,32 +258,51 @@ async function main() {
   const endDate = new Date();
   endDate.setFullYear(startDate.getFullYear() + 1); // 1 year from now
 
-  await prisma.coupon.createMany({
-    data: [
-      {
-        code: 'WELCOME10',
-        description: 'Get 10% off on your order',
-        discountType: 'PERCENTAGE',
-        discountValue: 10.0,
-        minSubtotal: 299.0,
-        startDate,
-        endDate,
-        isActive: true,
-        restaurantId: restaurant.id,
+  const couponsData = [
+    {
+      code: 'WELCOME10',
+      description: 'Get 10% off on your order',
+      discountType: 'PERCENTAGE' as const,
+      discountValue: 10.0,
+      minSubtotal: 299.0,
+      startDate,
+      endDate,
+      isActive: true,
+      restaurantId: restaurant.id,
+    },
+    {
+      code: 'FLAT100',
+      description: 'Get ₹100 off on orders above ₹500',
+      discountType: 'FLAT' as const,
+      discountValue: 100.0,
+      minSubtotal: 500.0,
+      startDate,
+      endDate,
+      isActive: true,
+      restaurantId: restaurant.id,
+    }
+  ];
+
+  for (const coupon of couponsData) {
+    await prisma.coupon.upsert({
+      where: {
+        code_restaurantId: {
+          code: coupon.code,
+          restaurantId: restaurant.id,
+        }
       },
-      {
-        code: 'FLAT100',
-        description: 'Get ₹100 off on orders above ₹500',
-        discountType: 'FLAT',
-        discountValue: 100.0,
-        minSubtotal: 500.0,
-        startDate,
-        endDate,
-        isActive: true,
-        restaurantId: restaurant.id,
-      }
-    ]
-  });
+      update: {
+        description: coupon.description,
+        discountType: coupon.discountType,
+        discountValue: coupon.discountValue,
+        minSubtotal: coupon.minSubtotal,
+        startDate: coupon.startDate,
+        endDate: coupon.endDate,
+        isActive: coupon.isActive,
+      },
+      create: coupon,
+    });
+  }
   console.log('Coupons seeded successfully.');
   
   // 7. Seed Dining Tables
@@ -279,8 +318,17 @@ async function main() {
   ];
   
   for (const tbl of defaultTables) {
-    await prisma.diningTable.create({
-      data: {
+    await prisma.diningTable.upsert({
+      where: {
+        name_restaurantId: {
+          name: tbl.name,
+          restaurantId: restaurant.id,
+        }
+      },
+      update: {
+        capacity: tbl.capacity,
+      },
+      create: {
         name: tbl.name,
         capacity: tbl.capacity,
         status: 'AVAILABLE',
