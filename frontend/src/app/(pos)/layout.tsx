@@ -335,6 +335,22 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
         </main>
       </div>
       <ConfirmDialog />
+
+      {/* Floating Help Button */}
+      <button
+        onClick={() => {
+          sessionStorage.setItem('help_return_path', pathname);
+          router.push('/help');
+        }}
+        title="Help Center"
+        className={`fixed bottom-5 right-5 z-30 flex h-10 w-10 items-center justify-center rounded-full shadow-lg border transition-all duration-150 active:scale-95 cursor-pointer ${
+          pathname === '/help' || pathname.startsWith('/help/')
+            ? 'bg-orange-500 border-orange-400 text-white shadow-orange-200 dark:shadow-orange-950/50'
+            : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:border-orange-300 dark:hover:border-orange-700 hover:text-orange-500 hover:shadow-orange-100 dark:hover:shadow-orange-950/30'
+        }`}
+      >
+        <LucideIcons.CircleHelp className="h-5 w-5" />
+      </button>
     </div>
   );
 }

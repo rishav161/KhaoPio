@@ -310,4 +310,29 @@ model Booking {
   updatedAt    DateTime      @updatedAt
 }
 
+model HelpCategory {
+  id        String        @id @default(uuid())
+  title     String
+  slug      String        @unique
+  icon      String        @default("HelpCircle")
+  order     Int           @default(0)
+  articles  HelpArticle[]
+  createdAt DateTime      @default(now())
+}
+
+model HelpArticle {
+  id         String       @id @default(uuid())
+  title      String
+  slug       String       @unique
+  content    String       @db.Text
+  excerpt    String?
+  categoryId String
+  category   HelpCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  roles      String[]     @default([])
+  helpful    Int          @default(0)
+  notHelpful Int          @default(0)
+  order      Int          @default(0)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+}
 

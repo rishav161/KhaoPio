@@ -343,11 +343,11 @@ export default function Login() {
           <div className="mb-6 flex rounded-full border border-zinc-200 bg-zinc-100 p-1 gap-1">
             <button onClick={() => handleTabChange('email')}
               className={`flex-1 py-2 text-sm font-medium rounded-full cursor-pointer transition-all ${tab === 'email' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'}`}>
-              Admin
+              Manager
             </button>
             <button onClick={() => handleTabChange('pin')}
               className={`flex-1 py-2 text-sm font-medium rounded-full cursor-pointer transition-all ${tab === 'pin' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'}`}>
-              Staff PIN
+              Staff
             </button>
           </div>
 
