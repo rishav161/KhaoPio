@@ -13,6 +13,7 @@ import tableRoutes from './routes/table.routes';
 import bookingRoutes from './routes/booking.routes';
 import couponRoutes from './routes/coupon.routes';
 import helpRoutes from './routes/help.routes';
+import kotRoutes from './routes/kot.routes';
 
 // Load environment variables
 dotenv.config();
@@ -51,6 +52,7 @@ app.use('/api/tables', tableRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/help', helpRoutes);
+app.use('/api/kots', kotRoutes);
 
 // Server startup
 app.listen(PORT, () => {

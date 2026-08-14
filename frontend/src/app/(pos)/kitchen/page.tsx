@@ -48,47 +48,47 @@ function ElapsedTimer({ createdAt }: { createdAt: string }) {
 }
 
 export default function KitchenPage() {
-  const { activeOrders, updateOrderStatus, fetchActiveOrders, fetchMenuItems } = usePOSStore();
+  const { kots, updateKotStatus, fetchActiveKots, fetchMenuItems } = usePOSStore();
   const [filter, setFilter] = useState<'ALL' | 'PENDING' | 'PREPARING'>('ALL');
-  const [submittingOrderIds, setSubmittingOrderIds] = useState<Record<string, boolean>>({});
+  const [submittingKotIds, setSubmittingKotIds] = useState<Record<string, boolean>>({});
 
-  const handleUpdateStatus = async (orderId: string, status: 'PREPARING' | 'READY') => {
-    setSubmittingOrderIds((prev) => ({ ...prev, [orderId]: true }));
+  const handleUpdateStatus = async (kotId: string, status: 'PREPARING' | 'READY') => {
+    setSubmittingKotIds((prev) => ({ ...prev, [kotId]: true }));
     try {
-      await updateOrderStatus(orderId, status);
+      await updateKotStatus(kotId, status);
     } catch (err) {
       console.error(err);
     } finally {
-      setSubmittingOrderIds((prev) => ({ ...prev, [orderId]: false }));
+      setSubmittingKotIds((prev) => ({ ...prev, [kotId]: false }));
     }
   };
 
   useEffect(() => {
     fetchMenuItems().then(() => {
-      fetchActiveOrders();
+      fetchActiveKots();
     });
-    const interval = setInterval(fetchActiveOrders, 5000);
+    const interval = setInterval(fetchActiveKots, 5000);
     return () => clearInterval(interval);
-  }, [fetchActiveOrders, fetchMenuItems]);
+  }, [fetchActiveKots, fetchMenuItems]);
 
-  // Filter kitchen orders ('KITCHEN_PENDING' or 'PREPARING')
+  // Filter kitchen tickets
   const kitchenOrders = useMemo(() => {
-    return activeOrders.filter((order) => {
+    return kots.filter((kot) => {
       const isKitchenStatus =
-        order.status === 'KITCHEN_PENDING' || order.status === 'PREPARING';
+        kot.status === 'PENDING' || kot.status === 'PREPARING';
       
       if (!isKitchenStatus) return false;
 
-      if (filter === 'PENDING') return order.status === 'KITCHEN_PENDING';
-      if (filter === 'PREPARING') return order.status === 'PREPARING';
+      if (filter === 'PENDING') return kot.status === 'PENDING';
+      if (filter === 'PREPARING') return kot.status === 'PREPARING';
       return true;
     });
-  }, [activeOrders, filter]);
+  }, [kots, filter]);
 
   // Compute the count of active pending kitchen orders
   const pendingCount = useMemo(() => {
-    return activeOrders.filter((o) => o.status === 'KITCHEN_PENDING').length;
-  }, [activeOrders]);
+    return kots.filter((k) => k.status === 'PENDING').length;
+  }, [kots]);
 
   // Web Audio API chime synthesizer for zero-dependency KDS alert
   const playChime = () => {
@@ -134,7 +134,7 @@ export default function KitchenPage() {
   }, [pendingCount]);
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden bg-zinc-100 dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+    <div className="flex h-full w-full flex-col overflow-hidden bg-zinc-100 dark:bg-zinc-955 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
       {/* KDS Header & Filter bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3">
         <div className="flex items-center gap-2 flex-wrap">
@@ -148,7 +148,7 @@ export default function KitchenPage() {
         </div>
 
         {/* Filter Tab Controllers */}
-        <div className="flex bg-zinc-100 dark:bg-zinc-950 p-0.5 rounded-lg border border-zinc-300 dark:border-zinc-850">
+        <div className="flex bg-zinc-100 dark:bg-zinc-955 p-0.5 rounded-lg border border-zinc-300 dark:border-zinc-850">
           {(['ALL', 'PENDING', 'PREPARING'] as const).map((tab) => (
             <button
               key={tab}
@@ -166,22 +166,22 @@ export default function KitchenPage() {
       </div>
 
       {/* Grid of Active Kitchen Orders */}
-      <div className="flex-1 overflow-x-auto p-4">
+      <div className="flex-1 overflow-x-auto p-4 bg-zinc-50/20">
         {kitchenOrders.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-zinc-400 bg-white dark:bg-zinc-900 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-800">
             <Flame className="h-12 w-12 stroke-[1.2] text-zinc-300 mb-2 animate-pulse" />
-            <p className="text-xs font-black text-zinc-500 dark:text-zinc-450">No active kitchen orders</p>
+            <p className="text-xs font-black text-zinc-505 dark:text-zinc-450">No active kitchen orders</p>
             <p className="text-[10px] text-zinc-400 mt-1">
               New orders sent from the Billing counter will automatically appear here.
             </p>
           </div>
         ) : (
           <div className="flex gap-4 items-start h-full">
-            {kitchenOrders.map((order) => {
-              const isPending = order.status === 'KITCHEN_PENDING';
+            {kitchenOrders.map((kot) => {
+              const isPending = kot.status === 'PENDING';
               return (
                 <div
-                  key={order.id}
+                  key={kot.id}
                   className={`flex w-72 flex-col rounded-xl border-2 bg-white dark:bg-zinc-900 shadow-md transition-all duration-200 shrink-0 ${
                     isPending
                       ? 'border-orange-500 ring-2 ring-orange-500/20'
@@ -196,31 +196,31 @@ export default function KitchenPage() {
                   >
                     <div>
                       <span className="text-sm font-black text-zinc-905 dark:text-zinc-50 leading-none">
-                        {order.orderNumber} {order.table ? `(${order.table.name})` : '(Takeaway)'}
+                        KOT #{kot.kotNumber} {kot.table ? `(${kot.table.name})` : '(Takeaway)'}
                       </span>
                       <div className="text-[9px] font-extrabold text-zinc-500 dark:text-zinc-400 mt-0.5">
-                        Items: {order.items.reduce((acc, ci) => acc + ci.quantity, 0)}
+                        Items: {kot.items.reduce((acc, ci) => acc + ci.quantity, 0)}
                       </div>
                       <div className="text-[8px] font-black text-zinc-450 dark:text-zinc-550 leading-tight uppercase mt-0.5">
-                        By: {order.waiterName} ({order.waiterRole?.replace('_', ' ')})
+                        By: {kot.waiterName} ({kot.waiterRole?.replace('_', ' ')})
                       </div>
                     </div>
                     {/* Live Timer */}
-                    <ElapsedTimer createdAt={order.createdAt} />
+                    <ElapsedTimer createdAt={kot.createdAt} />
                   </div>
 
                   {/* Order Items (Readable, large-text list for screen mounting) */}
                   <div className="flex-1 overflow-y-auto px-3 py-2.5 max-h-[300px] min-h-[160px] divide-y divide-zinc-105 dark:divide-zinc-800">
-                    {order.items.map((item) => (
-                      <div key={item.menuItem.id} className="flex items-start justify-between py-2">
+                    {kot.items.map((item) => (
+                      <div key={item.id} className="flex items-start justify-between py-2">
                         <div className="flex items-start gap-2">
-                          <span className="text-lg mt-0.5">{item.menuItem.image}</span>
+                          <span className="text-lg mt-0.5">{item.menuItem?.image || '🍽️'}</span>
                           <div>
                             <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100 leading-tight">
-                              {item.menuItem.name}
+                              {item.name}
                             </span>
-                            <span className="ml-1 text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase">
-                              [{item.menuItem.code}]
+                            <span className="ml-1 text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase font-mono">
+                              [{item.menuItem?.code || 'KOT'}]
                             </span>
                           </div>
                         </div>
@@ -232,14 +232,14 @@ export default function KitchenPage() {
                     ))}
                   </div>
 
-                  <div className="border-t border-zinc-200 dark:border-zinc-800 p-2 bg-zinc-50 dark:bg-zinc-950 rounded-b-xl">
+                  <div className="border-t border-zinc-200 dark:border-zinc-800 p-2 bg-zinc-55 dark:bg-zinc-950 rounded-b-xl">
                     {isPending ? (
                       <button
-                        onClick={() => handleUpdateStatus(order.id, 'PREPARING')}
-                        disabled={submittingOrderIds[order.id]}
+                        onClick={() => handleUpdateStatus(kot.id, 'PREPARING')}
+                        disabled={submittingKotIds[kot.id]}
                         className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 py-2.5 text-xs font-black text-white transition-all shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {submittingOrderIds[order.id] ? (
+                        {submittingKotIds[kot.id] ? (
                           <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
                         ) : (
                           <>
@@ -250,11 +250,11 @@ export default function KitchenPage() {
                       </button>
                     ) : (
                       <button
-                        onClick={() => handleUpdateStatus(order.id, 'READY')}
-                        disabled={submittingOrderIds[order.id]}
+                        onClick={() => handleUpdateStatus(kot.id, 'READY')}
+                        disabled={submittingKotIds[kot.id]}
                         className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-blue-600 py-2.5 text-xs font-black text-white hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {submittingOrderIds[order.id] ? (
+                        {submittingKotIds[kot.id] ? (
                           <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
                         ) : (
                           <>

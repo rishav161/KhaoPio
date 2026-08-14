@@ -64,3 +64,27 @@ export interface Booking {
   tableId: string;
   table?: DiningTable;
 }
+
+export interface KotItem {
+  id: string;
+  kotId: string;
+  menuItemId: string;
+  name: string;
+  quantity: number;
+  price: number;
+  menuItem?: MenuItem;
+}
+
+export interface Kot {
+  id: string;
+  kotNumber: number;
+  orderId: string;
+  status: 'PENDING' | 'PREPARING' | 'READY' | 'CANCELLED';
+  createdAt: string;
+  updatedAt: string;
+  items: KotItem[];
+  order?: Order;
+  waiterName?: string;
+  waiterRole?: string;
+  table?: DiningTable;
+}

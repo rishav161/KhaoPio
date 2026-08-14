@@ -8,8 +8,6 @@ export class OrderService {
    * and returns the order.
    */
   async createKitchenOrder(waiterId: string, payload: CreateOrderPayload): Promise<Order> {
-    const subtotal = payload.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
     // Fetch waiter's restaurantId and its default rates
     const waiter = await prisma.user.findUnique({
       where: { id: waiterId },
@@ -27,32 +25,163 @@ export class OrderService {
     const taxRate = waiter?.restaurant?.defaultTaxRate ?? 5.0;
     const serviceChargeRate = waiter?.restaurant?.defaultServiceCharge ?? 5.0;
 
-    const taxTotal = Math.round(subtotal * (taxRate / 100) * 100) / 100;
-    const serviceChargeTotal = Math.round(subtotal * (serviceChargeRate / 100) * 100) / 100;
-    const grandTotal = Math.round((subtotal + taxTotal + serviceChargeTotal) * 100) / 100;
+    let activeOrder = null;
+    if (payload.tableId) {
+      activeOrder = await prisma.order.findFirst({
+        where: {
+          tableId: payload.tableId,
+          restaurantId: waiter?.restaurantId,
+          status: {
+            notIn: ['PAID', 'CANCELLED']
+          }
+        },
+        include: {
+          items: true
+        }
+      });
+    }
 
-    const newOrder = await prisma.order.create({
-      data: {
-        status: 'KITCHEN_PENDING',
-        subtotal,
-        taxRate,
-        taxTotal,
-        serviceChargeRate,
-        serviceChargeTotal,
-        discountTotal: 0.0,
-        grandTotal,
-        waiterId,
-        restaurantId: waiter?.restaurantId,
-        tableId: payload.tableId || null,
-        items: {
-          create: payload.items.map(item => ({
+    let orderId: string;
+
+    if (activeOrder) {
+      orderId = activeOrder.id;
+
+      // Merge items
+      const mergedItemsMap = new Map<string, { id?: string; menuItemId: string; name: string; price: number; quantity: number }>();
+      
+      activeOrder.items.forEach(item => {
+        mergedItemsMap.set(item.menuItemId, {
+          id: item.id,
+          menuItemId: item.menuItemId,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity
+        });
+      });
+
+      payload.items.forEach(item => {
+        const existing = mergedItemsMap.get(item.menuItemId);
+        if (existing) {
+          existing.quantity += item.quantity;
+        } else {
+          mergedItemsMap.set(item.menuItemId, {
             menuItemId: item.menuItemId,
             name: item.name,
-            quantity: item.quantity,
-            price: item.price
-          }))
+            price: item.price,
+            quantity: item.quantity
+          });
         }
-      },
+      });
+
+      const subtotal = Array.from(mergedItemsMap.values()).reduce((sum, item) => sum + item.price * item.quantity, 0);
+      const taxTotal = Math.round(subtotal * (taxRate / 100) * 100) / 100;
+      const serviceChargeTotal = Math.round(subtotal * (serviceChargeRate / 100) * 100) / 100;
+      const grandTotal = Math.round((subtotal + taxTotal + serviceChargeTotal) * 100) / 100;
+
+      // Update OrderItems in database inside transaction
+      await prisma.$transaction(
+        Array.from(mergedItemsMap.values()).map(item => {
+          if (item.id) {
+            return prisma.orderItem.update({
+              where: { id: item.id },
+              data: { quantity: item.quantity }
+            });
+          } else {
+            return prisma.orderItem.create({
+              data: {
+                orderId,
+                menuItemId: item.menuItemId,
+                name: item.name,
+                quantity: item.quantity,
+                price: item.price
+              }
+            });
+          }
+        })
+      );
+
+      // Create KOT for the new items in payload
+      await prisma.kot.create({
+        data: {
+          orderId,
+          status: 'PENDING',
+          items: {
+            create: payload.items.map(item => ({
+              menuItemId: item.menuItemId,
+              name: item.name,
+              quantity: item.quantity,
+              price: item.price
+            }))
+          }
+        }
+      });
+
+      // Update Order totals and status back to KITCHEN_PENDING
+      await prisma.order.update({
+        where: { id: orderId },
+        data: {
+          status: 'KITCHEN_PENDING',
+          subtotal,
+          taxTotal,
+          serviceChargeTotal,
+          grandTotal
+        }
+      });
+
+    } else {
+      const subtotal = payload.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      const taxTotal = Math.round(subtotal * (taxRate / 100) * 100) / 100;
+      const serviceChargeTotal = Math.round(subtotal * (serviceChargeRate / 100) * 100) / 100;
+      const grandTotal = Math.round((subtotal + taxTotal + serviceChargeTotal) * 100) / 100;
+
+      const createdOrder = await prisma.order.create({
+        data: {
+          status: 'KITCHEN_PENDING',
+          subtotal,
+          taxRate,
+          taxTotal,
+          serviceChargeRate,
+          serviceChargeTotal,
+          discountTotal: 0.0,
+          grandTotal,
+          waiterId,
+          restaurantId: waiter?.restaurantId,
+          tableId: payload.tableId || null,
+          items: {
+            create: payload.items.map(item => ({
+              menuItemId: item.menuItemId,
+              name: item.name,
+              quantity: item.quantity,
+              price: item.price
+            }))
+          },
+          kots: {
+            create: {
+              status: 'PENDING',
+              items: {
+                create: payload.items.map(item => ({
+                  menuItemId: item.menuItemId,
+                  name: item.name,
+                  quantity: item.quantity,
+                  price: item.price
+                }))
+              }
+            }
+          }
+        }
+      });
+      orderId = createdOrder.id;
+
+      if (payload.tableId) {
+        await prisma.diningTable.update({
+          where: { id: payload.tableId },
+          data: { status: 'OCCUPIED' },
+        });
+      }
+    }
+
+    const newOrder = await prisma.order.findUnique({
+      where: { id: orderId },
       include: {
         items: true,
         payments: {
@@ -69,16 +198,14 @@ export class OrderService {
           include: {
             role: true
           }
+        },
+        kots: {
+          include: {
+            items: true
+          }
         }
       }
     });
-
-    if (payload.tableId) {
-      await prisma.diningTable.update({
-        where: { id: payload.tableId },
-        data: { status: 'OCCUPIED' },
-      });
-    }
 
     return newOrder as unknown as Order;
   }
@@ -152,6 +279,11 @@ export class OrderService {
           include: {
             role: true
           }
+        },
+        kots: {
+          include: {
+            items: true
+          }
         }
       },
       orderBy: {
@@ -185,6 +317,11 @@ export class OrderService {
           waiter: {
             include: {
               role: true
+            }
+          },
+          kots: {
+            include: {
+              items: true
             }
           }
         }
@@ -337,6 +474,11 @@ export class OrderService {
           waiter: {
             include: {
               role: true
+            }
+          },
+          kots: {
+            include: {
+              items: true
             }
           }
         }

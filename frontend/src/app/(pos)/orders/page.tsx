@@ -157,7 +157,7 @@ export default function OrdersPage() {
         >
           <option value="">Takeaway / No Table</option>
           {tables.map(t => (
-            <option key={t.id} value={t.id} disabled={t.status === 'OCCUPIED'}>
+            <option key={t.id} value={t.id}>
               {t.name} ({t.capacity} seats){t.status === 'OCCUPIED' ? ' — Occupied' : t.status === 'RESERVED' ? ' — Reserved' : ''}
             </option>
           ))}

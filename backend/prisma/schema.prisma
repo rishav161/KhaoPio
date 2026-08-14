@@ -167,6 +167,7 @@ model Order {
   createdAt           DateTime    @default(now())
   updatedAt           DateTime    @updatedAt
   items               OrderItem[]
+  kots                Kot[]
 }
 
 model OrderItem {
@@ -334,5 +335,33 @@ model HelpArticle {
   order      Int          @default(0)
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
+}
+
+enum KotStatus {
+  PENDING
+  PREPARING
+  READY
+  CANCELLED
+}
+
+model Kot {
+  id           String      @id @default(uuid())
+  kotNumber    Int         @default(autoincrement())
+  orderId      String
+  order        Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status       KotStatus   @default(PENDING)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  items        KotItem[]
+}
+
+model KotItem {
+  id         String   @id @default(uuid())
+  kotId      String
+  kot        Kot      @relation(fields: [kotId], references: [id], onDelete: Cascade)
+  menuItemId String
+  name       String
+  quantity   Int
+  price      Float
 }
 

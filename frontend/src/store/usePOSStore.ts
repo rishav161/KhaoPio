@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import Big from 'big.js';
-import { MenuItem, CartItem, Order, OrderTotals, DiningTable, Booking } from '@/types/pos';
+import { MenuItem, CartItem, Order, OrderTotals, DiningTable, Booking, Kot } from '@/types/pos';
 import { apiFetch } from '@/utils/api';
 
 interface POSState {
@@ -9,6 +9,7 @@ interface POSState {
   activeOrders: Order[];
   tables: DiningTable[];
   bookings: Booking[];
+  kots: Kot[];
   selectedTableId: string | null;
   
   // Actions
@@ -38,6 +39,8 @@ interface POSState {
   checkInBooking: (id: string) => Promise<void>;
   cancelBooking: (id: string) => Promise<void>;
   setSelectedTableId: (tableId: string | null) => void;
+  fetchActiveKots: () => Promise<void>;
+  updateKotStatus: (kotId: string, status: Kot['status']) => Promise<void>;
 }
 
 export const usePOSStore = create<POSState>((set, get) => ({
@@ -46,6 +49,7 @@ export const usePOSStore = create<POSState>((set, get) => ({
   activeOrders: [],
   tables: [],
   bookings: [],
+  kots: [],
   selectedTableId: null,
 
   // 1. Fetch menu categories and items from backend
@@ -339,5 +343,61 @@ export const usePOSStore = create<POSState>((set, get) => ({
 
   setSelectedTableId: (selectedTableId: string | null) => {
     set({ selectedTableId });
+  },
+
+  fetchActiveKots: async () => {
+    try {
+      const kots = await apiFetch<any[]>('/kots/active');
+      const mappedKots: Kot[] = kots.map((kot) => {
+        const items = kot.items.map((dbItem: any) => {
+          const localMenuItem = get().menuItems.find((mi) => mi.id === dbItem.menuItemId) || {
+            id: dbItem.menuItemId,
+            name: dbItem.name,
+            price: dbItem.price,
+            category: 'Other',
+            image: '🍽️',
+            code: 'KOT',
+            isAvailable: true,
+          };
+          return {
+            id: dbItem.id,
+            kotId: dbItem.kotId,
+            menuItemId: dbItem.menuItemId,
+            name: dbItem.name,
+            quantity: dbItem.quantity,
+            price: dbItem.price,
+            menuItem: localMenuItem,
+          };
+        });
+
+        return {
+          id: kot.id,
+          kotNumber: kot.kotNumber,
+          orderId: kot.orderId,
+          status: kot.status,
+          createdAt: kot.createdAt,
+          updatedAt: kot.updatedAt,
+          items,
+          waiterName: kot.order?.waiter?.name || 'N/A',
+          waiterRole: kot.order?.waiter?.role?.name || 'N/A',
+          table: kot.order?.table || null,
+        };
+      });
+      set({ kots: mappedKots });
+    } catch (error) {
+      console.error('Error fetching active KOTs:', error);
+    }
+  },
+
+  updateKotStatus: async (kotId: string, status: Kot['status']) => {
+    try {
+      await apiFetch(`/kots/${kotId}/status`, {
+        method: 'PATCH',
+        body: { status },
+      });
+      await get().fetchActiveKots();
+    } catch (error) {
+      console.error(`Error updating status for KOT ${kotId}:`, error);
+    }
   },
 }));

@@ -66,6 +66,7 @@ export interface Order {
   createdAt: Date;
   updatedAt: Date;
   items: OrderItem[];
+  kots?: Kot[];
 }
 
 export type TableStatus = 'AVAILABLE' | 'OCCUPIED' | 'RESERVED';
@@ -97,6 +98,27 @@ export interface Booking {
 export interface CreateOrderPayload {
   items: Omit<OrderItem, 'id' | 'orderId'>[];
   tableId?: string;
+}
+
+export type KotStatus = 'PENDING' | 'PREPARING' | 'READY' | 'CANCELLED';
+
+export interface KotItem {
+  id: string;
+  kotId: string;
+  menuItemId: string;
+  name: string;
+  quantity: number;
+  price: number;
+}
+
+export interface Kot {
+  id: string;
+  kotNumber: number;
+  orderId: string;
+  status: KotStatus;
+  createdAt: Date;
+  updatedAt: Date;
+  items: KotItem[];
 }
 
 
