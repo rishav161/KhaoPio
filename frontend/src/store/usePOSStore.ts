@@ -212,8 +212,8 @@ export const usePOSStore = create<POSState>((set, get) => ({
       // Clear local cart
       set({ cartItems: [], selectedTableId: null });
 
-      // Refresh order queues
-      await get().fetchActiveOrders();
+      // Refresh order queues and KOTs so sidebar badge updates immediately
+      await Promise.all([get().fetchActiveOrders(), get().fetchActiveKots()]);
     } catch (error) {
       console.error('Error dispatching KOT order:', error);
       throw error;
@@ -395,7 +395,7 @@ export const usePOSStore = create<POSState>((set, get) => ({
         method: 'PATCH',
         body: { status },
       });
-      await get().fetchActiveKots();
+      await Promise.all([get().fetchActiveKots(), get().fetchActiveOrders()]);
     } catch (error) {
       console.error(`Error updating status for KOT ${kotId}:`, error);
     }

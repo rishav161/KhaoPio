@@ -22,6 +22,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
   
   // Zustand Store States
   const activeOrders = usePOSStore((state) => state.activeOrders);
+  const kots = usePOSStore((state) => state.kots);
   const { user, token, sidebarItems, setSidebarItems, logout } = useAuthStore();
   
   // Settings dropdown state
@@ -86,6 +87,16 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Poll KOTs every 10s so the kitchen sidebar badge stays accurate on any page
+  // (fetchActiveOrders is intentionally excluded — each page polls it with its own includePaid param,
+  //  and calling it here without includePaid would wipe PAID orders from the store and cause flicker)
+  useEffect(() => {
+    if (!isMounted || !token) return;
+    usePOSStore.getState().fetchActiveKots();
+    const interval = setInterval(() => usePOSStore.getState().fetchActiveKots(), 10000);
+    return () => clearInterval(interval);
+  }, [isMounted, token]);
+
   // Real-time clock for POS header
   const [time, setTime] = useState('');
   useEffect(() => {
@@ -97,8 +108,8 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Compute order counts for sidebar badges
-  const kdsCount = activeOrders.filter(
-    (o) => o.status === 'KITCHEN_PENDING' || o.status === 'PREPARING'
+  const kdsCount = kots.filter(
+    (k) => k.status === 'PENDING' || k.status === 'PREPARING'
   ).length;
   
   const readyCount = activeOrders.filter((o) => o.status === 'READY').length;

@@ -336,9 +336,25 @@ export default function OrdersPage() {
                     </div>
                     <div className={`flex items-center justify-between px-2.5 py-2.5 border-t transition-colors ${inCart ? 'border-orange-200 dark:border-orange-900/40 bg-orange-500/10' : 'border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/20'}`}>
                       <span className="text-sm font-black text-zinc-900 dark:text-zinc-100">{currencySymbol}{item.price.toFixed(2)}</span>
-                      <span className={`flex items-center gap-0.5 rounded-lg px-2.5 py-1.5 text-[10px] font-black transition-colors ${inCart ? 'bg-orange-500 text-white' : 'bg-zinc-900 dark:bg-zinc-700 text-white group-hover:bg-orange-500'}`}>
-                        <Plus className="h-3 w-3" />ADD
-                      </span>
+                      {inCart ? (
+                        <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                          <button
+                            onClick={() => qty === 1 ? removeFromCart(item.id) : updateCartQuantity(item.id, -1)}
+                            className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-500 hover:bg-orange-600 active:scale-[0.92] text-white transition-all cursor-pointer">
+                            <Minus className="h-3 w-3" />
+                          </button>
+                          <span className="w-5 text-center text-xs font-black text-zinc-900 dark:text-zinc-100">{qty}</span>
+                          <button
+                            onClick={() => handleAddToCart(item)}
+                            className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-500 hover:bg-orange-600 active:scale-[0.92] text-white transition-all cursor-pointer">
+                            <Plus className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="flex items-center gap-0.5 rounded-lg px-2.5 py-1.5 text-[10px] font-black transition-colors bg-zinc-900 dark:bg-zinc-700 text-white group-hover:bg-orange-500">
+                          <Plus className="h-3 w-3" />ADD
+                        </span>
+                      )}
                     </div>
                   </div>
                 );
