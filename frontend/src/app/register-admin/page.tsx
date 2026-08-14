@@ -255,7 +255,7 @@ export default function RegisterAdmin() {
                 <label className="block text-sm font-medium text-zinc-700 mb-1.5">Email</label>
                 <input type="email" placeholder="admin@yourrestaurant.com" value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className={inputClass} required />
+                  autoComplete="off" className={inputClass} required />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -263,7 +263,7 @@ export default function RegisterAdmin() {
                   <div className="relative">
                     <input type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={form.password}
                       onChange={(e) => setForm({ ...form, password: e.target.value })}
-                      className={inputClass} required />
+                      autoComplete="new-password" className={inputClass} required />
                     <button type="button" onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 cursor-pointer">
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -275,7 +275,7 @@ export default function RegisterAdmin() {
                   <div className="relative">
                     <input type={showConfirmPassword ? 'text' : 'password'} placeholder="••••••••" value={form.confirmPassword}
                       onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-                      className={inputClass} required />
+                      autoComplete="new-password" className={inputClass} required />
                     <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 cursor-pointer">
                       {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

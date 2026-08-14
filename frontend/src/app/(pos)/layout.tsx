@@ -168,6 +168,9 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
               <button
                 key={item.id}
                 onClick={() => {
+                  if (item.path === '/help') {
+                    sessionStorage.setItem('help_return_path', pathname);
+                  }
                   router.push(item.path);
                   setIsSidebarOpen(false);
                 }}
@@ -297,6 +300,17 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
                         <span>Coupons & Promo</span>
                       </button>
                     )}
+                    <button
+                      onClick={() => {
+                        sessionStorage.setItem('help_return_path', pathname);
+                        router.push('/help');
+                        setIsDropdownOpen(false);
+                      }}
+                      className="flex w-full items-center gap-2 px-3.5 py-2.5 text-left text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-350 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-orange-500 transition-colors cursor-pointer border-t border-zinc-100 dark:border-zinc-800"
+                    >
+                      <LucideIcons.CircleHelp className="h-4 w-4" />
+                      <span>Help Center</span>
+                    </button>
                   </div>
                 </>
               )}
@@ -335,6 +349,22 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
         </main>
       </div>
       <ConfirmDialog />
+
+      {/* Floating Help Button */}
+      <button
+        onClick={() => {
+          sessionStorage.setItem('help_return_path', pathname);
+          router.push('/help');
+        }}
+        title="Help Center"
+        className={`fixed bottom-5 right-5 z-30 flex h-10 w-10 items-center justify-center rounded-full shadow-lg border transition-all duration-150 active:scale-95 cursor-pointer ${
+          pathname === '/help' || pathname.startsWith('/help/')
+            ? 'bg-orange-500 border-orange-400 text-white shadow-orange-200 dark:shadow-orange-950/50'
+            : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:border-orange-300 dark:hover:border-orange-700 hover:text-orange-500 hover:shadow-orange-100 dark:hover:shadow-orange-950/30'
+        }`}
+      >
+        <LucideIcons.CircleHelp className="h-5 w-5" />
+      </button>
     </div>
   );
 }
