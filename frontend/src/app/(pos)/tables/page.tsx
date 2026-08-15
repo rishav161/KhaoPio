@@ -368,7 +368,7 @@ export default function TablesPage() {
                   key={booking.id}
                   className={`flex flex-col border p-3 rounded-lg transition-all ${
                     isCheckedOut
-                      ? 'border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 opacity-60'
+                      ? 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 border-dashed'
                       : 'border-zinc-200 dark:border-zinc-805 bg-white dark:bg-zinc-900 shadow-xs hover:shadow-sm'
                   }`}
                 >
