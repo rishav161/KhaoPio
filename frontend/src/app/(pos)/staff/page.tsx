@@ -258,30 +258,32 @@ export default function StaffManagement() {
   return (
     <div className="flex h-full flex-col overflow-hidden bg-zinc-50 dark:bg-zinc-950 p-4 transition-colors">
       {/* Title Header */}
-      <div className="mb-4 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 flex items-center gap-2">
-            <Users className="h-6 w-6 text-orange-500" />
-            <span>Staff Administration</span>
-          </h1>
-          <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-            Provision roles, manage active terminal accounts, and dispatch security invitations.
-          </p>
+      <div className="mb-4 rounded-xl bg-gradient-to-r from-orange-500 to-orange-400 p-4 shadow-md">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
+              <Users className="h-6 w-6 text-white" />
+              <span>Staff Administration</span>
+            </h1>
+            <p className="text-xs font-semibold text-orange-100">
+              Provision roles, manage active terminal accounts, and dispatch security invitations.
+            </p>
+          </div>
+          {canInvite && (
+            <button
+              onClick={() => {
+                setErrorMsg('');
+                setSuccessMsg('');
+                setGeneratedInviteLink('');
+                setIsInviteOpen(true);
+              }}
+              className="flex items-center gap-1.5 self-start rounded-lg bg-white text-orange-600 px-4 py-2.5 text-xs font-black uppercase tracking-wider shadow-md transition-all cursor-pointer hover:bg-orange-50 active:scale-95"
+            >
+              <UserPlus className="h-4.5 w-4.5" />
+              <span>Invite Staff Member</span>
+            </button>
+          )}
         </div>
-        {canInvite && (
-          <button
-            onClick={() => {
-              setErrorMsg('');
-              setSuccessMsg('');
-              setGeneratedInviteLink('');
-              setIsInviteOpen(true);
-            }}
-            className="flex items-center gap-1.5 self-start rounded-lg bg-orange-500 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-md shadow-orange-100 dark:shadow-none transition-all cursor-pointer hover:bg-orange-600 active:scale-95"
-          >
-            <UserPlus className="h-4.5 w-4.5" />
-            <span>Invite Staff Member</span>
-          </button>
-        )}
       </div>
 
       {/* Banners */}

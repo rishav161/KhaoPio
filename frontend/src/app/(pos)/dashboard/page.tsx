@@ -127,31 +127,37 @@ export default function Dashboard() {
   return (
     <div className="flex h-full flex-col gap-4 overflow-y-auto bg-zinc-50 dark:bg-zinc-950 p-1 pr-2">
 
-      {/* ── Header + Filter toolbar ── */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex-1 min-w-0">
-          <h1 className="flex items-center gap-2 text-lg font-black text-zinc-900 dark:text-zinc-50">
-            <TrendingUp className="h-5 w-5 text-orange-500 shrink-0" />
-            Dashboard
-          </h1>
-        </div>
+      {/* ── Header ── */}
+      <div className="rounded-xl bg-gradient-to-r from-orange-500 to-orange-400 p-4 shadow-md">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="flex items-center gap-2 text-xl font-black text-white">
+              <TrendingUp className="h-5 w-5 text-white shrink-0" />
+              Dashboard
+            </h1>
+            <p className="text-xs font-semibold text-orange-100 mt-0.5">Track revenue, orders, and real-time kitchen activity</p>
+          </div>
 
-        {/* Preset pills */}
-        <div className="flex items-center gap-1.5">
-          {PRESETS.map(p => (
-            <button key={p.key} onClick={() => applyPreset(p.key)}
-              className={`rounded-lg px-3 py-1.5 text-[11px] font-black transition-all cursor-pointer ${
-                activePreset === p.key
-                  ? 'bg-orange-500 text-white shadow-sm shadow-orange-200'
-                  : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-orange-300 hover:text-orange-500'
-              }`}>
-              {p.label}
-            </button>
-          ))}
+          {/* Preset pills */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {PRESETS.map(p => (
+              <button key={p.key} onClick={() => applyPreset(p.key)}
+                className={`rounded-lg px-3 py-1.5 text-[11px] font-black transition-all cursor-pointer ${
+                  activePreset === p.key
+                    ? 'bg-white text-orange-600 shadow-sm'
+                    : 'bg-white/20 text-white hover:bg-white/30'
+                }`}>
+                {p.label}
+              </button>
+            ))}
+          </div>
         </div>
+      </div>
 
+      {/* ── Filter toolbar ── */}
+      <div className="flex flex-wrap items-center gap-2">
         {/* Custom date range */}
-        <form onSubmit={handleApplyFilters} className="flex items-center gap-2">
+        <form onSubmit={handleApplyFilters} className="flex items-center gap-2 flex-wrap">
           <input type="date" value={startDate} onChange={e => { setStartDate(e.target.value); setActivePreset(''); }}
             className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 py-1.5 text-[11px] font-bold text-zinc-700 dark:text-zinc-300 outline-none focus:border-orange-400 cursor-pointer" />
           <span className="text-xs text-zinc-400">→</span>

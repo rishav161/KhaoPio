@@ -266,6 +266,13 @@ export default function OrdersPage() {
       {/* ── Menu panel (full width on mobile, flex-1 on desktop) ── */}
       <div className="flex flex-1 flex-col overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm min-w-0">
 
+        {/* Menu header */}
+        <div className="flex items-center gap-2 border-b border-orange-600 bg-gradient-to-r from-orange-500 to-orange-400 px-3 py-2.5">
+          <Soup className="h-4 w-4 text-white" />
+          <h2 className="text-xs font-black uppercase tracking-wider text-white">Menu</h2>
+          <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-black text-white">{filteredMenuItems.length} items</span>
+        </div>
+
         {/* Search bar */}
         <div className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2.5">
           <div className="relative">
@@ -336,9 +343,25 @@ export default function OrdersPage() {
                     </div>
                     <div className={`flex items-center justify-between px-2.5 py-2.5 border-t transition-colors ${inCart ? 'border-orange-200 dark:border-orange-900/40 bg-orange-500/10' : 'border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/20'}`}>
                       <span className="text-sm font-black text-zinc-900 dark:text-zinc-100">{currencySymbol}{item.price.toFixed(2)}</span>
-                      <span className={`flex items-center gap-0.5 rounded-lg px-2.5 py-1.5 text-[10px] font-black transition-colors ${inCart ? 'bg-orange-500 text-white' : 'bg-zinc-900 dark:bg-zinc-700 text-white group-hover:bg-orange-500'}`}>
-                        <Plus className="h-3 w-3" />ADD
-                      </span>
+                      {inCart ? (
+                        <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                          <button
+                            onClick={() => qty === 1 ? removeFromCart(item.id) : updateCartQuantity(item.id, -1)}
+                            className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-500 hover:bg-orange-600 active:scale-[0.92] text-white transition-all cursor-pointer">
+                            <Minus className="h-3 w-3" />
+                          </button>
+                          <span className="w-5 text-center text-xs font-black text-zinc-900 dark:text-zinc-100">{qty}</span>
+                          <button
+                            onClick={() => handleAddToCart(item)}
+                            className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-500 hover:bg-orange-600 active:scale-[0.92] text-white transition-all cursor-pointer">
+                            <Plus className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="flex items-center gap-0.5 rounded-lg px-2.5 py-1.5 text-[10px] font-black transition-colors bg-zinc-900 dark:bg-zinc-700 text-white group-hover:bg-orange-500">
+                          <Plus className="h-3 w-3" />ADD
+                        </span>
+                      )}
                     </div>
                   </div>
                 );
@@ -350,14 +373,14 @@ export default function OrdersPage() {
 
       {/* ── DESKTOP: Cart sidebar (lg+) ── */}
       <div className="hidden lg:flex w-[300px] xl:w-[320px] shrink-0 flex-col rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2.5">
+        <div className="flex items-center justify-between border-b border-zinc-800 bg-gradient-to-r from-zinc-900 to-zinc-700 px-3 py-2.5">
           <div className="flex items-center gap-2">
-            <ShoppingCart className="h-4 w-4 text-orange-500" />
-            <span className="text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Order</span>
+            <ShoppingCart className="h-4 w-4 text-orange-400" />
+            <span className="text-xs font-black uppercase tracking-wider text-white">Order</span>
             {cartItemCount > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-black text-white">{cartItemCount}</span>}
           </div>
           {cartItems.length > 0 && (
-            <button onClick={clearCart} className="flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-black text-red-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/20 transition-colors cursor-pointer">
+            <button onClick={clearCart} className="flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-black text-red-300 hover:bg-white/10 transition-colors cursor-pointer">
               <Trash2 className="h-3 w-3" />CLEAR
             </button>
           )}

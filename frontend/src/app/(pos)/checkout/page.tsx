@@ -76,6 +76,7 @@ export default function CheckoutPage() {
       setLocalPayments([]);
       setCouponError('');
       setCouponSuccess('');
+      setShowMobileReceipt(false);
       const alreadyPaid = selectedOrderForBill.payments?.reduce((s, p) => s + p.amount, 0) || 0;
       const rem = Math.max(0, parseFloat(selectedOrderForBill.totals.total) - alreadyPaid);
       setPaymentAmountInput(rem > 0 ? rem.toFixed(2) : '');
@@ -175,6 +176,8 @@ export default function CheckoutPage() {
     setTimeout(cleanup, 3000);
   };
 
+  const [showMobileReceipt, setShowMobileReceipt] = useState(false);
+
   const checkoutButtonText = useMemo(() => {
     if (payingOrderId !== null) return 'SAVING...';
     if (localPayments.length === 0) return remainingBalance > 0 ? `CHARGE ${currencySymbol}${remainingBalance.toFixed(2)} (${paymentMethodInput})` : 'SAVE CHANGES';
@@ -206,10 +209,10 @@ export default function CheckoutPage() {
 
       {/* ── LEFT: Ready for checkout ── */}
       <div className="flex w-full lg:w-[55%] flex-col rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm overflow-hidden shrink-0">
-        <div className="flex items-center gap-2.5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-4 py-3">
-          <ShoppingBag className="h-4 w-4 text-orange-500" />
-          <h2 className="text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Ready for Checkout</h2>
-          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-black text-white">{readyOrders.length}</span>
+        <div className="flex items-center gap-2.5 border-b border-orange-600 bg-gradient-to-r from-orange-500 to-orange-400 px-4 py-3">
+          <ShoppingBag className="h-4 w-4 text-white" />
+          <h2 className="text-xs font-black uppercase tracking-wider text-white">Ready for Checkout</h2>
+          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-white/20 px-1 text-[10px] font-black text-white">{readyOrders.length}</span>
         </div>
 
         <div className="relative flex-1 overflow-y-auto p-3 space-y-2.5">
@@ -283,16 +286,16 @@ export default function CheckoutPage() {
 
       {/* ── RIGHT: Completed orders ── */}
       <div className="flex w-full lg:w-[45%] flex-col rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm overflow-hidden shrink-0">
-        <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-4 py-3">
+        <div className="flex items-center justify-between border-b border-zinc-800 bg-gradient-to-r from-zinc-900 to-zinc-700 px-4 py-3">
           <div className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4 text-emerald-500" />
-            <h2 className="text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Completed</h2>
-            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-black text-white">{completedOrders.length}</span>
+            <CheckCircle className="h-4 w-4 text-emerald-400" />
+            <h2 className="text-xs font-black uppercase tracking-wider text-white">Completed</h2>
+            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-white/15 px-1 text-[10px] font-black text-white">{completedOrders.length}</span>
           </div>
           <select
             value={completedFilter}
             onChange={(e) => setCompletedFilter(e.target.value as any)}
-            className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2 py-1 text-[10px] font-black outline-none focus:border-orange-400 cursor-pointer text-zinc-700 dark:text-zinc-300"
+            className="rounded-lg border border-zinc-600 bg-zinc-800 px-2 py-1 text-[10px] font-black outline-none focus:border-orange-400 cursor-pointer text-zinc-100"
           >
             <option value="today">Today</option>
             <option value="yesterday">Yesterday</option>
@@ -359,15 +362,14 @@ export default function CheckoutPage() {
             </div>
 
             {/* Modal body */}
-            <div className="flex-1 overflow-hidden">
-              <div className="flex h-full flex-col md:flex-row">
+            <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
 
                 {/* ── LEFT PANEL: Payment editor (only for non-paid orders) ── */}
                 {selectedOrderForBill.status !== 'PAID' && (
-                  <div className="w-full md:w-[340px] shrink-0 flex flex-col border-b md:border-b-0 md:border-r border-zinc-200 dark:border-zinc-800 overflow-y-auto">
+                  <div className="flex-1 md:flex-none md:w-[340px] flex flex-col border-b md:border-b-0 md:border-r border-zinc-200 dark:border-zinc-800 overflow-hidden">
 
                     {/* Balance summary — TOP of panel, always visible */}
-                    <div className="bg-zinc-900 dark:bg-zinc-950 px-4 py-4 space-y-2">
+                    <div className="bg-zinc-900 dark:bg-zinc-950 px-4 py-4 space-y-2 shrink-0">
                       <div className="flex justify-between text-[10px] font-bold text-zinc-400">
                         <span>Grand Total</span>
                         <span className="text-white font-black">{currencySymbol}{selectedOrderForBill.totals.total}</span>
@@ -479,7 +481,13 @@ export default function CheckoutPage() {
                     </div>
 
                     {/* Finalize button — sticky at bottom of left panel */}
-                    <div className="border-t border-zinc-200 dark:border-zinc-800 p-3">
+                    <div className="border-t border-zinc-200 dark:border-zinc-800 p-3 shrink-0 space-y-2">
+                      <button
+                        onClick={() => setShowMobileReceipt(v => !v)}
+                        className="md:hidden w-full rounded-xl border border-zinc-200 dark:border-zinc-800 py-2 text-[11px] font-black text-zinc-500 dark:text-zinc-400 hover:border-orange-300 hover:text-orange-500 transition-all cursor-pointer flex items-center justify-center gap-1.5">
+                        <Receipt className="h-3.5 w-3.5" />
+                        {showMobileReceipt ? 'HIDE RECEIPT' : 'VIEW RECEIPT'}
+                      </button>
                       <button onClick={handleFinalizeCheckout} disabled={payingOrderId !== null}
                         className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] py-3.5 text-xs font-black text-white transition-all shadow-md shadow-emerald-200 dark:shadow-none disabled:opacity-50 cursor-pointer">
                         {payingOrderId ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> : <CheckCircle className="h-4 w-4" />}
@@ -490,7 +498,7 @@ export default function CheckoutPage() {
                 )}
 
                 {/* ── RIGHT PANEL: Thermal receipt preview ── */}
-                <div className="flex-1 overflow-y-auto bg-zinc-100 dark:bg-zinc-950/60 p-4 flex justify-center">
+                <div className={`flex-1 overflow-y-auto bg-zinc-100 dark:bg-zinc-950/60 p-4 justify-center md:flex ${showMobileReceipt ? 'flex' : 'hidden'}`}>
                   <div
                     id="thermal-receipt-print-area"
                     className="w-full max-w-[80mm] bg-white border border-zinc-300 shadow-sm p-4 text-zinc-950 font-mono text-[11px] leading-relaxed"
@@ -613,7 +621,6 @@ export default function CheckoutPage() {
                   </div>
                 </div>
 
-              </div>
             </div>
 
             {/* Modal footer */}

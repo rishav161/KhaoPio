@@ -34,6 +34,7 @@ interface POSState {
   fetchTables: () => Promise<void>;
   createTable: (name: string, capacity: number) => Promise<void>;
   deleteTable: (id: string) => Promise<void>;
+  freeTable: (id: string) => Promise<void>;
   fetchBookings: () => Promise<void>;
   createBooking: (payload: { customerName: string; customerPhone?: string; bookingTime: string; guestsCount: number; tableId: string }) => Promise<void>;
   checkInBooking: (id: string) => Promise<void>;
@@ -212,8 +213,8 @@ export const usePOSStore = create<POSState>((set, get) => ({
       // Clear local cart
       set({ cartItems: [], selectedTableId: null });
 
-      // Refresh order queues
-      await get().fetchActiveOrders();
+      // Refresh order queues and KOTs so sidebar badge updates immediately
+      await Promise.all([get().fetchActiveOrders(), get().fetchActiveKots()]);
     } catch (error) {
       console.error('Error dispatching KOT order:', error);
       throw error;
@@ -251,7 +252,7 @@ export const usePOSStore = create<POSState>((set, get) => ({
         body: paymentPayload,
       });
 
-      await get().fetchActiveOrders(true);
+      await Promise.all([get().fetchActiveOrders(true), get().fetchTables()]);
     } catch (error) {
       console.error(`Error completing payment for order ${orderId}:`, error);
     }
@@ -288,6 +289,18 @@ export const usePOSStore = create<POSState>((set, get) => ({
       await get().fetchTables();
     } catch (error) {
       console.error('Error deleting dining table:', error);
+      throw error;
+    }
+  },
+
+  freeTable: async (id: string) => {
+    try {
+      await apiFetch(`/tables/${id}/free`, {
+        method: 'PATCH',
+      });
+      await get().fetchTables();
+    } catch (error) {
+      console.error('Error freeing dining table:', error);
       throw error;
     }
   },
@@ -395,7 +408,7 @@ export const usePOSStore = create<POSState>((set, get) => ({
         method: 'PATCH',
         body: { status },
       });
-      await get().fetchActiveKots();
+      await Promise.all([get().fetchActiveKots(), get().fetchActiveOrders()]);
     } catch (error) {
       console.error(`Error updating status for KOT ${kotId}:`, error);
     }

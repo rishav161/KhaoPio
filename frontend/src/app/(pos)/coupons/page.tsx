@@ -182,21 +182,21 @@ export default function CouponsPage() {
 
   return (
     <div className="h-full w-full overflow-y-auto pb-8 pr-1 relative">
-      <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3.5 mb-6">
-        <div className="flex items-center gap-2">
-          <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-orange-50 dark:bg-orange-950/20 text-orange-500">
+      <div className="flex items-center justify-between rounded-xl bg-gradient-to-r from-orange-500 to-orange-400 p-4 mb-6 shadow-md">
+        <div className="flex items-center gap-3">
+          <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 text-white">
             <Ticket className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-base font-black uppercase tracking-wider text-zinc-900 dark:text-zinc-50">Coupons & Promo Codes</h1>
-            <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">Manage custom restaurant discounts, flat and percentage rates</p>
+            <h1 className="text-base font-black uppercase tracking-wider text-white">Coupons & Promo Codes</h1>
+            <p className="text-[10px] font-bold text-orange-100 uppercase tracking-wide">Manage custom restaurant discounts, flat and percentage rates</p>
           </div>
         </div>
 
         {user?.role === 'SUPER_ADMIN' && (
           <button
             onClick={() => setIsDrawerOpen(true)}
-            className="flex items-center gap-1.5 cursor-pointer rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-black px-4 py-2.5 text-[10px] uppercase shadow-sm tracking-wide transition-all active:scale-[0.98]"
+            className="flex items-center gap-1.5 cursor-pointer rounded-lg bg-white text-orange-600 hover:bg-orange-50 font-black px-4 py-2.5 text-[10px] uppercase shadow-sm tracking-wide transition-all active:scale-[0.98]"
           >
             <Plus className="h-4 w-4" />
             <span>Create Coupon</span>
@@ -234,14 +234,14 @@ export default function CouponsPage() {
             const statusLabel = isExpired ? 'Expired' : coupon.isActive ? 'Active' : 'Deactivated';
 
             return (
-              <div 
-                key={coupon.id} 
-                className={`relative flex flex-col justify-between rounded-xl border p-4.5 bg-white dark:bg-zinc-900 shadow-xs transition-all ${
-                  isExpired 
-                    ? 'border-zinc-200 dark:border-zinc-850 opacity-60'
+              <div
+                key={coupon.id}
+                className={`relative flex flex-col justify-between rounded-xl border p-4 shadow-sm transition-all ${
+                  isExpired
+                    ? 'border-zinc-200 dark:border-zinc-800 opacity-60 bg-zinc-50 dark:bg-zinc-900'
                     : coupon.isActive
-                      ? 'border-zinc-200 dark:border-zinc-800 hover:border-orange-300 dark:hover:border-orange-800'
-                      : 'border-zinc-200 dark:border-zinc-850 bg-zinc-50/50 dark:bg-zinc-900/50'
+                      ? 'border-orange-200 dark:border-orange-900/40 bg-orange-50/40 dark:bg-orange-950/10 hover:border-orange-300 dark:hover:border-orange-800'
+                      : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50'
                 }`}
               >
                 {/* Details */}

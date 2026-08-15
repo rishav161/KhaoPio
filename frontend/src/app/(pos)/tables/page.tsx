@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { usePOSStore } from '@/store/usePOSStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Loader } from '@/components/Loader';
-import { Plus, Trash2, CalendarDays, Users, Check, X, Armchair, PlusCircle, Clock, Sparkles } from 'lucide-react';
+import { Plus, Trash2, CalendarDays, Users, Check, X, Armchair, PlusCircle, Clock, Sparkles, Unlock } from 'lucide-react';
 import { useConfirmStore } from '@/store/useConfirmStore';
 
 export default function TablesPage() {
@@ -15,6 +15,7 @@ export default function TablesPage() {
     fetchBookings,
     createTable,
     deleteTable,
+    freeTable,
     createBooking,
     checkInBooking,
     cancelBooking,
@@ -185,6 +186,22 @@ export default function TablesPage() {
     });
   };
 
+  const handleFreeTable = (tableId: string, tableName: string) => {
+    confirm({
+      title: 'Free Table',
+      message: `Mark "${tableName}" as available? Do this only if the guests have left and the table is clear.`,
+      type: 'warning',
+      confirmText: 'Free Table',
+      onConfirm: async () => {
+        try {
+          await freeTable(tableId);
+        } catch (err: any) {
+          showAlert('Error', err.message || 'Failed to free table.', 'danger');
+        }
+      }
+    });
+  };
+
   if (loading && tables.length === 0) {
     return (
       <Loader
@@ -200,19 +217,19 @@ export default function TablesPage() {
       
       {/* LEFT COLUMN: Tables Dashboard Grid (65% width) */}
       <div className="flex w-full lg:w-[65%] flex-col border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-xl shadow-sm overflow-hidden shrink-0">
-        
+
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-955 p-3">
+        <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-gradient-to-r from-orange-500 to-orange-400 px-4 py-3">
           <div className="flex items-center gap-2">
-            <Armchair className="h-5 w-5 text-orange-500" />
-            <h1 className="text-xs sm:text-sm font-black uppercase tracking-wider text-zinc-855 dark:text-zinc-100">
-              Dining Tables Setup
+            <Armchair className="h-5 w-5 text-white" />
+            <h1 className="text-xs sm:text-sm font-black uppercase tracking-wider text-white">
+              Dining Tables
             </h1>
           </div>
           {user?.role === 'SUPER_ADMIN' || user?.role === 'STORE_MANAGER' ? (
             <button
               onClick={() => setIsAddTableOpen(true)}
-              className="flex items-center gap-1 rounded bg-orange-500 hover:bg-orange-600 text-white font-black py-1.5 px-3 text-[10px] uppercase shadow-sm tracking-wide transition-all cursor-pointer"
+              className="flex items-center gap-1 rounded-lg bg-white/20 hover:bg-white/30 text-white font-black py-1.5 px-3 text-[10px] uppercase tracking-wide transition-all cursor-pointer border border-white/30"
             >
               <Plus className="h-3.5 w-3.5" />
               Add Table
@@ -221,29 +238,29 @@ export default function TablesPage() {
         </div>
 
         {/* Stats Summary Bar */}
-        <div className="grid grid-cols-4 gap-2 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/20 px-4 py-2.5">
-          <div className="text-center">
-            <div className="text-[10px] font-black text-zinc-400 uppercase">Total</div>
-            <div className="text-base font-black text-zinc-800 dark:text-zinc-100">{stats.total}</div>
+        <div className="grid grid-cols-4 divide-x divide-zinc-100 dark:divide-zinc-800 border-b border-zinc-200 dark:border-zinc-800">
+          <div className="flex flex-col items-center py-3 px-2 bg-zinc-50 dark:bg-zinc-950">
+            <div className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-0.5">Total</div>
+            <div className="text-2xl font-black text-zinc-700 dark:text-zinc-200 leading-none">{stats.total}</div>
           </div>
-          <div className="text-center">
-            <div className="text-[10px] font-black text-emerald-500 uppercase">Available</div>
-            <div className="text-base font-black text-emerald-600 dark:text-emerald-500">{stats.available}</div>
+          <div className="flex flex-col items-center py-3 px-2 bg-emerald-50 dark:bg-emerald-950/30">
+            <div className="text-[9px] font-black text-emerald-500 uppercase tracking-widest mb-0.5">Free</div>
+            <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 leading-none">{stats.available}</div>
           </div>
-          <div className="text-center">
-            <div className="text-[10px] font-black text-red-500 uppercase">Occupied</div>
-            <div className="text-base font-black text-red-500">{stats.occupied}</div>
+          <div className="flex flex-col items-center py-3 px-2 bg-red-50 dark:bg-red-950/30">
+            <div className="text-[9px] font-black text-red-500 uppercase tracking-widest mb-0.5">Busy</div>
+            <div className="text-2xl font-black text-red-500 leading-none">{stats.occupied}</div>
           </div>
-          <div className="text-center">
-            <div className="text-[10px] font-black text-amber-500 uppercase">Reserved</div>
-            <div className="text-base font-black text-amber-600 dark:text-amber-500">{stats.reserved}</div>
+          <div className="flex flex-col items-center py-3 px-2 bg-amber-50 dark:bg-amber-950/30">
+            <div className="text-[9px] font-black text-amber-500 uppercase tracking-widest mb-0.5">Reserved</div>
+            <div className="text-2xl font-black text-amber-600 dark:text-amber-400 leading-none">{stats.reserved}</div>
           </div>
         </div>
 
         {/* Grid View */}
-        <div className="flex-1 overflow-y-auto p-4 bg-zinc-50/30">
+        <div className="flex-1 overflow-y-auto p-4 bg-zinc-50 dark:bg-zinc-950/40">
           {tables.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center text-zinc-400 p-8 text-center bg-white dark:bg-zinc-905 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800">
+            <div className="flex h-full flex-col items-center justify-center text-zinc-400 p-8 text-center bg-white dark:bg-zinc-900 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800">
               <Armchair className="h-12 w-12 stroke-[1.2] text-zinc-300 mb-2 animate-bounce" />
               <p className="text-xs font-black text-zinc-500 dark:text-zinc-400">No dining tables configured</p>
               <p className="text-[10px] text-zinc-400 mt-1 max-w-[220px]">
@@ -260,59 +277,80 @@ export default function TablesPage() {
                 return (
                   <div
                     key={table.id}
-                    className={`relative flex flex-col justify-between rounded-xl border p-3.5 bg-white dark:bg-zinc-900 shadow-xs transition-all select-none ${
+                    className={`relative flex flex-col justify-between rounded-xl border p-3.5 shadow-sm transition-all select-none ${
                       isAvailable
-                        ? 'border-emerald-200 dark:border-emerald-950/40 hover:border-emerald-400 dark:hover:border-emerald-900 hover:shadow-emerald-50/50'
+                        ? 'border-emerald-200 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-950/20 hover:shadow-md hover:shadow-emerald-100 dark:hover:shadow-none'
                         : isOccupied
-                        ? 'border-red-200 dark:border-red-955/40 hover:border-red-400'
-                        : 'border-amber-200 dark:border-amber-955/40 hover:border-amber-400'
+                        ? 'border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/20 hover:shadow-md hover:shadow-red-100 dark:hover:shadow-none'
+                        : 'border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/20 hover:shadow-md hover:shadow-amber-100 dark:hover:shadow-none'
                     }`}
                   >
-                    {/* Top Section: Status Badging & Delete */}
+                    {/* Top Section: Status Badging & Actions */}
                     <div className="flex items-center justify-between mb-2">
                       <span
                         className={`rounded-full px-2 py-0.5 text-[8px] font-black tracking-wider uppercase border ${
                           isAvailable
-                            ? 'bg-emerald-50 dark:bg-emerald-955/20 text-emerald-700 dark:text-emerald-400 border-emerald-250 dark:border-emerald-900'
+                            ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800'
                             : isOccupied
-                            ? 'bg-red-50 dark:bg-red-955/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900'
-                            : 'bg-amber-50 dark:bg-amber-955/20 text-amber-700 dark:text-amber-505 border-amber-200 dark:border-amber-900'
+                            ? 'bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 border-red-300 dark:border-red-800'
+                            : 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-800'
                         }`}
                       >
-                        {table.status}
+                        {isAvailable ? 'Available' : isOccupied ? 'Occupied' : 'Reserved'}
                       </span>
-                      {(!isOccupied && (user?.role === 'SUPER_ADMIN' || user?.role === 'STORE_MANAGER')) && (
-                        <button
-                          onClick={() => handleDeleteTable(table.id, table.name)}
-                          className="rounded-lg p-1 text-zinc-400 hover:bg-red-50 hover:text-red-500 transition-colors cursor-pointer"
-                          title="Delete Table"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      )}
+                      <div className="flex items-center gap-1">
+                        {!isOccupied && (user?.role === 'SUPER_ADMIN' || user?.role === 'STORE_MANAGER') && (
+                          <button
+                            onClick={() => handleDeleteTable(table.id, table.name)}
+                            className="rounded-lg p-1 text-zinc-400 hover:bg-white/70 hover:text-red-500 transition-colors cursor-pointer"
+                            title="Delete Table"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     {/* Middle Section: Armchair Icon & Name */}
                     <div className="flex flex-col items-center my-3 text-center">
                       <Armchair
-                        className={`h-9 w-9 mb-1.5 transition-transform duration-350 ${
+                        className={`h-10 w-10 mb-2 transition-all duration-300 ${
                           isAvailable
                             ? 'text-emerald-500'
                             : isOccupied
-                            ? 'text-red-500 scale-105 animate-pulse'
+                            ? 'text-red-400 animate-pulse'
                             : 'text-amber-500'
                         }`}
                       />
-                      <h3 className="text-xs font-black text-zinc-900 dark:text-zinc-100 uppercase tracking-tight">
+                      <h3 className={`text-sm font-black uppercase tracking-tight ${
+                        isAvailable ? 'text-emerald-800 dark:text-emerald-300'
+                        : isOccupied ? 'text-red-700 dark:text-red-300'
+                        : 'text-amber-800 dark:text-amber-300'
+                      }`}>
                         {table.name}
                       </h3>
                     </div>
 
                     {/* Bottom Section: Seating Capacity */}
-                    <div className="mt-1 flex items-center justify-center gap-1 text-[10px] font-extrabold text-zinc-400 border-t border-dashed border-zinc-150 dark:border-zinc-800 pt-2 uppercase">
+                    <div className={`mt-1 flex items-center justify-center gap-1 text-[10px] font-extrabold border-t pt-2 uppercase ${
+                      isAvailable ? 'border-emerald-200 dark:border-emerald-900/40 text-emerald-600 dark:text-emerald-500'
+                      : isOccupied ? 'border-red-200 dark:border-red-900/40 text-red-500'
+                      : 'border-amber-200 dark:border-amber-900/40 text-amber-600 dark:text-amber-500'
+                    }`}>
                       <Users className="h-3 w-3" />
-                      <span>Seats {table.capacity} max</span>
+                      <span>Seats {table.capacity}</span>
                     </div>
+
+                    {/* Free Table button — only on occupied cards for managers */}
+                    {isOccupied && (user?.role === 'SUPER_ADMIN' || user?.role === 'STORE_MANAGER') && (
+                      <button
+                        onClick={() => handleFreeTable(table.id, table.name)}
+                        className="mt-2.5 w-full flex items-center justify-center gap-1.5 rounded-lg border border-emerald-300 dark:border-emerald-800 bg-white/60 dark:bg-emerald-950/30 hover:bg-emerald-500 hover:border-emerald-500 hover:text-white text-emerald-700 dark:text-emerald-400 py-1.5 text-[10px] font-black uppercase tracking-wide transition-all cursor-pointer group"
+                      >
+                        <Unlock className="h-3 w-3" />
+                        Free Table
+                      </button>
+                    )}
                   </div>
                 );
               })}
@@ -323,18 +361,18 @@ export default function TablesPage() {
 
       {/* RIGHT COLUMN: Reservations pane (35% width) */}
       <div className="flex w-full lg:w-[35%] flex-col border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-xl shadow-sm overflow-hidden shrink-0">
-        
+
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-955 p-3">
+        <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-gradient-to-r from-zinc-900 to-zinc-700 dark:from-zinc-950 dark:to-zinc-800 px-4 py-3">
           <div className="flex items-center gap-2">
-            <CalendarDays className="h-5 w-5 text-orange-500" />
-            <h2 className="text-xs font-black uppercase tracking-wider text-zinc-705 dark:text-zinc-300">
+            <CalendarDays className="h-5 w-5 text-orange-400" />
+            <h2 className="text-xs font-black uppercase tracking-wider text-white">
               Active Reservations
             </h2>
           </div>
           <button
             onClick={() => setIsAddBookingOpen(true)}
-            className="flex items-center gap-1 rounded bg-zinc-900 dark:bg-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-900 text-white font-black py-1.5 px-2.5 text-[9px] uppercase shadow-sm tracking-wide transition-all cursor-pointer"
+            className="flex items-center gap-1 rounded-lg bg-orange-500 hover:bg-orange-400 text-white font-black py-1.5 px-2.5 text-[9px] uppercase shadow-sm tracking-wide transition-all cursor-pointer"
           >
             <PlusCircle className="h-3.5 w-3.5" />
             New Book
@@ -356,18 +394,26 @@ export default function TablesPage() {
               const isSeated = booking.status === 'SEATED';
               const isCancelled = booking.status === 'CANCELLED';
               const isConfirmed = booking.status === 'CONFIRMED' || booking.status === 'PENDING';
-              
+
+              // SEATED but table is now AVAILABLE = customer has paid and left
+              const tableStatus = tables.find(t => t.id === booking.tableId)?.status;
+              const isCheckedOut = isSeated && tableStatus === 'AVAILABLE';
+
               const bookingDateTime = new Date(booking.bookingTime);
 
               return (
                 <div
                   key={booking.id}
-                  className="flex flex-col border border-zinc-200 dark:border-zinc-805 bg-white dark:bg-zinc-900 p-3 rounded-lg shadow-xs hover:shadow-sm transition-all"
+                  className={`flex flex-col border p-3 rounded-lg transition-all ${
+                    isCheckedOut
+                      ? 'border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950'
+                      : 'border-zinc-200 dark:border-zinc-805 bg-white dark:bg-zinc-900 shadow-xs hover:shadow-sm'
+                  }`}
                 >
                   {/* Top: Customer & Seats */}
                   <div className="flex justify-between items-start mb-1.5">
                     <div>
-                      <h4 className="text-xs font-black text-zinc-900 dark:text-zinc-50 uppercase leading-none">
+                      <h4 className={`text-xs font-black uppercase leading-none ${isCheckedOut ? 'text-zinc-400 dark:text-zinc-500 line-through' : 'text-zinc-900 dark:text-zinc-50'}`}>
                         {booking.customerName}
                       </h4>
                       {booking.customerPhone && (
@@ -383,7 +429,7 @@ export default function TablesPage() {
 
                   {/* Mid: Table assigned & Time */}
                   <div className="flex items-center justify-between text-[10px] font-bold text-zinc-505 dark:text-zinc-450 py-1.5 border-t border-dashed border-zinc-150 dark:border-zinc-800">
-                    <span className="flex items-center gap-1 text-orange-500 font-extrabold uppercase">
+                    <span className={`flex items-center gap-1 font-extrabold uppercase ${isCheckedOut ? 'text-zinc-400' : 'text-orange-500'}`}>
                       <Armchair className="h-3.5 w-3.5" />
                       {booking.table ? booking.table.name : 'Unknown Table'}
                     </span>
@@ -394,18 +440,20 @@ export default function TablesPage() {
                     </span>
                   </div>
 
-                  {/* Bottom: Action state controllers */}
+                  {/* Bottom: Status badge + actions */}
                   <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800">
                     <span
                       className={`rounded px-1.5 py-0.5 text-[8px] font-black uppercase ${
-                        isSeated
+                        isCheckedOut
+                          ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 border border-zinc-200 dark:border-zinc-700'
+                          : isSeated
                           ? 'bg-emerald-50 dark:bg-emerald-955/20 text-emerald-700 dark:text-emerald-450 border border-emerald-250 dark:border-emerald-900'
                           : isCancelled
                           ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border border-zinc-200 dark:border-zinc-700'
                           : 'bg-amber-50 dark:bg-amber-955/20 text-amber-700 dark:text-amber-505 border border-amber-250 dark:border-amber-900'
                       }`}
                     >
-                      {booking.status}
+                      {isCheckedOut ? 'Checked Out' : booking.status}
                     </span>
 
                     {isConfirmed && (

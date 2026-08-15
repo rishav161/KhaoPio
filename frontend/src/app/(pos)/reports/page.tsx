@@ -173,24 +173,26 @@ export default function Reports() {
     <div className="flex h-full flex-col overflow-y-auto bg-zinc-50 dark:bg-zinc-950 p-4 transition-colors duration-250">
       
       {/* Title Header */}
-      <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-zinc-950 dark:text-zinc-50 flex items-center gap-2">
-            <BarChart3 className="h-6 w-6 text-orange-500" />
-            <span>Sales & Activity Reports</span>
-          </h1>
-          <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-            Generate detailed transaction logs, analyze tax components, and filter sales records.
-          </p>
+      <div className="mb-6 rounded-xl bg-gradient-to-r from-orange-500 to-orange-400 p-4 shadow-md">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
+              <BarChart3 className="h-6 w-6 text-white" />
+              <span>Sales & Activity Reports</span>
+            </h1>
+            <p className="text-xs font-semibold text-orange-100">
+              Generate detailed transaction logs, analyze tax components, and filter sales records.
+            </p>
+          </div>
+
+          <button
+            onClick={() => fetchReport()}
+            className="flex items-center gap-1.5 self-start rounded-lg bg-white text-orange-600 px-3.5 py-2 text-xs font-black uppercase tracking-wider hover:bg-orange-50 active:scale-95 transition-all cursor-pointer shadow-sm"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            <span>Refresh Data</span>
+          </button>
         </div>
-        
-        <button
-          onClick={() => fetchReport()}
-          className="flex items-center gap-1.5 self-start rounded-lg border border-zinc-250 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3.5 py-2 text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100/50 dark:hover:bg-zinc-800 active:scale-95 transition-all cursor-pointer shadow-sm"
-        >
-          <RefreshCw className="h-3.5 w-3.5 animate-spin-hover" />
-          <span>Refresh Data</span>
-        </button>
       </div>
 
       {/* Filter and Presets Console */}
@@ -286,36 +288,36 @@ export default function Reports() {
           {/* Summary Mini-Widgets */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-sm flex items-center gap-4">
-              <div className="h-10 w-10 rounded-xl bg-orange-50 dark:bg-orange-950/20 text-orange-500 flex items-center justify-center">
-                <Coins className="h-5 w-5" />
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-500 shadow-md shadow-orange-200 dark:shadow-none">
+                <Coins className="h-5 w-5 text-white" />
               </div>
               <div>
                 <span className="text-[9px] font-black uppercase tracking-wider text-zinc-400">Filtered Sales Revenue</span>
-                <h4 className="text-xl font-black font-mono text-zinc-955 dark:text-zinc-50 leading-tight">
+                <h4 className="text-xl font-black font-mono text-zinc-900 dark:text-zinc-50 leading-tight">
                   {currencySymbol}{reportData.summary.totalRevenue.toFixed(2)}
                 </h4>
               </div>
             </div>
 
             <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-sm flex items-center gap-4">
-              <div className="h-10 w-10 rounded-xl bg-orange-50 dark:bg-orange-950/20 text-orange-500 flex items-center justify-center">
-                <ShoppingBag className="h-5 w-5" />
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-500 shadow-md shadow-blue-200 dark:shadow-none">
+                <ShoppingBag className="h-5 w-5 text-white" />
               </div>
               <div>
                 <span className="text-[9px] font-black uppercase tracking-wider text-zinc-400">Filtered Orders Count</span>
-                <h4 className="text-xl font-black font-mono text-zinc-955 dark:text-zinc-50 leading-tight">
+                <h4 className="text-xl font-black font-mono text-zinc-900 dark:text-zinc-50 leading-tight">
                   {reportData.summary.totalOrders}
                 </h4>
               </div>
             </div>
 
             <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-sm flex items-center gap-4">
-              <div className="h-10 w-10 rounded-xl bg-orange-50 dark:bg-orange-950/20 text-orange-500 flex items-center justify-center">
-                <Percent className="h-5 w-5" />
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-500 shadow-md shadow-violet-200 dark:shadow-none">
+                <Percent className="h-5 w-5 text-white" />
               </div>
               <div>
                 <span className="text-[9px] font-black uppercase tracking-wider text-zinc-400">Tax Component Total</span>
-                <h4 className="text-xl font-black font-mono text-zinc-955 dark:text-zinc-50 leading-tight">
+                <h4 className="text-xl font-black font-mono text-zinc-900 dark:text-zinc-50 leading-tight">
                   {currencySymbol}{reportData.summary.totalTax.toFixed(2)}
                 </h4>
               </div>

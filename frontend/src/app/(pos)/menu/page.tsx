@@ -294,24 +294,26 @@ export default function MenuPage() {
     <div className="flex h-full flex-col overflow-hidden bg-zinc-50 dark:bg-zinc-950 p-4 transition-colors duration-250">
       
       {/* Title Header */}
-      <div className="mb-4 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-zinc-950 dark:text-zinc-50 flex items-center gap-2">
-            <Layers className="h-6 w-6 text-orange-500" />
-            <span>Menu Configuration</span>
-          </h1>
-          <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-            Define kitchen categories, publish dishes, manage pricing, and toggle menu availability.
-          </p>
+      <div className="mb-4 rounded-xl bg-gradient-to-r from-orange-500 to-orange-400 p-4 shadow-md">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
+              <Layers className="h-6 w-6 text-white" />
+              <span>Menu Configuration</span>
+            </h1>
+            <p className="text-xs font-semibold text-orange-100">
+              Define kitchen categories, publish dishes, manage pricing, and toggle menu availability.
+            </p>
+          </div>
+
+          <button
+            onClick={handleOpenCreateItem}
+            className="flex items-center gap-1.5 self-start rounded-lg bg-white text-orange-600 px-4 py-2.5 text-xs font-black uppercase tracking-wider shadow-md hover:bg-orange-50 active:scale-95 transition-all cursor-pointer"
+          >
+            <Plus className="h-4.5 w-4.5" />
+            <span>Add Menu Item</span>
+          </button>
         </div>
-        
-        <button
-          onClick={handleOpenCreateItem}
-          className="flex items-center gap-1.5 self-start rounded-lg bg-orange-500 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-md shadow-orange-100 dark:shadow-none hover:bg-orange-600 active:scale-95 transition-all cursor-pointer"
-        >
-          <Plus className="h-4.5 w-4.5" />
-          <span>Add Menu Item</span>
-        </button>
       </div>
 
       {/* Success/Error Alert banners */}
@@ -344,11 +346,11 @@ export default function MenuPage() {
         
         {/* LEFT COLUMN: Categories list management console */}
         <div className="lg:col-span-1 flex flex-col rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden shadow-sm">
-          <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 flex items-center justify-between">
-            <h2 className="text-[10px] font-black uppercase tracking-wider text-zinc-500">
+          <div className="p-3 border-b border-orange-600 bg-gradient-to-r from-orange-500 to-orange-400 flex items-center justify-between rounded-t-xl">
+            <h2 className="text-[10px] font-black uppercase tracking-wider text-white">
               Menu Categories
             </h2>
-            <Layers className="h-4 w-4 text-zinc-400" />
+            <Layers className="h-4 w-4 text-white/80" />
           </div>
 
           {/* Add Category Form */}
