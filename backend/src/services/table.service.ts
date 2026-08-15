@@ -34,6 +34,25 @@ export class TableService {
     }) as unknown as DiningTable;
   }
 
+  async freeTable(restaurantId: string, tableId: string): Promise<DiningTable> {
+    const table = await prisma.diningTable.findFirst({
+      where: { id: tableId, restaurantId },
+    });
+
+    if (!table) {
+      throw new Error('Table not found.');
+    }
+
+    if (table.status === 'AVAILABLE') {
+      throw new Error('Table is already available.');
+    }
+
+    return prisma.diningTable.update({
+      where: { id: tableId },
+      data: { status: 'AVAILABLE' },
+    }) as unknown as DiningTable;
+  }
+
   async deleteTable(restaurantId: string, tableId: string): Promise<DiningTable> {
     // Verify the table belongs to this restaurant
     const table = await prisma.diningTable.findFirst({

@@ -1,11 +1,12 @@
 import { Router } from 'express';
-import { getTables, createTable, deleteTable } from '../controllers/table.controller';
+import { getTables, createTable, deleteTable, freeTable } from '../controllers/table.controller';
 import { authenticateJWT, requirePermission } from '../middlewares/auth.middleware';
 
 const router = Router();
 
 router.get('/', authenticateJWT, requirePermission('view:tables'), getTables);
 router.post('/', authenticateJWT, requirePermission('manage:tables'), createTable);
+router.patch('/:id/free', authenticateJWT, requirePermission('manage:tables'), freeTable);
 router.delete('/:id', authenticateJWT, requirePermission('manage:tables'), deleteTable);
 
 export default router;

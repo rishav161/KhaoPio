@@ -34,6 +34,7 @@ interface POSState {
   fetchTables: () => Promise<void>;
   createTable: (name: string, capacity: number) => Promise<void>;
   deleteTable: (id: string) => Promise<void>;
+  freeTable: (id: string) => Promise<void>;
   fetchBookings: () => Promise<void>;
   createBooking: (payload: { customerName: string; customerPhone?: string; bookingTime: string; guestsCount: number; tableId: string }) => Promise<void>;
   checkInBooking: (id: string) => Promise<void>;
@@ -288,6 +289,18 @@ export const usePOSStore = create<POSState>((set, get) => ({
       await get().fetchTables();
     } catch (error) {
       console.error('Error deleting dining table:', error);
+      throw error;
+    }
+  },
+
+  freeTable: async (id: string) => {
+    try {
+      await apiFetch(`/tables/${id}/free`, {
+        method: 'PATCH',
+      });
+      await get().fetchTables();
+    } catch (error) {
+      console.error('Error freeing dining table:', error);
       throw error;
     }
   },

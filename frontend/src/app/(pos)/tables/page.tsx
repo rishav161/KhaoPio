@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { usePOSStore } from '@/store/usePOSStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Loader } from '@/components/Loader';
-import { Plus, Trash2, CalendarDays, Users, Check, X, Armchair, PlusCircle, Clock, Sparkles } from 'lucide-react';
+import { Plus, Trash2, CalendarDays, Users, Check, X, Armchair, PlusCircle, Clock, Sparkles, Unlock } from 'lucide-react';
 import { useConfirmStore } from '@/store/useConfirmStore';
 
 export default function TablesPage() {
@@ -15,6 +15,7 @@ export default function TablesPage() {
     fetchBookings,
     createTable,
     deleteTable,
+    freeTable,
     createBooking,
     checkInBooking,
     cancelBooking,
@@ -185,6 +186,22 @@ export default function TablesPage() {
     });
   };
 
+  const handleFreeTable = (tableId: string, tableName: string) => {
+    confirm({
+      title: 'Free Table',
+      message: `Mark "${tableName}" as available? Do this only if the guests have left and the table is clear.`,
+      type: 'warning',
+      confirmText: 'Free Table',
+      onConfirm: async () => {
+        try {
+          await freeTable(tableId);
+        } catch (err: any) {
+          showAlert('Error', err.message || 'Failed to free table.', 'danger');
+        }
+      }
+    });
+  };
+
   if (loading && tables.length === 0) {
     return (
       <Loader
@@ -268,7 +285,7 @@ export default function TablesPage() {
                         : 'border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/20 hover:shadow-md hover:shadow-amber-100 dark:hover:shadow-none'
                     }`}
                   >
-                    {/* Top Section: Status Badging & Delete */}
+                    {/* Top Section: Status Badging & Actions */}
                     <div className="flex items-center justify-between mb-2">
                       <span
                         className={`rounded-full px-2 py-0.5 text-[8px] font-black tracking-wider uppercase border ${
@@ -281,15 +298,26 @@ export default function TablesPage() {
                       >
                         {isAvailable ? 'Available' : isOccupied ? 'Occupied' : 'Reserved'}
                       </span>
-                      {(!isOccupied && (user?.role === 'SUPER_ADMIN' || user?.role === 'STORE_MANAGER')) && (
-                        <button
-                          onClick={() => handleDeleteTable(table.id, table.name)}
-                          className="rounded-lg p-1 text-zinc-400 hover:bg-white/70 hover:text-red-500 transition-colors cursor-pointer"
-                          title="Delete Table"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      )}
+                      <div className="flex items-center gap-1">
+                        {isOccupied && (user?.role === 'SUPER_ADMIN' || user?.role === 'STORE_MANAGER') && (
+                          <button
+                            onClick={() => handleFreeTable(table.id, table.name)}
+                            className="rounded-lg p-1 text-zinc-400 hover:bg-white/70 hover:text-emerald-600 transition-colors cursor-pointer"
+                            title="Free Table"
+                          >
+                            <Unlock className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                        {!isOccupied && (user?.role === 'SUPER_ADMIN' || user?.role === 'STORE_MANAGER') && (
+                          <button
+                            onClick={() => handleDeleteTable(table.id, table.name)}
+                            className="rounded-lg p-1 text-zinc-400 hover:bg-white/70 hover:text-red-500 transition-colors cursor-pointer"
+                            title="Delete Table"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     {/* Middle Section: Armchair Icon & Name */}

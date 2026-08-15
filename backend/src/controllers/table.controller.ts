@@ -2,6 +2,22 @@ import { Response } from 'express';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 import tableService from '../services/table.service';
 
+export const freeTable = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const restaurantId = req.user?.restaurantId;
+    if (!restaurantId) {
+      res.status(400).json({ error: 'Restaurant context is missing.' });
+      return;
+    }
+
+    const { id } = req.params;
+    const table = await tableService.freeTable(restaurantId, id);
+    res.status(200).json(table);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message || 'Bad Request' });
+  }
+};
+
 export const getTables = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const restaurantId = req.user?.restaurantId;
