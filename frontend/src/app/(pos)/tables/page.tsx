@@ -299,15 +299,6 @@ export default function TablesPage() {
                         {isAvailable ? 'Available' : isOccupied ? 'Occupied' : 'Reserved'}
                       </span>
                       <div className="flex items-center gap-1">
-                        {isOccupied && (user?.role === 'SUPER_ADMIN' || user?.role === 'STORE_MANAGER') && (
-                          <button
-                            onClick={() => handleFreeTable(table.id, table.name)}
-                            className="rounded-lg p-1 text-zinc-400 hover:bg-white/70 hover:text-emerald-600 transition-colors cursor-pointer"
-                            title="Free Table"
-                          >
-                            <Unlock className="h-3.5 w-3.5" />
-                          </button>
-                        )}
                         {!isOccupied && (user?.role === 'SUPER_ADMIN' || user?.role === 'STORE_MANAGER') && (
                           <button
                             onClick={() => handleDeleteTable(table.id, table.name)}
@@ -349,6 +340,17 @@ export default function TablesPage() {
                       <Users className="h-3 w-3" />
                       <span>Seats {table.capacity}</span>
                     </div>
+
+                    {/* Free Table button — only on occupied cards for managers */}
+                    {isOccupied && (user?.role === 'SUPER_ADMIN' || user?.role === 'STORE_MANAGER') && (
+                      <button
+                        onClick={() => handleFreeTable(table.id, table.name)}
+                        className="mt-2.5 w-full flex items-center justify-center gap-1.5 rounded-lg border border-emerald-300 dark:border-emerald-800 bg-white/60 dark:bg-emerald-950/30 hover:bg-emerald-500 hover:border-emerald-500 hover:text-white text-emerald-700 dark:text-emerald-400 py-1.5 text-[10px] font-black uppercase tracking-wide transition-all cursor-pointer group"
+                      >
+                        <Unlock className="h-3 w-3" />
+                        Free Table
+                      </button>
+                    )}
                   </div>
                 );
               })}
