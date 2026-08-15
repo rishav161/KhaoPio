@@ -251,7 +251,7 @@ export const usePOSStore = create<POSState>((set, get) => ({
         body: paymentPayload,
       });
 
-      await get().fetchActiveOrders(true);
+      await Promise.all([get().fetchActiveOrders(true), get().fetchTables()]);
     } catch (error) {
       console.error(`Error completing payment for order ${orderId}:`, error);
     }
