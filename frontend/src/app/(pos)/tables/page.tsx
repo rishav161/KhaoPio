@@ -356,18 +356,26 @@ export default function TablesPage() {
               const isSeated = booking.status === 'SEATED';
               const isCancelled = booking.status === 'CANCELLED';
               const isConfirmed = booking.status === 'CONFIRMED' || booking.status === 'PENDING';
-              
+
+              // SEATED but table is now AVAILABLE = customer has paid and left
+              const tableStatus = tables.find(t => t.id === booking.tableId)?.status;
+              const isCheckedOut = isSeated && tableStatus === 'AVAILABLE';
+
               const bookingDateTime = new Date(booking.bookingTime);
 
               return (
                 <div
                   key={booking.id}
-                  className="flex flex-col border border-zinc-200 dark:border-zinc-805 bg-white dark:bg-zinc-900 p-3 rounded-lg shadow-xs hover:shadow-sm transition-all"
+                  className={`flex flex-col border p-3 rounded-lg transition-all ${
+                    isCheckedOut
+                      ? 'border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 opacity-60'
+                      : 'border-zinc-200 dark:border-zinc-805 bg-white dark:bg-zinc-900 shadow-xs hover:shadow-sm'
+                  }`}
                 >
                   {/* Top: Customer & Seats */}
                   <div className="flex justify-between items-start mb-1.5">
                     <div>
-                      <h4 className="text-xs font-black text-zinc-900 dark:text-zinc-50 uppercase leading-none">
+                      <h4 className={`text-xs font-black uppercase leading-none ${isCheckedOut ? 'text-zinc-400 dark:text-zinc-500 line-through' : 'text-zinc-900 dark:text-zinc-50'}`}>
                         {booking.customerName}
                       </h4>
                       {booking.customerPhone && (
@@ -383,7 +391,7 @@ export default function TablesPage() {
 
                   {/* Mid: Table assigned & Time */}
                   <div className="flex items-center justify-between text-[10px] font-bold text-zinc-505 dark:text-zinc-450 py-1.5 border-t border-dashed border-zinc-150 dark:border-zinc-800">
-                    <span className="flex items-center gap-1 text-orange-500 font-extrabold uppercase">
+                    <span className={`flex items-center gap-1 font-extrabold uppercase ${isCheckedOut ? 'text-zinc-400' : 'text-orange-500'}`}>
                       <Armchair className="h-3.5 w-3.5" />
                       {booking.table ? booking.table.name : 'Unknown Table'}
                     </span>
@@ -394,18 +402,20 @@ export default function TablesPage() {
                     </span>
                   </div>
 
-                  {/* Bottom: Action state controllers */}
+                  {/* Bottom: Status badge + actions */}
                   <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800">
                     <span
                       className={`rounded px-1.5 py-0.5 text-[8px] font-black uppercase ${
-                        isSeated
+                        isCheckedOut
+                          ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 border border-zinc-200 dark:border-zinc-700'
+                          : isSeated
                           ? 'bg-emerald-50 dark:bg-emerald-955/20 text-emerald-700 dark:text-emerald-450 border border-emerald-250 dark:border-emerald-900'
                           : isCancelled
                           ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border border-zinc-200 dark:border-zinc-700'
                           : 'bg-amber-50 dark:bg-amber-955/20 text-amber-700 dark:text-amber-505 border border-amber-250 dark:border-amber-900'
                       }`}
                     >
-                      {booking.status}
+                      {isCheckedOut ? 'Checked Out' : booking.status}
                     </span>
 
                     {isConfirmed && (
