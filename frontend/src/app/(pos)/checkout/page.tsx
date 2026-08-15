@@ -209,10 +209,10 @@ export default function CheckoutPage() {
 
       {/* ── LEFT: Ready for checkout ── */}
       <div className="flex w-full lg:w-[55%] flex-col rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm overflow-hidden shrink-0">
-        <div className="flex items-center gap-2.5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-4 py-3">
-          <ShoppingBag className="h-4 w-4 text-orange-500" />
-          <h2 className="text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Ready for Checkout</h2>
-          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-black text-white">{readyOrders.length}</span>
+        <div className="flex items-center gap-2.5 border-b border-orange-600 bg-gradient-to-r from-orange-500 to-orange-400 px-4 py-3">
+          <ShoppingBag className="h-4 w-4 text-white" />
+          <h2 className="text-xs font-black uppercase tracking-wider text-white">Ready for Checkout</h2>
+          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-white/20 px-1 text-[10px] font-black text-white">{readyOrders.length}</span>
         </div>
 
         <div className="relative flex-1 overflow-y-auto p-3 space-y-2.5">
@@ -286,16 +286,16 @@ export default function CheckoutPage() {
 
       {/* ── RIGHT: Completed orders ── */}
       <div className="flex w-full lg:w-[45%] flex-col rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm overflow-hidden shrink-0">
-        <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-4 py-3">
+        <div className="flex items-center justify-between border-b border-zinc-800 bg-gradient-to-r from-zinc-900 to-zinc-700 px-4 py-3">
           <div className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4 text-emerald-500" />
-            <h2 className="text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Completed</h2>
-            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-black text-white">{completedOrders.length}</span>
+            <CheckCircle className="h-4 w-4 text-emerald-400" />
+            <h2 className="text-xs font-black uppercase tracking-wider text-white">Completed</h2>
+            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-white/15 px-1 text-[10px] font-black text-white">{completedOrders.length}</span>
           </div>
           <select
             value={completedFilter}
             onChange={(e) => setCompletedFilter(e.target.value as any)}
-            className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2 py-1 text-[10px] font-black outline-none focus:border-orange-400 cursor-pointer text-zinc-700 dark:text-zinc-300"
+            className="rounded-lg border border-zinc-600 bg-zinc-800 px-2 py-1 text-[10px] font-black outline-none focus:border-orange-400 cursor-pointer text-zinc-100"
           >
             <option value="today">Today</option>
             <option value="yesterday">Yesterday</option>
