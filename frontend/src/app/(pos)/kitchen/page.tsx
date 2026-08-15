@@ -136,27 +136,27 @@ export default function KitchenPage() {
   return (
     <div className="flex h-full w-full flex-col overflow-hidden bg-zinc-100 dark:bg-zinc-955 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
       {/* KDS Header & Filter bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-orange-600 bg-gradient-to-r from-orange-500 to-orange-400 p-3">
         <div className="flex items-center gap-2 flex-wrap">
-          <ChefHat className="h-5 w-5 text-orange-500" />
-          <h1 className="text-xs sm:text-sm font-black uppercase tracking-wider text-zinc-800 dark:text-zinc-100">
+          <ChefHat className="h-5 w-5 text-white" />
+          <h1 className="text-xs sm:text-sm font-black uppercase tracking-wider text-white">
             Kitchen Display System (KDS)
           </h1>
-          <span className="rounded-full bg-zinc-900 dark:bg-zinc-100 px-2 py-0.5 text-[10px] font-black text-white dark:text-zinc-950">
+          <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-black text-white">
             {kitchenOrders.length} <span className="hidden sm:inline">Active Tickets</span><span className="sm:hidden inline">Active</span>
           </span>
         </div>
 
         {/* Filter Tab Controllers */}
-        <div className="flex bg-zinc-100 dark:bg-zinc-955 p-0.5 rounded-lg border border-zinc-300 dark:border-zinc-850">
+        <div className="flex bg-white/15 p-0.5 rounded-lg border border-white/30">
           {(['ALL', 'PENDING', 'PREPARING'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setFilter(tab)}
               className={`rounded-md px-3 py-1 text-[10px] font-black tracking-wide transition-all cursor-pointer ${
                 filter === tab
-                  ? 'bg-white dark:bg-zinc-900 text-zinc-955 dark:text-zinc-50 shadow-sm'
-                  : 'text-zinc-650 dark:text-zinc-450 hover:text-zinc-955 dark:hover:text-zinc-100'
+                  ? 'bg-white text-orange-600 shadow-sm'
+                  : 'text-white/75 hover:text-white hover:bg-white/10'
               }`}
             >
               {tab}
