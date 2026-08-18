@@ -156,6 +156,44 @@ export class DashboardService {
       quantity: g._sum.quantity || 0,
     }));
 
+    // Payment method breakdown (paid orders only)
+    const paymentsRaw = await prisma.payment.groupBy({
+      by: ['paymentMethod'],
+      where: {
+        order: {
+          ...filterClause,
+          status: OrderStatus.PAID,
+        },
+      },
+      _sum: { amount: true },
+      _count: { id: true },
+    });
+
+    const paymentBreakdown = paymentsRaw.map(p => ({
+      method: p.paymentMethod,
+      amount: parseFloat((p._sum.amount || 0).toFixed(2)),
+      count: p._count.id,
+    }));
+
+    // Hourly order distribution (all paid orders, grouped by hour 0–23)
+    const hourlyMap: Record<number, number> = {};
+    for (let h = 0; h < 24; h++) hourlyMap[h] = 0;
+
+    const paidOrdersWithTime = await prisma.order.findMany({
+      where: { ...filterClause, status: OrderStatus.PAID },
+      select: { createdAt: true },
+    });
+
+    paidOrdersWithTime.forEach(o => {
+      const hour = new Date(o.createdAt).getHours();
+      hourlyMap[hour] = (hourlyMap[hour] || 0) + 1;
+    });
+
+    const hourlyOrders = Object.entries(hourlyMap).map(([hour, count]) => ({
+      hour: parseInt(hour),
+      count,
+    }));
+
     return {
       metrics: {
         totalSales: parseFloat(totalSales.toFixed(2)),
@@ -165,6 +203,8 @@ export class DashboardService {
       },
       salesTrend,
       topItems,
+      paymentBreakdown,
+      hourlyOrders,
       recentOrders,
       pagination: {
         total: recentOrdersCount,

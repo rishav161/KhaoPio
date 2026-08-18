@@ -3,11 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import {
   TrendingUp, ShoppingBag, RefreshCw, ArrowUpRight, ShieldAlert,
-  BadgeCent, Flame, Calendar, IndianRupee, Trophy,
+  BadgeCent, Flame, Calendar, IndianRupee, Trophy, Clock, CreditCard,
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer,
+  ResponsiveContainer, BarChart, Bar, Cell, PieChart, Pie,
 } from 'recharts';
 import { apiFetch } from '@/utils/api';
 import { Table } from '@/components/Table';
@@ -24,6 +24,8 @@ interface DashboardStats {
   };
   salesTrend: { date: string; amount: number; count: number }[];
   topItems: { name: string; quantity: number }[];
+  paymentBreakdown: { method: string; amount: number; count: number }[];
+  hourlyOrders: { hour: number; count: number }[];
   recentOrders: {
     id: string;
     orderNumber: number;
@@ -35,6 +37,18 @@ interface DashboardStats {
   }[];
   pagination: { total: number; page: number; limit: number; totalPages: number };
 }
+
+const PAYMENT_COLORS: Record<string, string> = {
+  CASH: 'rgb(34,197,94)',
+  CARD: 'rgb(59,130,246)',
+  UPI: 'rgb(168,85,247)',
+};
+
+const PAYMENT_LABELS: Record<string, string> = {
+  CASH: 'Cash',
+  CARD: 'Card',
+  UPI: 'UPI',
+};
 
 const PRESETS = [
   { key: 'today', label: 'Today' },
@@ -104,7 +118,19 @@ export default function Dashboard() {
   const metrics = stats?.metrics ?? { totalSales: 0, ordersCount: 0, aov: 0, activeOrdersCount: 0 };
   const salesTrend = stats?.salesTrend ?? [];
   const topItems = stats?.topItems ?? [];
+  const paymentBreakdown = stats?.paymentBreakdown ?? [];
+  const hourlyOrders = stats?.hourlyOrders ?? [];
   const recentOrders = stats?.recentOrders ?? [];
+
+  const totalPaymentAmount = paymentBreakdown.reduce((s, p) => s + p.amount, 0);
+
+  // Only show operating hours (6am–11pm) for peak hours chart
+  const peakHours = hourlyOrders.filter(h => h.hour >= 6 && h.hour <= 23).map(h => ({
+    label: h.hour === 0 ? '12a' : h.hour < 12 ? `${h.hour}a` : h.hour === 12 ? '12p' : `${h.hour - 12}p`,
+    count: h.count,
+    hour: h.hour,
+  }));
+  const maxHourCount = Math.max(...peakHours.map(h => h.count), 1);
 
   // Format trend data for Recharts
   const chartData = salesTrend.map(s => ({
@@ -351,6 +377,116 @@ export default function Dashboard() {
                 </div>
               ))}
             </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Payment breakdown + Peak hours ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+
+        {/* Payment method donut */}
+        <div className="relative rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-sm">
+          {loading && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm">
+              <Loader size="sm" text="Loading..." />
+            </div>
+          )}
+          <h3 className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-4">
+            <CreditCard className="h-4 w-4 text-orange-500" />Payment Breakdown
+          </h3>
+
+          {paymentBreakdown.length === 0 ? (
+            <div className="flex h-44 items-center justify-center text-xs text-zinc-400 font-semibold">No payment data</div>
+          ) : (
+            <div className="flex items-center gap-6">
+              <ResponsiveContainer width={160} height={160}>
+                <PieChart>
+                  <Pie
+                    data={paymentBreakdown}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={44}
+                    outerRadius={72}
+                    paddingAngle={3}
+                    dataKey="amount"
+                    strokeWidth={0}
+                  >
+                    {paymentBreakdown.map((entry, i) => (
+                      <Cell key={i} fill={PAYMENT_COLORS[entry.method] ?? 'rgb(161,161,170)'} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      background: 'rgb(24,24,27)', border: '1px solid rgb(63,63,70)',
+                      borderRadius: '10px', fontSize: '11px', fontWeight: 700, color: 'white', padding: '8px 12px',
+                    }}
+                    formatter={(value) => [`${currencySymbol}${Number(value).toFixed(2)}`, 'Amount']}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+
+              <div className="flex flex-col gap-2.5 flex-1 min-w-0">
+                {paymentBreakdown.map((p, i) => {
+                  const pct = totalPaymentAmount > 0 ? ((p.amount / totalPaymentAmount) * 100).toFixed(1) : '0';
+                  return (
+                    <div key={i} className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: PAYMENT_COLORS[p.method] ?? 'rgb(161,161,170)' }} />
+                          <span className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300">{PAYMENT_LABELS[p.method] ?? p.method}</span>
+                        </div>
+                        <span className="text-[10px] font-black text-zinc-500">{pct}%</span>
+                      </div>
+                      <div className="h-1.5 w-full rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
+                        <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: PAYMENT_COLORS[p.method] ?? 'rgb(161,161,170)' }} />
+                      </div>
+                      <p className="text-[10px] text-zinc-400">{currencySymbol}{p.amount.toFixed(2)} · {p.count} orders</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Peak hours bar chart */}
+        <div className="relative rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-sm">
+          {loading && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm">
+              <Loader size="sm" text="Loading..." />
+            </div>
+          )}
+          <h3 className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-3">
+            <Clock className="h-4 w-4 text-orange-500" />Peak Hours
+          </h3>
+
+          {peakHours.every(h => h.count === 0) ? (
+            <div className="flex h-44 items-center justify-center text-xs text-zinc-400 font-semibold">No data for this range</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={176}>
+              <BarChart data={peakHours} margin={{ top: 4, right: 4, left: -20, bottom: 0 }} barSize={14}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(161,161,170,0.15)" vertical={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 9, fontWeight: 700, fill: 'rgb(161,161,170)' }} axisLine={false} tickLine={false} interval={1} />
+                <YAxis tick={{ fontSize: 9, fontWeight: 700, fill: 'rgb(161,161,170)' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <Tooltip
+                  contentStyle={{
+                    background: 'rgb(24,24,27)', border: '1px solid rgb(63,63,70)',
+                    borderRadius: '10px', fontSize: '11px', fontWeight: 700, color: 'white', padding: '8px 12px',
+                  }}
+                  formatter={(value) => [value, 'Orders']}
+                  labelFormatter={(label) => `Hour: ${label}`}
+                  cursor={{ fill: 'rgba(249,115,22,0.08)' }}
+                />
+                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                  {peakHours.map((entry, i) => (
+                    <Cell
+                      key={i}
+                      fill={entry.count === maxHourCount ? 'rgb(249,115,22)' : 'rgb(228,228,231)'}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           )}
         </div>
       </div>

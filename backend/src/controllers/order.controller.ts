@@ -123,6 +123,18 @@ export const payOrder = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+export const cancelOrderItem = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const restaurantId = (req as any).user?.restaurantId;
+    const { id: orderId, itemId } = req.params;
+    if (!restaurantId) { res.status(401).json({ error: 'Unauthorized.' }); return; }
+    const updatedOrder = await orderService.cancelOrderItem(restaurantId, orderId, itemId);
+    res.status(200).json(updatedOrder);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message || 'Bad Request' });
+  }
+};
+
 export const validateCoupon = async (req: Request, res: Response): Promise<void> => {
   try {
     const { code } = req.query;
