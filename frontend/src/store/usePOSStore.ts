@@ -16,11 +16,14 @@ interface POSState {
   fetchMenuItems: () => Promise<void>;
   addToCart: (item: MenuItem) => void;
   updateCartQuantity: (itemId: string, change: number) => void;
+  updateCartNotes: (itemId: string, notes: string) => void;
   removeFromCart: (itemId: string) => void;
   clearCart: () => void;
   fetchActiveOrders: (includePaid?: boolean, paidDays?: string) => Promise<void>;
   sendOrderToKitchen: () => Promise<void>;
   updateOrderStatus: (orderId: string, newStatus: Order['status']) => Promise<void>;
+  cancelOrder: (orderId: string) => Promise<void>;
+  cancelOrderItem: (orderId: string, itemId: string) => Promise<void>;
   completePayment: (
     orderId: string,
     paymentPayload: {
@@ -124,6 +127,14 @@ export const usePOSStore = create<POSState>((set, get) => ({
     });
   },
 
+  updateCartNotes: (itemId: string, notes: string) => {
+    set((state) => ({
+      cartItems: state.cartItems.map((ci) =>
+        ci.menuItem.id === itemId ? { ...ci, notes: notes || undefined } : ci
+      ),
+    }));
+  },
+
   removeFromCart: (itemId: string) => {
     set((state) => ({
       cartItems: state.cartItems.filter((ci) => ci.menuItem.id !== itemId),
@@ -154,8 +165,11 @@ export const usePOSStore = create<POSState>((set, get) => ({
           };
 
           return {
+            id: dbItem.id,
             menuItem: localMenuItem,
             quantity: dbItem.quantity,
+            notes: dbItem.notes ?? undefined,
+            status: dbItem.status ?? 'ACTIVE',
           };
         });
 
@@ -200,6 +214,7 @@ export const usePOSStore = create<POSState>((set, get) => ({
         name: ci.menuItem.name,
         quantity: ci.quantity,
         price: ci.menuItem.price,
+        notes: ci.notes || null,
       }));
 
       await apiFetch('/orders/kitchen', {
@@ -234,6 +249,27 @@ export const usePOSStore = create<POSState>((set, get) => ({
       await get().fetchActiveOrders();
     } catch (error) {
       console.error(`Error updating order status for ${orderId}:`, error);
+    }
+  },
+
+  cancelOrder: async (orderId: string) => {
+    try {
+      await apiFetch(`/orders/${orderId}/status`, { method: 'PATCH', body: { status: 'CANCELLED' } });
+      await get().fetchActiveOrders(true);
+      await get().fetchTables();
+    } catch (error) {
+      console.error(`Error cancelling order ${orderId}:`, error);
+      throw error;
+    }
+  },
+
+  cancelOrderItem: async (orderId: string, itemId: string) => {
+    try {
+      await apiFetch(`/orders/${orderId}/items/${itemId}/cancel`, { method: 'PATCH' });
+      await get().fetchActiveOrders(true);
+    } catch (error) {
+      console.error(`Error cancelling item ${itemId} on order ${orderId}:`, error);
+      throw error;
     }
   },
 
@@ -379,6 +415,7 @@ export const usePOSStore = create<POSState>((set, get) => ({
             name: dbItem.name,
             quantity: dbItem.quantity,
             price: dbItem.price,
+            notes: dbItem.notes ?? null,
             menuItem: localMenuItem,
           };
         });

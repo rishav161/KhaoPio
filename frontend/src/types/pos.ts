@@ -12,6 +12,9 @@ export interface MenuItem {
 export interface CartItem {
   menuItem: MenuItem;
   quantity: number;
+  notes?: string;
+  status?: 'ACTIVE' | 'CANCELLED';
+  id?: string;
 }
 
 export interface OrderTotals {
@@ -72,6 +75,7 @@ export interface KotItem {
   name: string;
   quantity: number;
   price: number;
+  notes?: string | null;
   menuItem?: MenuItem;
 }
 

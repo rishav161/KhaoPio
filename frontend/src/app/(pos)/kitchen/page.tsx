@@ -212,22 +212,28 @@ export default function KitchenPage() {
                   {/* Order Items (Readable, large-text list for screen mounting) */}
                   <div className="flex-1 overflow-y-auto px-3 py-2.5 max-h-[300px] min-h-[160px] divide-y divide-zinc-105 dark:divide-zinc-800">
                     {kot.items.map((item) => (
-                      <div key={item.id} className="flex items-start justify-between py-2">
-                        <div className="flex items-start gap-2">
-                          <span className="text-lg mt-0.5">{item.menuItem?.image || '🍽️'}</span>
-                          <div>
-                            <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100 leading-tight">
-                              {item.name}
-                            </span>
-                            <span className="ml-1 text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase font-mono">
-                              [{item.menuItem?.code || 'KOT'}]
-                            </span>
+                      <div key={item.id} className="py-2 space-y-1">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-start gap-2">
+                            <span className="text-lg mt-0.5">{item.menuItem?.image || '🍽️'}</span>
+                            <div>
+                              <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100 leading-tight">
+                                {item.name}
+                              </span>
+                              <span className="ml-1 text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase font-mono">
+                                [{item.menuItem?.code || 'KOT'}]
+                              </span>
+                            </div>
                           </div>
+                          <span className="rounded bg-zinc-900 px-2 py-0.5 text-sm font-black text-white leading-none shrink-0">
+                            x{item.quantity}
+                          </span>
                         </div>
-                        {/* Large Font Size for Quantity */}
-                        <span className="rounded bg-zinc-900 px-2 py-0.5 text-sm font-black text-white leading-none">
-                          x{item.quantity}
-                        </span>
+                        {item.notes && (
+                          <div className="ml-8 flex items-center gap-1 rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 px-2 py-1">
+                            <span className="text-[10px] font-black text-amber-700 dark:text-amber-400 italic">"{item.notes}"</span>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

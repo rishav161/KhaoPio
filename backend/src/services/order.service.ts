@@ -47,7 +47,7 @@ export class OrderService {
       orderId = activeOrder.id;
 
       // Merge items
-      const mergedItemsMap = new Map<string, { id?: string; menuItemId: string; name: string; price: number; quantity: number }>();
+      const mergedItemsMap = new Map<string, { id?: string; menuItemId: string; name: string; price: number; quantity: number; notes?: string | null }>();
       
       activeOrder.items.forEach(item => {
         mergedItemsMap.set(item.menuItemId, {
@@ -55,7 +55,8 @@ export class OrderService {
           menuItemId: item.menuItemId,
           name: item.name,
           price: item.price,
-          quantity: item.quantity
+          quantity: item.quantity,
+          notes: (item as any).notes ?? null,
         });
       });
 
@@ -63,12 +64,14 @@ export class OrderService {
         const existing = mergedItemsMap.get(item.menuItemId);
         if (existing) {
           existing.quantity += item.quantity;
+          if (item.notes) existing.notes = item.notes;
         } else {
           mergedItemsMap.set(item.menuItemId, {
             menuItemId: item.menuItemId,
             name: item.name,
             price: item.price,
-            quantity: item.quantity
+            quantity: item.quantity,
+            notes: item.notes ?? null,
           });
         }
       });
@@ -84,7 +87,7 @@ export class OrderService {
           if (item.id) {
             return prisma.orderItem.update({
               where: { id: item.id },
-              data: { quantity: item.quantity }
+              data: { quantity: item.quantity, notes: item.notes ?? null }
             });
           } else {
             return prisma.orderItem.create({
@@ -93,7 +96,8 @@ export class OrderService {
                 menuItemId: item.menuItemId,
                 name: item.name,
                 quantity: item.quantity,
-                price: item.price
+                price: item.price,
+                notes: item.notes ?? null,
               }
             });
           }
@@ -110,7 +114,8 @@ export class OrderService {
               menuItemId: item.menuItemId,
               name: item.name,
               quantity: item.quantity,
-              price: item.price
+              price: item.price,
+              notes: item.notes ?? null,
             }))
           }
         }
@@ -152,7 +157,8 @@ export class OrderService {
               menuItemId: item.menuItemId,
               name: item.name,
               quantity: item.quantity,
-              price: item.price
+              price: item.price,
+              notes: item.notes ?? null,
             }))
           },
           kots: {
@@ -163,7 +169,8 @@ export class OrderService {
                   menuItemId: item.menuItemId,
                   name: item.name,
                   quantity: item.quantity,
-                  price: item.price
+                  price: item.price,
+                  notes: item.notes ?? null,
                 }))
               }
             }
@@ -327,11 +334,18 @@ export class OrderService {
         }
       });
 
-      if (newStatus === 'CANCELLED' && updatedOrder.tableId) {
-        await prisma.diningTable.update({
-          where: { id: updatedOrder.tableId },
-          data: { status: 'AVAILABLE' },
+      if (newStatus === 'CANCELLED') {
+        // Cancel all active KOTs so the kitchen stops showing them
+        await prisma.kot.updateMany({
+          where: { orderId, status: { in: ['PENDING', 'PREPARING'] } },
+          data: { status: 'CANCELLED' },
         });
+        if (updatedOrder.tableId) {
+          await prisma.diningTable.update({
+            where: { id: updatedOrder.tableId },
+            data: { status: 'AVAILABLE' },
+          });
+        }
       }
 
       return updatedOrder as unknown as Order;
@@ -341,6 +355,73 @@ export class OrderService {
       }
       throw error;
     }
+  }
+
+  /**
+   * Cancels a single item on an order, recalculates totals, removes the corresponding KotItem.
+   * Auto-cancels the order if all items are cancelled.
+   */
+  async cancelOrderItem(restaurantId: string, orderId: string, itemId: string): Promise<Order> {
+    const order = await prisma.order.findFirst({
+      where: { id: orderId, restaurantId },
+      include: { items: true },
+    });
+
+    if (!order) throw new Error('Order not found.');
+    if (order.status === 'PAID' || order.status === 'CANCELLED') {
+      throw new Error('Cannot modify a completed or cancelled order.');
+    }
+
+    const item = order.items.find(i => i.id === itemId);
+    if (!item) throw new Error('Item not found on this order.');
+    if ((item as any).status === 'CANCELLED') throw new Error('Item is already cancelled.');
+
+    // Mark item as cancelled
+    await prisma.orderItem.update({
+      where: { id: itemId },
+      data: { status: 'CANCELLED' },
+    });
+
+    // Remove matching KotItem(s) for this menuItemId on this order's KOTs
+    await prisma.kotItem.deleteMany({
+      where: {
+        menuItemId: item.menuItemId,
+        kot: { orderId },
+      },
+    });
+
+    // Recalculate totals from remaining ACTIVE items
+    const activeItems = order.items.filter(i => i.id !== itemId && (i as any).status !== 'CANCELLED');
+
+    if (activeItems.length === 0) {
+      // All items cancelled — cancel the whole order and its KOTs
+      await prisma.kot.updateMany({
+        where: { orderId, status: { in: ['PENDING', 'PREPARING'] } },
+        data: { status: 'CANCELLED' },
+      });
+      const cancelled = await prisma.order.update({
+        where: { id: orderId },
+        data: { status: 'CANCELLED', subtotal: 0, taxTotal: 0, serviceChargeTotal: 0, discountTotal: 0, grandTotal: 0 },
+        include: { items: true, payments: true, table: true, waiter: { include: { role: true } }, kots: { include: { items: true } } },
+      });
+      if (order.tableId) {
+        await prisma.diningTable.update({ where: { id: order.tableId }, data: { status: 'AVAILABLE' } });
+      }
+      return cancelled as unknown as Order;
+    }
+
+    const subtotal = activeItems.reduce((s, i) => s + i.price * i.quantity, 0);
+    const taxTotal = Math.round(subtotal * (order.taxRate / 100) * 100) / 100;
+    const serviceChargeTotal = Math.round(subtotal * (order.serviceChargeRate / 100) * 100) / 100;
+    const grandTotal = Math.round((subtotal + taxTotal + serviceChargeTotal) * 100) / 100;
+
+    const updated = await prisma.order.update({
+      where: { id: orderId },
+      data: { subtotal, taxTotal, serviceChargeTotal, grandTotal },
+      include: { items: true, payments: true, table: true, waiter: { include: { role: true } }, kots: { include: { items: true } } },
+    });
+
+    return updated as unknown as Order;
   }
 
   /**
@@ -484,11 +565,19 @@ export class OrderService {
         }
       });
 
-      if (newStatus === 'PAID' && updatedOrder.tableId) {
-        await prisma.diningTable.update({
-          where: { id: updatedOrder.tableId },
-          data: { status: 'AVAILABLE' },
+      if (newStatus === 'PAID') {
+        // Close out any active KOTs so the kitchen stops showing them
+        await prisma.kot.updateMany({
+          where: { orderId, status: { in: ['PENDING', 'PREPARING'] } },
+          data: { status: 'READY' },
         });
+
+        if (updatedOrder.tableId) {
+          await prisma.diningTable.update({
+            where: { id: updatedOrder.tableId },
+            data: { status: 'AVAILABLE' },
+          });
+        }
       }
 
       return updatedOrder as unknown as Order;

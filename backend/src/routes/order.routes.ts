@@ -6,6 +6,7 @@ import {
   updateStatus,
   requestBill,
   payOrder,
+  cancelOrderItem,
 } from '../controllers/order.controller';
 import { authenticateJWT, requirePermission } from '../middlewares/auth.middleware';
 
@@ -16,6 +17,7 @@ router.post('/kitchen', authenticateJWT, requirePermission('create:kot'), sendTo
 router.get('/active', authenticateJWT, requirePermission('view:orders'), getActiveOrders);
 router.get('/coupons/validate', authenticateJWT, validateCoupon);
 router.patch('/:id/status', authenticateJWT, requirePermission('update:order-status'), updateStatus);
+router.patch('/:id/items/:itemId/cancel', authenticateJWT, requirePermission('update:order-status'), cancelOrderItem);
 router.post('/:id/request-bill', authenticateJWT, requirePermission('request:bill'), requestBill);
 router.post('/:id/pay', authenticateJWT, requirePermission('pay:order'), payOrder);
 

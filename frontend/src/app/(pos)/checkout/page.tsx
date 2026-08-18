@@ -1,12 +1,14 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { usePOSStore } from '@/store/usePOSStore';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useConfirmStore } from '@/store/useConfirmStore';
 import { Order } from '@/types/pos';
 import {
   Banknote, CreditCard, Receipt, CheckCircle, Printer, X,
-  ShoppingBag, Trash2, Tag, Percent, Plus, Smartphone, Clock,
+  ShoppingBag, Trash2, Tag, Percent, Plus, Smartphone, Clock, Ban,
 } from 'lucide-react';
 import confettiExplosion from 'canvas-confetti';
 import { Loader } from '@/components/Loader';
@@ -20,9 +22,14 @@ const METHOD_OPTIONS: { key: 'CASH' | 'CARD' | 'UPI'; label: string; icon: React
 ];
 
 export default function CheckoutPage() {
-  const { activeOrders, completePayment, fetchActiveOrders, fetchMenuItems } = usePOSStore();
+  const searchParams = useSearchParams();
+  const preselectedOrderId = searchParams.get('orderId');
+
+  const { activeOrders, completePayment, fetchActiveOrders, fetchMenuItems, cancelOrder, cancelOrderItem } = usePOSStore();
   const { user } = useAuthStore();
+  const confirm = useConfirmStore((s) => s.confirm);
   const currencySymbol = useCurrencySymbol();
+  const [cancellingItemId, setCancellingItemId] = useState<string | null>(null);
   const [selectedOrderForBill, setSelectedOrderForBill] = useState<Order | null>(null);
   const [completedFilter, setCompletedFilter] = useState<'today' | 'yesterday' | '7days' | 'all'>('today');
   const [loadingCompleted, setLoadingCompleted] = useState(false);
@@ -63,11 +70,25 @@ export default function CheckoutPage() {
   }, [fetchActiveOrders, fetchMenuItems, completedFilter]);
 
   React.useEffect(() => {
-    if (selectedOrderForBill) {
-      const updated = activeOrders.find((o) => o.id === selectedOrderForBill.id);
-      if (updated) setSelectedOrderForBill(updated);
-    }
+    if (!selectedOrderForBill) return;
+    const updated = activeOrders.find((o) => o.id === selectedOrderForBill.id);
+    if (!updated) return;
+    // Only swap the reference when something meaningful changed — avoids blinking on every poll
+    const changed =
+      updated.status !== selectedOrderForBill.status ||
+      updated.totals.total !== selectedOrderForBill.totals.total ||
+      updated.items.length !== selectedOrderForBill.items.length ||
+      updated.payments?.length !== selectedOrderForBill.payments?.length;
+    if (changed) setSelectedOrderForBill(updated);
   }, [activeOrders, selectedOrderForBill?.id]);
+
+  // Auto-select order when navigated from the orders list with ?orderId=
+  // Skip PAID orders — opening their invoice automatically is disruptive
+  React.useEffect(() => {
+    if (!preselectedOrderId || activeOrders.length === 0) return;
+    const target = activeOrders.find(o => o.id === preselectedOrderId && o.status !== 'PAID');
+    if (target && !selectedOrderForBill) setSelectedOrderForBill(target);
+  }, [preselectedOrderId, activeOrders]);
 
   React.useEffect(() => {
     if (selectedOrderForBill) {
@@ -184,6 +205,36 @@ export default function CheckoutPage() {
     return remainingBalance === 0 ? 'COMPLETE CHECKOUT' : 'SAVE PARTIAL PAYMENTS';
   }, [payingOrderId, localPayments.length, remainingBalance, paymentMethodInput, currencySymbol]);
 
+  const handleCancelOrder = (order: Order) => {
+    confirm({
+      title: 'Cancel Order',
+      message: `Cancel order ${order.orderNumber}${order.table ? ` (${order.table.name})` : ''}? This cannot be undone.`,
+      type: 'danger',
+      confirmText: 'Cancel Order',
+      onConfirm: async () => {
+        await cancelOrder(order.id);
+        if (selectedOrderForBill?.id === order.id) setSelectedOrderForBill(null);
+      },
+    });
+  };
+
+  const handleCancelItem = (orderId: string, itemId: string, itemName: string) => {
+    confirm({
+      title: 'Cancel Item',
+      message: `Remove "${itemName}" from this order? The order total will be recalculated.`,
+      type: 'warning',
+      confirmText: 'Remove Item',
+      onConfirm: async () => {
+        setCancellingItemId(itemId);
+        try {
+          await cancelOrderItem(orderId, itemId);
+        } finally {
+          setCancellingItemId(null);
+        }
+      },
+    });
+  };
+
   const getStatusStyle = (status: string) => {
     if (status === 'READY') return 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800';
     if (status === 'BILL_REQUESTED') return 'bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800';
@@ -253,23 +304,46 @@ export default function CheckoutPage() {
 
                 {/* Items */}
                 <div className="px-3 py-2 space-y-0.5">
-                  {order.items.map((item) => (
-                    <div key={item.menuItem.id} className="flex justify-between text-[11px]">
-                      <span className="text-zinc-600 dark:text-zinc-400 font-semibold">
-                        {item.menuItem.name} <span className="text-zinc-400">×{item.quantity}</span>
-                      </span>
-                      <span className="font-bold text-zinc-700 dark:text-zinc-300">
-                        {currencySymbol}{(item.menuItem.price * item.quantity).toFixed(2)}
-                      </span>
-                    </div>
-                  ))}
+                  {order.items.map((item) => {
+                    const isCancelled = item.status === 'CANCELLED';
+                    return (
+                      <div key={item.id ?? item.menuItem.id} className={`flex items-center justify-between text-[11px] gap-1 group ${isCancelled ? 'opacity-50' : ''}`}>
+                        <span className={`flex-1 min-w-0 font-semibold ${isCancelled ? 'line-through text-zinc-400' : 'text-zinc-600 dark:text-zinc-400'}`}>
+                          {item.menuItem.name} <span className="text-zinc-400">×{item.quantity}</span>
+                          {isCancelled && <span className="ml-1 text-[9px] font-black text-red-400 uppercase">cancelled</span>}
+                        </span>
+                        <span className={`font-bold shrink-0 ${isCancelled ? 'line-through text-zinc-400' : 'text-zinc-700 dark:text-zinc-300'}`}>
+                          {currencySymbol}{(item.menuItem.price * item.quantity).toFixed(2)}
+                        </span>
+                        {!isCancelled && item.id && (
+                          <button
+                            onClick={() => handleCancelItem(order.id, item.id!, item.menuItem.name)}
+                            disabled={cancellingItemId === item.id}
+                            className="opacity-0 group-hover:opacity-100 ml-1 shrink-0 rounded p-0.5 text-zinc-300 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer disabled:opacity-30"
+                            title="Cancel this item"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* Footer */}
                 <div className="flex items-center justify-between px-3 py-2.5 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/20">
-                  <span className="text-base font-black text-orange-500">
-                    {currencySymbol}{order.totals.total}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-base font-black text-orange-500">
+                      {currencySymbol}{order.totals.total}
+                    </span>
+                    <button
+                      onClick={() => handleCancelOrder(order)}
+                      className="flex items-center gap-1 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/20 hover:bg-red-100 px-2 py-1.5 text-[10px] font-black text-red-600 dark:text-red-400 transition-all cursor-pointer"
+                      title="Cancel Order"
+                    >
+                      <Ban className="h-3 w-3" />CANCEL
+                    </button>
+                  </div>
                   <button
                     onClick={() => setSelectedOrderForBill(order)}
                     className="flex items-center gap-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 active:scale-[0.98] px-4 py-2 text-[11px] font-black text-white transition-all shadow-sm shadow-orange-200 cursor-pointer"

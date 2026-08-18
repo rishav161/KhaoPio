@@ -171,13 +171,20 @@ model Order {
 }
 
 model OrderItem {
-  id         String @id @default(uuid())
+  id         String          @id @default(uuid())
   menuItemId String
   name       String
   quantity   Int
   price      Float
+  notes      String?
+  status     OrderItemStatus @default(ACTIVE)
   orderId    String
-  order      Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order      Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+enum OrderItemStatus {
+  ACTIVE
+  CANCELLED
 }
 
 model Restaurant {
@@ -363,5 +370,6 @@ model KotItem {
   name       String
   quantity   Int
   price      Float
+  notes      String?
 }
 
