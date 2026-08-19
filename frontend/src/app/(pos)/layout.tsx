@@ -27,7 +27,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
   
   // Settings dropdown state
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  
+
   // Theme state
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [isMounted, setIsMounted] = useState(false);
@@ -35,6 +35,14 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  // Restaurant logo
+  const [restaurantLogo, setRestaurantLogo] = useState<string | null>(null);
+  useEffect(() => {
+    if (isMounted && token) {
+      apiFetch<any>('/auth/restaurant').then(d => setRestaurantLogo(d.logo || null)).catch(() => {});
+    }
+  }, [isMounted, token]);
 
   // Guard the routes: Redirect to login if token is missing, or to onboarding if restaurantId is missing
   useEffect(() => {
@@ -151,11 +159,17 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Logo / Brand */}
-        <div className="flex h-16 w-full items-center justify-center border-b border-zinc-250 dark:border-zinc-800 bg-orange-500 text-white shadow-inner">
-          <div className="flex flex-col items-center">
-            <span className="text-sm font-black tracking-wider">Khao</span>
-            <span className="text-[10px] font-bold text-orange-100 leading-none">Pio</span>
-          </div>
+        <div className="flex h-16 w-full items-center justify-center border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden">
+          {restaurantLogo && restaurantLogo.startsWith('http') ? (
+            <img src={restaurantLogo} alt="logo" className="h-full w-full object-contain p-2" />
+          ) : restaurantLogo ? (
+            <span className="text-3xl">{restaurantLogo}</span>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full w-full bg-orange-500">
+              <span className="text-sm font-black tracking-wider text-white">Khao</span>
+              <span className="text-[10px] font-bold text-orange-100 leading-none">Pio</span>
+            </div>
+          )}
         </div>
 
         {/* Dynamic Navigation Items */}

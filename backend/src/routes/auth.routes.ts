@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import multer from 'multer';
 import {
   registerAdmin,
   loginEmail,
@@ -18,8 +19,11 @@ import {
   forgotPassword,
   resetPassword,
   changePassword,
+  uploadRestaurantLogo,
 } from '../controllers/auth.controller';
 import { authenticateJWT, requirePermission } from '../middlewares/auth.middleware';
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 const router = Router();
 
@@ -48,5 +52,6 @@ router.patch('/profile', authenticateJWT, updateProfile);
 router.patch('/change-password', authenticateJWT, changePassword);
 router.get('/restaurant', authenticateJWT, getRestaurantDetails);
 router.patch('/restaurant', authenticateJWT, updateRestaurantDetails);
+router.post('/restaurant/logo', authenticateJWT, upload.single('logo'), uploadRestaurantLogo);
 
 export default router;
