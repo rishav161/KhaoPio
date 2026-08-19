@@ -4,6 +4,7 @@ import authService from '../services/auth.service';
 import emailService from '../services/email.service';
 import { RoleName } from '@prisma/client';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
+import { uploadLogoToCloudinary } from '../services/upload.service';
 
 export const registerAdmin = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -387,6 +388,33 @@ export const getRestaurantDetails = async (req: Request, res: Response): Promise
     res.status(200).json(restaurant);
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Error fetching restaurant details.' });
+  }
+};
+
+export const uploadRestaurantLogo = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const restaurantId = (req as AuthenticatedRequest).user?.restaurantId;
+    if (!restaurantId) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
+
+    const file = (req as any).file as Express.Multer.File | undefined;
+    if (!file) {
+      res.status(400).json({ error: 'No file uploaded.' });
+      return;
+    }
+
+    const logoUrl = await uploadLogoToCloudinary(file.buffer, file.mimetype);
+
+    await prisma.restaurant.update({
+      where: { id: restaurantId },
+      data: { logo: logoUrl },
+    });
+
+    res.status(200).json({ logo: logoUrl });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to upload logo.' });
   }
 };
 

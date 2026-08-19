@@ -7,7 +7,8 @@ import { apiFetch } from '@/utils/api';
 import { Loader } from '@/components/Loader';
 import {
   Settings, User, Landmark, Phone, FileText, MapPin,
-  Image, MessageSquare, Save, AlertCircle, CheckCircle2, Eye, EyeOff, KeyRound
+  Image, MessageSquare, Save, AlertCircle, CheckCircle2, Eye, EyeOff, KeyRound,
+  Upload, X, Loader2,
 } from 'lucide-react';
 import { SUPPORTED_CURRENCIES } from '@/utils/currency';
 
@@ -31,6 +32,8 @@ export default function SettingsPage() {
   const [pageLoading, setPageLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoError, setLogoError] = useState('');
 
   // Change password states
   const [pwForm, setPwForm] = useState({ current: '', next: '', confirm: '' });
@@ -77,6 +80,35 @@ export default function SettingsPage() {
       }
     }
   }, [isMounted, user]);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { setLogoError('Please select an image file.'); return; }
+    if (file.size > 5 * 1024 * 1024) { setLogoError('Image must be under 5 MB.'); return; }
+
+    setLogoUploading(true);
+    setLogoError('');
+    const formData = new FormData();
+    formData.append('logo', file);
+
+    try {
+      const token = useAuthStore.getState().token;
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/restaurant/logo`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Upload failed');
+      setProfileLogo(data.logo);
+    } catch (err: any) {
+      setLogoError(err.message || 'Upload failed. Please try again.');
+    } finally {
+      setLogoUploading(false);
+      e.target.value = '';
+    }
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -296,16 +328,57 @@ export default function SettingsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">Store Logo (URL or Symbol)</label>
-                  <div className="relative">
-                    <Image className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-                    <input 
-                      type="text" 
-                      value={profileLogo}
-                      onChange={(e) => setProfileLogo(e.target.value)}
-                      placeholder="e.g. 🍔 or https://logo-url"
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
-                    />
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">Store Logo</label>
+                  <div className="flex items-center gap-4">
+                    {/* Preview */}
+                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border-2 border-dashed border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 overflow-hidden">
+                      {profileLogo ? (
+                        profileLogo.startsWith('http') ? (
+                          <img src={profileLogo} alt="logo" className="h-full w-full object-contain p-1" />
+                        ) : (
+                          <span className="text-3xl">{profileLogo}</span>
+                        )
+                      ) : (
+                        <Image className="h-6 w-6 text-zinc-300" />
+                      )}
+                    </div>
+
+                    {/* Upload area */}
+                    <div className="flex-1 space-y-1.5">
+                      <label className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-3 text-xs font-black transition-all ${
+                        logoUploading
+                          ? 'border-orange-300 bg-orange-50 dark:bg-orange-950/20 text-orange-500'
+                          : 'border-zinc-200 dark:border-zinc-700 hover:border-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950/10 text-zinc-500 hover:text-orange-500'
+                      }`}>
+                        {logoUploading ? (
+                          <><Loader2 className="h-4 w-4 animate-spin" /><span>Uploading...</span></>
+                        ) : (
+                          <><Upload className="h-4 w-4" /><span>Click to upload image</span></>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleLogoUpload}
+                          disabled={logoUploading}
+                        />
+                      </label>
+                      {logoError && (
+                        <p className="flex items-center gap-1 text-[10px] font-bold text-red-500">
+                          <AlertCircle className="h-3 w-3" />{logoError}
+                        </p>
+                      )}
+                      {profileLogo && profileLogo.startsWith('http') && (
+                        <button
+                          type="button"
+                          onClick={() => setProfileLogo('')}
+                          className="flex items-center gap-1 text-[10px] font-bold text-zinc-400 hover:text-red-500 transition-colors cursor-pointer"
+                        >
+                          <X className="h-3 w-3" />Remove logo
+                        </button>
+                      )}
+                      <p className="text-[9px] text-zinc-400">PNG, JPG, SVG · Max 5 MB · Will be cropped to square</p>
+                    </div>
                   </div>
                 </div>
 
