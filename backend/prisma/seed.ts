@@ -153,7 +153,7 @@ async function main() {
 
   const sidebarItems: Record<string, any> = {};
   for (const item of sidebarData) {
-    const permissionId = permissions[item.permissionName]?.id || null;
+    const permissionId = item.permissionName ? permissions[item.permissionName]?.id ?? null : null;
     sidebarItems[item.label] = await prisma.sidebarItem.create({
       data: {
         label: item.label,
