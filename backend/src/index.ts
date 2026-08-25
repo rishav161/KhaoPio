@@ -54,6 +54,9 @@ app.use('/api/coupons', couponRoutes);
 app.use('/api/help', helpRoutes);
 app.use('/api/kots', kotRoutes);
 
+// Health check (used by Kubernetes readiness/liveness probes)
+app.get('/health', (_req, res) => res.status(200).json({ status: 'ok' }));
+
 // Server startup
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
