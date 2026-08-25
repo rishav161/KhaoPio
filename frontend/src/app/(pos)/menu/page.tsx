@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import { QRCodeSVG } from 'qrcode.react';
 import { 
   FolderPlus, Edit3, Trash2, Plus, Sparkles, AlertCircle, Check, 
   X, ClipboardCheck, ArrowRight, Eye, EyeOff, LayoutGrid, Tag, 
-  Layers, Package, Coins, Hash, RefreshCw, ToggleLeft, ToggleRight, Smile
+  Layers, Package, Coins, Hash, RefreshCw, ToggleLeft, ToggleRight, Smile, QrCode, Printer
 } from 'lucide-react';
 import { apiFetch } from '@/utils/api';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -53,6 +54,8 @@ export default function MenuPage() {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [showMasterQrModal, setShowMasterQrModal] = useState(false);
+  const [activeQrSlug, setActiveQrSlug] = useState<string>('');
 
   // Category Forms
   const [newCatName, setNewCatName] = useState('');
@@ -321,13 +324,24 @@ export default function MenuPage() {
             </p>
           </div>
 
-          <button
-            onClick={handleOpenCreateItem}
-            className="flex items-center gap-1.5 self-start rounded-lg bg-white text-orange-600 px-4 py-2.5 text-xs font-black uppercase tracking-wider shadow-md hover:bg-orange-50 active:scale-95 transition-all cursor-pointer"
-          >
-            <Plus className="h-4.5 w-4.5" />
-            <span>Add Menu Item</span>
-          </button>
+          <div className="flex items-center gap-2 self-start">
+            <button
+              onClick={() => setShowMasterQrModal(true)}
+              className="flex items-center gap-1.5 rounded-lg border border-white/40 bg-white/10 hover:bg-white/20 text-white px-3.5 py-2.5 text-xs font-black uppercase tracking-wider shadow-sm transition-all cursor-pointer backdrop-blur-xs"
+              title="View & Print Master Menu QR Code"
+            >
+              <QrCode className="h-4 w-4 text-white" />
+              <span>Public Menu QR</span>
+            </button>
+
+            <button
+              onClick={handleOpenCreateItem}
+              className="flex items-center gap-1.5 rounded-lg bg-white text-orange-600 px-4 py-2.5 text-xs font-black uppercase tracking-wider shadow-md hover:bg-orange-50 active:scale-95 transition-all cursor-pointer"
+            >
+              <Plus className="h-4.5 w-4.5" />
+              <span>Add Menu Item</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -776,6 +790,176 @@ export default function MenuPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* MASTER PUBLIC MENU QR CODE MODAL */}
+      {showMasterQrModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+          <div className="relative w-full max-w-sm overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-2xl animate-in zoom-in-95 duration-150 text-zinc-900 dark:text-zinc-100">
+            
+            <button
+              onClick={() => setShowMasterQrModal(false)}
+              className="absolute right-4 top-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="text-center">
+              <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-500 text-white text-xl font-black shadow-md border border-orange-400">
+                🍽️
+              </div>
+              <h2 className="text-lg font-black tracking-tight text-zinc-950 dark:text-zinc-50">
+                {user?.restaurantName || 'KhaoPio Restaurant'}
+              </h2>
+              <p className="text-xs font-bold text-orange-500 uppercase tracking-widest mt-0.5">
+                Master Public Digital Menu QR Code
+              </p>
+            </div>
+
+            {/* QR Code Container */}
+            <div className="my-5 flex flex-col items-center justify-center rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-5 shadow-inner">
+              <div className="bg-white p-3.5 rounded-xl shadow-md border border-zinc-200">
+                <QRCodeSVG
+                  value={typeof window !== 'undefined' ? `${window.location.origin}/m/${activeQrSlug || user?.restaurantId || 'default'}` : ''}
+                  size={170}
+                  level="H"
+                  includeMargin={true}
+                />
+              </div>
+
+              <div className="mt-3 text-center">
+                <p className="text-xs font-black uppercase text-zinc-800 dark:text-zinc-200 tracking-wider flex items-center justify-center gap-1">
+                  <QrCode className="h-3.5 w-3.5 text-orange-500" />
+                  <span>Scan to View Live Menu</span>
+                </p>
+                <p className="text-[9px] text-zinc-400 mt-1 font-mono break-all max-w-[240px]">
+                  {typeof window !== 'undefined' ? `${window.location.origin}/m/${activeQrSlug || user?.restaurantId || 'default'}` : ''}
+                </p>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowMasterQrModal(false)}
+                  className="flex-1 rounded-xl border border-zinc-300 dark:border-zinc-800 py-2.5 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+                    const url = `${origin}/m/${activeQrSlug || user?.restaurantId || 'default'}`;
+                    const restName = user?.restaurantName || 'KhaoPio Restaurant';
+                    const printWindow = window.open('', '_blank');
+                    if (!printWindow) return;
+
+                    printWindow.document.write(`
+                      <!DOCTYPE html>
+                      <html>
+                        <head>
+                          <title>Master Menu QR - ${restName}</title>
+                          <style>
+                            @media print {
+                              @page { size: 4in 6in; margin: 0; }
+                              body { margin: 0; }
+                            }
+                            body {
+                              font-family: system-ui, -apple-system, sans-serif;
+                              display: flex;
+                              flex-direction: column;
+                              align-items: center;
+                              justify-content: center;
+                              height: 100vh;
+                              margin: 0;
+                              padding: 20px;
+                              box-sizing: border-box;
+                              text-align: center;
+                              background: #fff;
+                              color: #18181b;
+                            }
+                            .card {
+                              border: 3px solid #f97316;
+                              border-radius: 24px;
+                              padding: 28px;
+                              width: 100%;
+                              max-width: 320px;
+                              box-sizing: border-box;
+                              box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+                            }
+                            .logo { font-size: 36px; margin-bottom: 4px; }
+                            .title { font-size: 22px; font-weight: 900; margin: 0 0 4px 0; color: #09090b; }
+                            .subtitle { font-size: 11px; font-weight: 800; color: #f97316; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px; }
+                            .qr-box { background: #fafafa; border: 2px dashed #e4e4e7; border-radius: 16px; padding: 16px; display: inline-block; margin-bottom: 16px; }
+                            .instruction { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #27272a; margin: 0; }
+                            .url { font-size: 9px; color: #a1a1aa; word-break: break-all; margin-top: 8px; font-family: monospace; }
+                          </style>
+                        </head>
+                        <body>
+                          <div class="card">
+                            <div class="logo">🍽️</div>
+                            <h1 class="title">${restName}</h1>
+                            <div class="subtitle">Digital Menu & Ordering</div>
+                            
+                            <div class="qr-box">
+                              <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}" width="180" height="180" alt="QR Code" />
+                            </div>
+
+                            <p class="instruction">📷 Scan with Smartphone Camera</p>
+                            <div class="url">${url}</div>
+                          </div>
+                          <script>
+                            window.onload = function() {
+                              window.print();
+                              setTimeout(function() { window.close(); }, 500);
+                            };
+                          </script>
+                        </body>
+                      </html>
+                    `);
+                    printWindow.document.close();
+                  }}
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white py-2.5 text-xs font-black uppercase tracking-wider shadow-md transition-all cursor-pointer"
+                >
+                  <Printer className="h-4 w-4" />
+                  Print QR Card
+                </button>
+              </div>
+
+              {/* Regenerate & Revoke Old QR Button */}
+              {canManage && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    confirm({
+                      title: 'Regenerate QR Code & Revoke Old?',
+                      message: 'Are you sure you want to generate a new QR Code? All previously printed physical QR posters will immediately be revoked and stop working!',
+                      type: 'danger',
+                      confirmText: 'Regenerate & Revoke Old',
+                      onConfirm: async () => {
+                        try {
+                          const res = await apiFetch<{ qrSlug: string; message: string }>('/menu/regenerate-qr', {
+                            method: 'POST',
+                          });
+                          setActiveQrSlug(res.qrSlug);
+                          setSuccessMsg('QR Code successfully regenerated! Old printed QR codes are now revoked.');
+                        } catch (err: any) {
+                          setErrorMsg(err.message || 'Error regenerating QR code.');
+                        }
+                      },
+                    });
+                  }}
+                  className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-950/20 hover:bg-red-500 hover:text-white text-red-600 dark:text-red-400 py-2 text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer mt-1"
+                >
+                  <RefreshCw className="h-3 w-3" />
+                  <span>Regenerate QR (Revoke Old Posters)</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

@@ -8,8 +8,9 @@ import { Loader } from '@/components/Loader';
 import {
   Settings, User, Landmark, Phone, FileText, MapPin,
   Image, MessageSquare, Save, AlertCircle, CheckCircle2, Eye, EyeOff, KeyRound,
-  Upload, X, Loader2,
+  Upload, X, Loader2, QrCode, RefreshCw, Printer
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { SUPPORTED_CURRENCIES } from '@/utils/currency';
 
 export default function SettingsPage() {
@@ -41,6 +42,10 @@ export default function SettingsPage() {
   const [pwLoading, setPwLoading] = useState(false);
   const [pwError, setPwError] = useState('');
   const [pwSuccess, setPwSuccess] = useState(false);
+
+  // QR Code States
+  const [activeQrSlug, setActiveQrSlug] = useState('');
+  const [qrRegenLoading, setQrRegenLoading] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -413,24 +418,139 @@ export default function SettingsPage() {
             )}
           </div>
 
-          <div className="flex pt-4">
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-1.5 cursor-pointer rounded-lg bg-orange-500 hover:bg-orange-600 text-white py-3 text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50 active:scale-[0.98] shadow-md shadow-orange-100 dark:shadow-none"
-            >
-              {loading ? (
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-              ) : (
-                <>
-                  <Save className="h-4 w-4" />
-                  <span>Save Configuration</span>
-                </>
+                {/* Save button */}
+                <div className="flex pt-4">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full flex items-center justify-center gap-1.5 cursor-pointer rounded-lg bg-orange-500 hover:bg-orange-600 text-white py-3 text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50 active:scale-[0.98] shadow-md shadow-orange-100 dark:shadow-none"
+                  >
+                    {loading ? (
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4" />
+                        <span>Save Configuration</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* RIGHT COLUMN */}
+            <div className="space-y-6">
+              {/* Digital Menu QR Code Card */}
+              {user?.role === 'SUPER_ADMIN' && (
+                <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-sm">
+                  <div className="flex items-center justify-between border-b border-zinc-150 dark:border-zinc-800 pb-3.5 mb-5">
+                    <div className="flex items-center gap-2">
+                      <div className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-orange-50 dark:bg-orange-950/20 text-orange-500">
+                        <QrCode className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <span className="block text-[10px] font-black uppercase tracking-widest text-orange-500">Public Digital Menu</span>
+                        <span className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">Master QR Code & Link</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-center gap-4 text-center">
+                    <div className="p-3 bg-white border border-zinc-200 rounded-2xl shadow-xs">
+                      <QRCodeSVG
+                        value={typeof window !== 'undefined' ? `${window.location.origin}/m/${activeQrSlug || user?.restaurantId || 'default'}` : ''}
+                        size={150}
+                        level="H"
+                        includeMargin={true}
+                      />
+                    </div>
+
+                    <div className="w-full space-y-2">
+                      <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                        Live Menu Public Link:
+                      </p>
+                      <p className="text-[10px] font-mono text-orange-500 bg-orange-50 dark:bg-orange-950/30 p-2 rounded-lg border border-orange-200 dark:border-orange-900/40 break-all select-all text-center">
+                        {typeof window !== 'undefined' ? `${window.location.origin}/m/${activeQrSlug || user?.restaurantId || 'default'}` : ''}
+                      </p>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const origin = typeof window !== 'undefined' ? window.location.origin : '';
+                            const url = `${origin}/m/${activeQrSlug || user?.restaurantId || 'default'}`;
+                            const restName = user?.restaurantName || 'KhaoPio Restaurant';
+                            const printWindow = window.open('', '_blank');
+                            if (!printWindow) return;
+
+                            printWindow.document.write(`
+                              <!DOCTYPE html>
+                              <html>
+                                <head>
+                                  <title>Master Menu QR - ${restName}</title>
+                                  <style>
+                                    @media print { @page { size: 4in 6in; margin: 0; } body { margin: 0; } }
+                                    body { font-family: system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; text-align: center; background: #fff; color: #18181b; }
+                                    .card { border: 3px solid #f97316; border-radius: 24px; padding: 28px; width: 100%; max-width: 320px; box-sizing: border-box; box-shadow: 0 10px 30px rgba(0,0,0,0.12); }
+                                    .logo { font-size: 36px; margin-bottom: 4px; }
+                                    .title { font-size: 22px; font-weight: 900; margin: 0 0 4px 0; color: #09090b; }
+                                    .subtitle { font-size: 11px; font-weight: 800; color: #f97316; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px; }
+                                    .qr-box { background: #fafafa; border: 2px dashed #e4e4e7; border-radius: 16px; padding: 16px; display: inline-block; margin-bottom: 16px; }
+                                    .instruction { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #27272a; margin: 0; }
+                                    .url { font-size: 9px; color: #a1a1aa; word-break: break-all; margin-top: 8px; font-family: monospace; }
+                                  </style>
+                                </head>
+                                <body>
+                                  <div class="card">
+                                    <div class="logo">🍽️</div>
+                                    <h1 class="title">${restName}</h1>
+                                    <div class="subtitle">Digital Menu & Touchless View</div>
+                                    <div class="qr-box">
+                                      <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}" width="180" height="180" alt="QR Code" />
+                                    </div>
+                                    <p class="instruction">📷 Scan with Smartphone Camera</p>
+                                    <div class="url">${url}</div>
+                                  </div>
+                                  <script>
+                                    window.onload = function() { window.print(); setTimeout(function() { window.close(); }, 500); };
+                                  </script>
+                                </body>
+                              </html>
+                            `);
+                            printWindow.document.close();
+                          }}
+                          className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white py-2.5 text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-xs"
+                        >
+                          <Printer className="h-3.5 w-3.5" />
+                          <span>Print QR Poster</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!window.confirm('Are you sure you want to generate a new QR Code? All previously printed physical QR posters will immediately be revoked and stop working!')) return;
+                            setQrRegenLoading(true);
+                            try {
+                              const data = await apiFetch<{ qrSlug: string }>('/menu/regenerate-qr', { method: 'POST' });
+                              setActiveQrSlug(data.qrSlug);
+                              setSuccess(true);
+                            } catch (err: any) {
+                              setError(err.message || 'Failed to regenerate QR code.');
+                            } finally {
+                              setQrRegenLoading(false);
+                            }
+                          }}
+                          disabled={qrRegenLoading}
+                          className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-950/20 hover:bg-red-500 hover:text-white text-red-600 dark:text-red-400 py-2.5 text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer disabled:opacity-50"
+                        >
+                          <RefreshCw className={`h-3.5 w-3.5 ${qrRegenLoading ? 'animate-spin' : ''}`} />
+                          <span>Regenerate QR</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               )}
-            </button>
-          </div>
-        </form>
-      </div>
 
       {/* Change Password card */}
       <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-sm">
@@ -499,6 +619,7 @@ export default function SettingsPage() {
             </button>
           </div>
         </form>
+      </div>
       </div>
 
       </div>
