@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { 
   Utensils, Search, MapPin, Phone, ShoppingBag, Plus, Minus, X, 
@@ -43,7 +43,7 @@ interface CartItem {
   quantity: number;
 }
 
-export default function PublicRestaurantMenuPage() {
+function PublicRestaurantMenuContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   
@@ -485,5 +485,17 @@ export default function PublicRestaurantMenuPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function PublicRestaurantMenuPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen w-full items-center justify-center bg-zinc-950 text-white">
+        <Loader size="lg" text="Loading Digital Menu..." />
+      </div>
+    }>
+      <PublicRestaurantMenuContent />
+    </Suspense>
   );
 }

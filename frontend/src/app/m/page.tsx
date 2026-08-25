@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function DefaultPublicMenuPage() {
+function DefaultPublicMenuContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -14,4 +14,12 @@ export default function DefaultPublicMenuPage() {
   }, [router, searchParams]);
 
   return null;
+}
+
+export default function DefaultPublicMenuPage() {
+  return (
+    <Suspense fallback={null}>
+      <DefaultPublicMenuContent />
+    </Suspense>
+  );
 }

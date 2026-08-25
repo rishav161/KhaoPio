@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { usePOSStore } from '@/store/usePOSStore';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -21,7 +21,7 @@ const METHOD_OPTIONS: { key: 'CASH' | 'CARD' | 'UPI'; label: string; icon: React
   { key: 'UPI', label: 'UPI', icon: <Smartphone className="h-4 w-4" /> },
 ];
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const searchParams = useSearchParams();
   const preselectedOrderId = searchParams.get('orderId');
 
@@ -712,5 +712,17 @@ export default function CheckoutPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-full w-full items-center justify-center p-8">
+        <Loader size="lg" text="Loading Checkout..." />
+      </div>
+    }>
+      <CheckoutContent />
+    </Suspense>
   );
 }
