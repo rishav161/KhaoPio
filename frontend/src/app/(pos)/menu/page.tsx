@@ -1,16 +1,28 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { 
   FolderPlus, Edit3, Trash2, Plus, Sparkles, AlertCircle, Check, 
   X, ClipboardCheck, ArrowRight, Eye, EyeOff, LayoutGrid, Tag, 
-  Layers, Package, Coins, Hash, RefreshCw, ToggleLeft, ToggleRight
+  Layers, Package, Coins, Hash, RefreshCw, ToggleLeft, ToggleRight, Smile
 } from 'lucide-react';
 import { apiFetch } from '@/utils/api';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Loader } from '@/components/Loader';
 import { useConfirmStore } from '@/store/useConfirmStore';
 import { useCurrencySymbol } from '@/utils/currency';
+
+const EmojiPicker: any = dynamic(() => import('emoji-picker-react'), { ssr: false });
+
+const PRESET_FOOD_EMOJIS = [
+  '🍔', '🍕', '🍟', '🌭', '🥪', '🌮', '🌯', '🫔', 
+  '🍗', '🥩', '🥓', '🍳', '🥞', '🧇', '🧀', '🥗', 
+  '🍲', '🥣', '🍜', '🍝', '🍛', '🍱', '🍣', '🍤', 
+  '🥟', '🍦', '🍧', '🍨', '🍩', '🍪', '🎂', '🍰', 
+  '🧁', '🥧', '🍫', '🍬', '☕', '🍵', '🧃', '🥤', 
+  '🧋', '🍺', '🍻', '🥂', '🍷', '🥃', '🍸', '🍹'
+];
 
 interface MenuItem {
   id: string;
@@ -50,6 +62,7 @@ export default function MenuPage() {
   // Item Modals & Forms
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [itemForm, setItemForm] = useState({
     name: '',
     description: '',
@@ -149,6 +162,7 @@ export default function MenuPage() {
   // Item Actions
   const handleOpenCreateItem = () => {
     setEditingItem(null);
+    setShowEmojiPicker(false);
     setItemForm({
       name: '',
       description: '',
@@ -165,6 +179,7 @@ export default function MenuPage() {
 
   const handleOpenEditItem = (item: MenuItem) => {
     setEditingItem(item);
+    setShowEmojiPicker(false);
     setItemForm({
       name: item.name,
       description: item.description || '',
@@ -640,18 +655,78 @@ export default function MenuPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-450 mb-1">
-                    Image / Emoji
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-450 mb-1 flex items-center justify-between">
+                    <span>Dish Icon</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                      className="text-orange-500 hover:underline flex items-center gap-0.5 cursor-pointer lowercase font-bold"
+                    >
+                      <Smile className="h-3 w-3" />
+                      <span>{showEmojiPicker ? 'close' : 'browse'}</span>
+                    </button>
                   </label>
-                  <input
-                    type="text"
-                    value={itemForm.image}
-                    onChange={(e) => setItemForm({ ...itemForm, image: e.target.value })}
-                    placeholder="🍲"
-                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-orange-400 text-center"
-                  />
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                      className="h-9 w-9 rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-950 flex items-center justify-center text-xl shrink-0 cursor-pointer hover:border-orange-400 transition-colors shadow-xs"
+                      title="Click to select food icon"
+                    >
+                      {itemForm.image || '🍽️'}
+                    </button>
+                    <input
+                      type="text"
+                      value={itemForm.image}
+                      onChange={(e) => setItemForm({ ...itemForm, image: e.target.value })}
+                      placeholder="e.g. 🍔 or URL"
+                      className="flex-1 rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-2.5 text-xs outline-none focus:border-orange-400"
+                    />
+                  </div>
                 </div>
               </div>
+
+              {/* Quick Preset Food Icons Bar */}
+              <div>
+                <label className="block text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-1">
+                  Quick Select Food Icon
+                </label>
+                <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-950/40 scrollbar-thin">
+                  {PRESET_FOOD_EMOJIS.map((emoji) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      onClick={() => {
+                        setItemForm({ ...itemForm, image: emoji });
+                        setShowEmojiPicker(false);
+                      }}
+                      className={`h-7 w-7 rounded-md text-base flex items-center justify-center transition-all cursor-pointer ${
+                        itemForm.image === emoji
+                          ? 'bg-orange-500 text-white shadow-xs scale-110'
+                          : 'hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:scale-105'
+                      }`}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Full Searchable Emoji Picker Drawer */}
+              {showEmojiPicker && (
+                <div className="rounded-xl border border-zinc-250 dark:border-zinc-800 overflow-hidden shadow-lg animate-in fade-in zoom-in-95 duration-150">
+                  <EmojiPicker
+                    onEmojiClick={(emojiData: any) => {
+                      setItemForm({ ...itemForm, image: emojiData.emoji });
+                      setShowEmojiPicker(false);
+                    }}
+                    width="100%"
+                    height={300}
+                    lazyLoadEmojis={true}
+                    searchPlaceHolder="Search food, drinks, icons..."
+                  />
+                </div>
+              )}
 
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-450 mb-1">
