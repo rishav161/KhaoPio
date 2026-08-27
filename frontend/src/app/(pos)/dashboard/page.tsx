@@ -74,10 +74,10 @@ function StatCard({
   icon, iconBg, label, value, delta, mono = true,
 }: { icon: React.ReactNode; iconBg: string; label: string; value: string; delta?: string; mono?: boolean }) {
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+    <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-sm">
       <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${iconBg} mb-3`}>{icon}</div>
-      <p className="text-xs text-zinc-500">{label}</p>
-      <p className={`mt-1 text-2xl font-bold text-zinc-900 ${mono ? 'font-mono' : ''}`}>{value}</p>
+      <p className="text-xs text-zinc-500 dark:text-zinc-400">{label}</p>
+      <p className={`mt-1 text-2xl font-bold text-zinc-900 dark:text-zinc-50 ${mono ? 'font-mono' : ''}`}>{value}</p>
       {delta && <p className="mt-1 text-xs font-medium text-brand-600">{delta}</p>}
     </div>
   );
@@ -147,15 +147,15 @@ export default function Dashboard() {
   useEffect(() => { fetchStats(1); fetchTables(); }, [activePreset]);
 
   if (loading && !stats) return (
-    <Loader size="lg" text="Compiling analytics..." className="h-full w-full bg-[var(--background)] rounded-xl border border-zinc-200" />
+    <Loader size="lg" text="Compiling analytics..." className="h-full w-full bg-[var(--background)] rounded-xl border border-zinc-200 dark:border-zinc-800" />
   );
 
   if (error && !stats) return (
     <div className="flex h-full items-center justify-center p-8 text-center">
       <div className="max-w-sm">
         <ShieldAlert className="mx-auto h-12 w-12 text-red-400 mb-3" />
-        <h2 className="text-sm font-black text-zinc-800">Failed to load dashboard</h2>
-        <p className="text-xs text-zinc-500 mt-1 mb-4">{error}</p>
+        <h2 className="text-sm font-black text-zinc-800 dark:text-zinc-100">Failed to load dashboard</h2>
+        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 mb-4">{error}</p>
         <button onClick={() => fetchStats()} className="rounded-lg bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 text-xs font-black cursor-pointer">Retry</button>
       </div>
     </div>
@@ -206,13 +206,13 @@ export default function Dashboard() {
   }));
 
   const maxQty = Math.max(...topItems.map(i => i.quantity), 1);
-  const medalColors = ['text-amber-500', 'text-zinc-400', 'text-amber-700', 'text-zinc-500', 'text-zinc-400'];
+  const medalColors = ['text-amber-500', 'text-zinc-400 dark:text-zinc-500', 'text-amber-700', 'text-zinc-500 dark:text-zinc-400', 'text-zinc-400 dark:text-zinc-500'];
   const barColors = ['from-brand-400 to-brand-500', 'from-brand-300 to-brand-400', 'from-brand-200 to-brand-300', 'from-zinc-300 to-zinc-400', 'from-zinc-200 to-zinc-300'];
 
   const getStatusBadge = (status: string) => {
-    if (status === 'PAID') return <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-black text-emerald-700">PAID</span>;
-    if (status === 'CANCELLED') return <span className="rounded-md bg-red-50 px-2 py-0.5 text-[10px] font-black text-red-600">CANCELLED</span>;
-    return <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-black text-amber-700">{status}</span>;
+    if (status === 'PAID') return <span className="rounded-md bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 text-[10px] font-black text-emerald-700 dark:text-emerald-400">PAID</span>;
+    if (status === 'CANCELLED') return <span className="rounded-md bg-red-50 dark:bg-red-950/30 px-2 py-0.5 text-[10px] font-black text-red-600 dark:text-red-400">CANCELLED</span>;
+    return <span className="rounded-md bg-amber-50 dark:bg-amber-950/30 px-2 py-0.5 text-[10px] font-black text-amber-700 dark:text-amber-400">{status}</span>;
   };
 
   return (
@@ -221,24 +221,24 @@ export default function Dashboard() {
       {/* ── Transient greeting toast — fades in, holds briefly, fades out ── */}
       {greetingMounted && (
         <div
-          className={`fixed top-20 right-6 z-40 flex items-center gap-3 rounded-2xl border border-zinc-200 bg-white px-5 py-3.5 shadow-lg transition-all duration-500 ease-out ${
+          className={`fixed top-20 right-6 z-40 flex items-center gap-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-5 py-3.5 shadow-lg transition-all duration-500 ease-out ${
             greetingVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
           }`}
         >
           <div>
-            <p className="flex items-center gap-1.5 text-sm font-semibold text-zinc-900">
+            <p className="flex items-center gap-1.5 text-sm font-semibold text-zinc-900 dark:text-zinc-50">
               Good {timeGreeting}, {firstName}
               <Sparkles className="h-4 w-4 text-brand-500 shrink-0" />
             </p>
-            <p className="text-xs text-zinc-500">Here&apos;s what&apos;s happening at your restaurant today.</p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">Here&apos;s what&apos;s happening at your restaurant today.</p>
           </div>
         </div>
       )}
 
       {/* ── Insight banner ── */}
       {busiestDay && (
-        <div className="flex items-center justify-between gap-4 rounded-2xl bg-[oklch(0.2_0.03_158)] px-6 py-5 text-white">
-          <div className="flex items-center gap-4 min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl bg-[oklch(0.2_0.03_158)] px-5 sm:px-6 py-5 text-white">
+          <div className="flex items-start sm:items-center gap-4 min-w-0">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10">
               <Sparkles className="h-5 w-5 text-brand-400" />
             </span>
@@ -251,7 +251,7 @@ export default function Dashboard() {
               </p>
             </div>
           </div>
-          <button onClick={() => router.push('/reports')} className="flex shrink-0 items-center gap-1.5 text-sm font-semibold text-white hover:text-brand-300 transition-colors cursor-pointer">
+          <button onClick={() => router.push('/reports')} className="flex shrink-0 items-center gap-1.5 self-start sm:self-auto pl-14 sm:pl-0 text-sm font-semibold text-white hover:text-brand-300 transition-colors cursor-pointer">
             View insights <ArrowRight className="h-4 w-4" />
           </button>
         </div>
@@ -259,23 +259,23 @@ export default function Dashboard() {
 
       {/* ── Period tabs ── */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-1 rounded-xl bg-zinc-100 p-1">
+        <div className="flex items-center gap-1 rounded-xl bg-zinc-100 dark:bg-zinc-800 p-1">
           {PRESETS.map((p) => (
             <button key={p.key} onClick={() => setActivePreset(p.key)}
               className={`rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all cursor-pointer ${
-                activePreset === p.key ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'
+                activePreset === p.key ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-50 shadow-sm' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300'
               }`}>
               {p.label}
             </button>
           ))}
         </div>
-        <span className="text-sm text-zinc-400">
+        <span className="text-sm text-zinc-400 dark:text-zinc-500">
           {new Date(range.startDate).toLocaleDateString(undefined, { day: 'numeric', month: 'long' })}
           {' — '}
           {new Date(range.endDate).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}
         </span>
         <button onClick={() => fetchStats(page)}
-          className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-500 hover:text-brand-600 hover:border-brand-300 transition-all cursor-pointer">
+          className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 hover:text-brand-600 hover:border-brand-300 transition-all cursor-pointer">
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
         </button>
       </div>
@@ -283,29 +283,29 @@ export default function Dashboard() {
       {/* ── Stat cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard
-          icon={<IndianRupee className="h-4.5 w-4.5 text-brand-700" />}
-          iconBg="bg-brand-100"
+          icon={<IndianRupee className="h-4.5 w-4.5 text-brand-700 dark:text-brand-400" />}
+          iconBg="bg-brand-100 dark:bg-brand-950/40"
           label={activePreset === 'today' ? "Today's revenue" : 'Revenue'}
           value={`${currencySymbol}${metrics.totalSales.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
           delta={`${revenueDelta >= 0 ? '↗' : '↘'} ${Math.abs(revenueDelta).toFixed(1)}% vs previous period`}
         />
         <StatCard
-          icon={<ShoppingBag className="h-4.5 w-4.5 text-blue-700" />}
-          iconBg="bg-blue-100"
+          icon={<ShoppingBag className="h-4.5 w-4.5 text-blue-700 dark:text-blue-400" />}
+          iconBg="bg-blue-100 dark:bg-blue-950/40"
           label="Total orders"
           value={`${metrics.ordersCount}`}
           delta={`${ordersDelta >= 0 ? '↗' : '↘'} ${Math.abs(ordersDelta).toFixed(1)}% vs previous period`}
         />
         <StatCard
-          icon={<BadgeCent className="h-4.5 w-4.5 text-amber-700" />}
-          iconBg="bg-amber-100"
+          icon={<BadgeCent className="h-4.5 w-4.5 text-amber-700 dark:text-amber-400" />}
+          iconBg="bg-amber-100 dark:bg-amber-950/40"
           label="Average order value"
           value={`${currencySymbol}${metrics.aov.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
           delta={`${aovDelta >= 0 ? '↗' : '↘'} ${Math.abs(aovDelta).toFixed(1)}% vs previous period`}
         />
         <StatCard
-          icon={<Table2 className="h-4.5 w-4.5 text-violet-700" />}
-          iconBg="bg-violet-100"
+          icon={<Table2 className="h-4.5 w-4.5 text-violet-700 dark:text-violet-400" />}
+          iconBg="bg-violet-100 dark:bg-violet-950/40"
           label="Active tables"
           value={totalTables > 0 ? `${occupiedTables} / ${totalTables}` : '—'}
           delta={totalTables > 0 ? `${occupancyPct}% occupancy now` : 'No tables configured'}
@@ -315,30 +315,30 @@ export default function Dashboard() {
       {/* ── Charts row ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
 
-        <div className="relative lg:col-span-2 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+        <div className="relative lg:col-span-2 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-sm">
           {loading && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/80 backdrop-blur-sm">
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm">
               <Loader size="sm" text="Loading trend..." />
             </div>
           )}
           <div className="flex items-center justify-between mb-1">
             <div>
-              <h3 className="text-base font-semibold text-zinc-900">Revenue overview</h3>
-              <p className="text-xs text-zinc-500">Daily performance for the selected period</p>
+              <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">Revenue overview</h3>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">Daily performance for the selected period</p>
             </div>
           </div>
           <p className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-bold font-mono text-zinc-900">
+            <span className="text-2xl font-bold font-mono text-zinc-900 dark:text-zinc-50">
               {currencySymbol}{metrics.totalSales.toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </span>
             <span className={`text-xs font-semibold ${revenueDelta >= 0 ? 'text-brand-600' : 'text-red-500'}`}>
               {revenueDelta >= 0 ? '↗' : '↘'} {Math.abs(revenueDelta).toFixed(1)}%
             </span>
-            <span className="text-xs text-zinc-400">Revenue this {activePreset === 'today' ? 'day' : activePreset === 'month' ? 'month' : 'week'}</span>
+            <span className="text-xs text-zinc-400 dark:text-zinc-500">Revenue this {activePreset === 'today' ? 'day' : activePreset === 'month' ? 'month' : 'week'}</span>
           </p>
 
           {chartData.length === 0 ? (
-            <div className="flex h-52 items-center justify-center text-xs text-zinc-400 font-semibold">No data for this range</div>
+            <div className="flex h-52 items-center justify-center text-xs text-zinc-400 dark:text-zinc-500 font-semibold">No data for this range</div>
           ) : (
             <ResponsiveContainer width="100%" height={200}>
               <AreaChart data={chartData} margin={{ top: 12, right: 4, left: 0, bottom: 0 }}>
@@ -368,17 +368,17 @@ export default function Dashboard() {
         </div>
 
         {/* Payment breakdown donut (real "where revenue comes from" data) */}
-        <div className="relative rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+        <div className="relative rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-sm">
           {loading && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/80 backdrop-blur-sm">
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm">
               <Loader size="sm" text="Loading..." />
             </div>
           )}
-          <h3 className="text-base font-semibold text-zinc-900">Payment methods</h3>
-          <p className="text-xs text-zinc-500">How today&apos;s bills were paid</p>
+          <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">Payment methods</h3>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">How today&apos;s bills were paid</p>
 
           {paymentBreakdown.length === 0 ? (
-            <div className="flex h-44 items-center justify-center text-xs text-zinc-400 font-semibold">No payment data</div>
+            <div className="flex h-44 items-center justify-center text-xs text-zinc-400 dark:text-zinc-500 font-semibold">No payment data</div>
           ) : (
             <>
               <div className="relative mt-2 flex items-center justify-center">
@@ -396,8 +396,8 @@ export default function Dashboard() {
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="pointer-events-none absolute flex flex-col items-center">
-                  <span className="text-2xl font-bold font-mono text-zinc-900">{metrics.ordersCount}</span>
-                  <span className="text-xs text-zinc-400">orders</span>
+                  <span className="text-2xl font-bold font-mono text-zinc-900 dark:text-zinc-50">{metrics.ordersCount}</span>
+                  <span className="text-xs text-zinc-400 dark:text-zinc-500">orders</span>
                 </div>
               </div>
               <div className="mt-3 flex flex-col gap-2">
@@ -407,9 +407,9 @@ export default function Dashboard() {
                     <div key={i} className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
                         <span className="h-2.5 w-2.5 rounded-full" style={{ background: PAYMENT_COLORS[p.method] ?? 'rgb(161,161,170)' }} />
-                        <span className="text-zinc-600">{PAYMENT_LABELS[p.method] ?? p.method}</span>
+                        <span className="text-zinc-600 dark:text-zinc-400">{PAYMENT_LABELS[p.method] ?? p.method}</span>
                       </div>
-                      <span className="font-semibold text-zinc-900">{p.count} <span className="text-zinc-400 font-normal">{pct}%</span></span>
+                      <span className="font-semibold text-zinc-900 dark:text-zinc-50">{p.count} <span className="text-zinc-400 dark:text-zinc-500 font-normal">{pct}%</span></span>
                     </div>
                   );
                 })}
@@ -421,29 +421,29 @@ export default function Dashboard() {
 
       {/* ── Top dishes + Peak hours ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        <div className="relative rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm flex flex-col">
+        <div className="relative rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-sm flex flex-col">
           {loading && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/80 backdrop-blur-sm">
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm">
               <Loader size="sm" text="Loading dishes..." />
             </div>
           )}
-          <h3 className="flex items-center gap-1.5 text-base font-semibold text-zinc-900 mb-4">
+          <h3 className="flex items-center gap-1.5 text-base font-semibold text-zinc-900 dark:text-zinc-50 mb-4">
             <Trophy className="h-4 w-4 text-brand-600" />Top dishes
           </h3>
           {topItems.length === 0 ? (
-            <div className="flex flex-1 items-center justify-center text-xs text-zinc-400 font-semibold py-12">No orders in this range</div>
+            <div className="flex flex-1 items-center justify-center text-xs text-zinc-400 dark:text-zinc-500 font-semibold py-12">No orders in this range</div>
           ) : (
             <div className="flex-1 flex flex-col justify-center gap-3.5">
               {topItems.map((item, i) => (
                 <div key={i} className="space-y-1">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <span className={`text-xs font-black shrink-0 ${medalColors[i] || 'text-zinc-400'}`}>#{i + 1}</span>
-                      <span className="truncate text-sm font-medium text-zinc-700">{item.name}</span>
+                      <span className={`text-xs font-black shrink-0 ${medalColors[i] || 'text-zinc-400 dark:text-zinc-500'}`}>#{i + 1}</span>
+                      <span className="truncate text-sm font-medium text-zinc-700 dark:text-zinc-300">{item.name}</span>
                     </div>
-                    <span className="text-xs font-bold font-mono text-zinc-500 shrink-0">{item.quantity}</span>
+                    <span className="text-xs font-bold font-mono text-zinc-500 dark:text-zinc-400 shrink-0">{item.quantity}</span>
                   </div>
-                  <div className="h-2 w-full rounded-full bg-zinc-100 overflow-hidden">
+                  <div className="h-2 w-full rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
                     <div className={`h-full rounded-full bg-gradient-to-r ${barColors[i] || 'from-zinc-300 to-zinc-400'} transition-all duration-700 ease-out`} style={{ width: `${(item.quantity / maxQty) * 100}%` }} />
                   </div>
                 </div>
@@ -452,17 +452,17 @@ export default function Dashboard() {
           )}
         </div>
 
-        <div className="relative rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+        <div className="relative rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-sm">
           {loading && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/80 backdrop-blur-sm">
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm">
               <Loader size="sm" text="Loading..." />
             </div>
           )}
-          <h3 className="flex items-center gap-1.5 text-base font-semibold text-zinc-900 mb-3">
+          <h3 className="flex items-center gap-1.5 text-base font-semibold text-zinc-900 dark:text-zinc-50 mb-3">
             <Clock className="h-4 w-4 text-brand-600" />Peak hours
           </h3>
           {peakHours.every(h => h.count === 0) ? (
-            <div className="flex h-44 items-center justify-center text-xs text-zinc-400 font-semibold">No data for this range</div>
+            <div className="flex h-44 items-center justify-center text-xs text-zinc-400 dark:text-zinc-500 font-semibold">No data for this range</div>
           ) : (
             <ResponsiveContainer width="100%" height={176}>
               <BarChart data={peakHours} margin={{ top: 4, right: 4, left: -20, bottom: 0 }} barSize={14}>
@@ -487,12 +487,12 @@ export default function Dashboard() {
       </div>
 
       {/* ── Recent orders table ── */}
-      <div className="rounded-2xl border border-zinc-200 bg-white shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100">
-          <h3 className="flex items-center gap-1.5 text-base font-semibold text-zinc-900">
+      <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100 dark:border-zinc-800">
+          <h3 className="flex items-center gap-1.5 text-base font-semibold text-zinc-900 dark:text-zinc-50">
             <ArrowUpRight className="h-4 w-4 text-brand-600" />Recent orders
           </h3>
-          {stats && <span className="text-xs text-zinc-400">{stats.pagination.total} total</span>}
+          {stats && <span className="text-xs text-zinc-400 dark:text-zinc-500">{stats.pagination.total} total</span>}
         </div>
 
         <Table
@@ -501,19 +501,19 @@ export default function Dashboard() {
           loading={loading}
           emptyMessage="No orders found for this date range."
           renderRow={(order) => (
-            <tr key={order.id} className="hover:bg-zinc-50/50 transition-colors">
-              <td className="px-4 py-3 text-xs font-black font-mono text-zinc-900">#{order.orderNumber}</td>
-              <td className="px-4 py-3 text-xs font-mono text-zinc-400">
+            <tr key={order.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/50 transition-colors">
+              <td className="px-4 py-3 text-xs font-black font-mono text-zinc-900 dark:text-zinc-50">#{order.orderNumber}</td>
+              <td className="px-4 py-3 text-xs font-mono text-zinc-400 dark:text-zinc-500">
                 {new Date(order.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
               </td>
-              <td className="px-4 py-3 text-xs font-bold text-zinc-700">{order.waiterName}</td>
+              <td className="px-4 py-3 text-xs font-bold text-zinc-700 dark:text-zinc-300">{order.waiterName}</td>
               <td className="px-4 py-3">
-                <span className="rounded-full bg-zinc-100 border border-zinc-200 px-2 py-0.5 text-[10px] font-black text-zinc-600">
+                <span className="rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 px-2 py-0.5 text-[10px] font-black text-zinc-600 dark:text-zinc-400">
                   {order.paymentMethod}
                 </span>
               </td>
               <td className="px-4 py-3">{getStatusBadge(order.status)}</td>
-              <td className="px-4 py-3 text-xs font-black font-mono text-zinc-900">
+              <td className="px-4 py-3 text-xs font-black font-mono text-zinc-900 dark:text-zinc-50">
                 {currencySymbol}{order.grandTotal.toFixed(2)}
               </td>
             </tr>
@@ -521,7 +521,7 @@ export default function Dashboard() {
         />
 
         {stats && (
-          <div className="border-t border-zinc-100 px-4 py-2">
+          <div className="border-t border-zinc-100 dark:border-zinc-800 px-4 py-2">
             <Pagination currentPage={page} totalPages={stats.pagination.totalPages} onPageChange={(p) => fetchStats(p)} />
           </div>
         )}

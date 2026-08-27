@@ -212,7 +212,7 @@ export default function CouponsPage() {
       )}
 
       {success && (
-        <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950/25 border border-emerald-200 dark:border-emerald-900 p-3.5 text-xs font-bold text-emerald-650 dark:text-emerald-400 flex items-center gap-2 mb-4 animate-pulse">
+        <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950/25 border border-emerald-200 dark:border-emerald-900 p-3.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2 mb-4 animate-pulse">
           <CheckCircle2 className="h-4.5 w-4.5 shrink-0" />
           <span>{success}</span>
         </div>
@@ -220,7 +220,7 @@ export default function CouponsPage() {
 
       {/* Coupons grid list */}
       {coupons.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center border border-dashed border-zinc-250 dark:border-zinc-800 rounded-2xl bg-white dark:bg-zinc-900">
+        <div className="flex flex-col items-center justify-center py-16 text-center border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl bg-white dark:bg-zinc-900">
           <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-zinc-50 dark:bg-zinc-950 text-zinc-400 mb-3">
             <Ticket className="h-6 w-6" />
           </div>
@@ -247,7 +247,7 @@ export default function CouponsPage() {
                 {/* Details */}
                 <div>
                   <div className="flex items-center justify-between mb-3.5">
-                    <span className="inline-flex items-center gap-1 rounded bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 px-2 py-1 font-mono text-xs font-black tracking-wider text-zinc-850 dark:text-zinc-150">
+                    <span className="inline-flex items-center gap-1 rounded bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 px-2 py-1 font-mono text-xs font-black tracking-wider text-zinc-800 dark:text-zinc-100">
                       {coupon.code}
                     </span>
                     
@@ -255,8 +255,8 @@ export default function CouponsPage() {
                       isExpired
                         ? 'bg-zinc-100 dark:bg-zinc-950 text-zinc-500'
                         : coupon.isActive
-                          ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-450 border border-emerald-150'
-                          : 'bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-450 border border-amber-150'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100'
+                          : 'bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border border-amber-100'
                     }`}>
                       {statusLabel}
                     </span>
@@ -269,12 +269,12 @@ export default function CouponsPage() {
                     }
                   </h3>
                                    {coupon.description && (
-                    <p className="text-[10px] text-zinc-600 dark:text-zinc-350 leading-normal mb-3 font-semibold">
+                    <p className="text-[10px] text-zinc-600 dark:text-zinc-300 leading-normal mb-3 font-semibold">
                       {coupon.description}
                     </p>
                   )}
 
-                  <div className="space-y-1.5 border-t border-zinc-150 dark:border-zinc-800/80 pt-3 text-[10px] text-zinc-650 dark:text-zinc-400 font-semibold">
+                  <div className="space-y-1.5 border-t border-zinc-100 dark:border-zinc-800/80 pt-3 text-[10px] text-zinc-600 dark:text-zinc-400 font-semibold">
                     <div className="flex justify-between">
                       <span>Min Order Subtotal:</span>
                       <span className="font-black text-zinc-900 dark:text-zinc-100">{currencySymbol}{coupon.minSubtotal}</span>
@@ -296,7 +296,7 @@ export default function CouponsPage() {
 
                 {/* Operations */}
                 {user?.role === 'SUPER_ADMIN' && (
-                  <div className="flex items-center justify-between border-t border-zinc-150 dark:border-zinc-850 pt-3 mt-4">
+                  <div className="flex items-center justify-between border-t border-zinc-100 dark:border-zinc-800 pt-3 mt-4">
                     {isExpired ? (
                       <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 flex items-center gap-1.5 select-none">
                         <ToggleLeft className="h-5 w-5 text-zinc-300 dark:text-zinc-800" />
@@ -323,7 +323,7 @@ export default function CouponsPage() {
 
                     <button
                       onClick={() => handleDeleteCoupon(coupon.id)}
-                      className="inline-flex h-7.5 w-7.5 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-450 hover:text-red-500 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-950 transition-colors cursor-pointer"
+                      className="inline-flex h-7.5 w-7.5 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-400 hover:text-red-500 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-950 transition-colors cursor-pointer"
                       title="Delete Coupon"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -348,7 +348,7 @@ export default function CouponsPage() {
                 </h3>
                 <button 
                   onClick={() => setIsDrawerOpen(false)}
-                  className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-150 dark:hover:bg-zinc-800 hover:text-zinc-650 dark:hover:text-zinc-100 transition-colors cursor-pointer"
+                  className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-600 dark:hover:text-zinc-100 transition-colors cursor-pointer"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -356,7 +356,7 @@ export default function CouponsPage() {
 
               <form onSubmit={handleCreateCoupon} className="space-y-4 max-h-[80vh] overflow-y-auto pr-1">
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">Coupon Code (Uppercase)</label>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-400 mb-1.5 font-bold">Coupon Code (Uppercase)</label>
                   <input 
                     type="text" 
                     placeholder="e.g. MONSOON20"
@@ -368,7 +368,7 @@ export default function CouponsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">Discount Description</label>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-400 mb-1.5 font-bold">Discount Description</label>
                   <input 
                     type="text" 
                     placeholder="e.g. 20% off on monsoon bookings"
@@ -380,7 +380,7 @@ export default function CouponsPage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">Discount Type</label>
+                    <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-400 mb-1.5 font-bold">Discount Type</label>
                     <select
                       value={discountType}
                       onChange={(e) => {
@@ -395,7 +395,7 @@ export default function CouponsPage() {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">Value</label>
+                    <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-400 mb-1.5 font-bold">Value</label>
                     <div className="relative">
                       <span className="absolute top-1/2 left-2.5 -translate-y-1/2 text-zinc-400 text-xs font-black">
                         {discountType === 'PERCENTAGE' ? '%' : currencySymbol}
@@ -407,7 +407,7 @@ export default function CouponsPage() {
                         placeholder="20"
                         value={discountValue}
                         onChange={(e) => setDiscountValue(e.target.value)}
-                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-55 dark:bg-zinc-950 py-2.5 pr-3 pl-7 text-xs font-semibold outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
+                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-7 text-xs font-semibold outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
                         required
                       />
                     </div>
@@ -416,19 +416,19 @@ export default function CouponsPage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">Min Subtotal ({currencySymbol})</label>
+                    <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-400 mb-1.5 font-bold">Min Subtotal ({currencySymbol})</label>
                     <input 
                       type="number" 
                       min="0"
                       value={minSubtotal}
                       onChange={(e) => setMinSubtotal(e.target.value)}
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-55 dark:bg-zinc-950 py-2.5 px-3 text-xs font-semibold outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-3 text-xs font-semibold outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-450 mb-1.5 font-bold disabled:opacity-40">Max Cap ({currencySymbol})</label>
+                    <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-400 mb-1.5 font-bold disabled:opacity-40">Max Cap ({currencySymbol})</label>
                     <input 
                       type="number" 
                       min="1"
@@ -443,7 +443,7 @@ export default function CouponsPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">Start Date</label>
+                    <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-400 mb-1.5 font-bold">Start Date</label>
                     <input 
                       type="date" 
                       value={startDate}
@@ -454,7 +454,7 @@ export default function CouponsPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">End Date</label>
+                    <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-400 mb-1.5 font-bold">End Date</label>
                     <input 
                       type="date" 
                       value={endDate}
@@ -470,7 +470,7 @@ export default function CouponsPage() {
                   <button
                     type="button"
                     onClick={() => setIsDrawerOpen(false)}
-                    className="flex-1 rounded-lg border border-zinc-250 dark:border-zinc-850 bg-white dark:bg-zinc-900 py-2.5 text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+                    className="flex-1 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 py-2.5 text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
                   >
                     Cancel
                   </button>

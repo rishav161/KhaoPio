@@ -52,6 +52,7 @@ function OrderCard({ order, currencySymbol, onCheckout }: {
   const activeItems = order.items.filter(i => i.status !== 'CANCELLED');
   const itemSummary = activeItems.slice(0, 3).map(i => `${i.menuItem.name} ×${i.quantity}`).join(', ');
   const extraCount = activeItems.length - 3;
+  const isCompleted = COMPLETED_STATUSES.has(order.status);
 
   return (
     <div className="flex flex-col rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm hover:shadow-md hover:border-brand-300 dark:hover:border-brand-700 transition-all duration-150">
@@ -90,13 +91,15 @@ function OrderCard({ order, currencySymbol, onCheckout }: {
       {/* Card footer */}
       <div className="flex items-center justify-between gap-2 px-4 pb-3.5 pt-2 border-t border-zinc-100 dark:border-zinc-800">
         <span className="text-base font-black text-brand-500">{currencySymbol}{order.totals.total}</span>
-        <button
-          onClick={() => onCheckout(order.id)}
-          className="flex items-center gap-1.5 rounded-xl bg-zinc-900 dark:bg-zinc-700 hover:bg-brand-500 px-4 py-2 text-[11px] font-black text-white transition-colors cursor-pointer"
-        >
-          <Receipt className="h-3.5 w-3.5" />
-          CHECKOUT
-        </button>
+        {!isCompleted && (
+          <button
+            onClick={() => onCheckout(order.id)}
+            className="flex items-center gap-1.5 rounded-xl bg-zinc-900 dark:bg-zinc-700 hover:bg-brand-500 px-4 py-2 text-[11px] font-black text-white transition-colors cursor-pointer"
+          >
+            <Receipt className="h-3.5 w-3.5" />
+            CHECKOUT
+          </button>
+        )}
       </div>
     </div>
   );
@@ -165,6 +168,7 @@ function PipelineCard({ order, currencySymbol, onCheckout, onCancel, isNew }: {
   const itemSummary = activeItems.slice(0, 2).map(i => `${i.menuItem.name} ×${i.quantity}`).join(', ');
   const extraCount = activeItems.length - 2;
   const canCancel = CANCELLABLE_STATUSES.has(order.status);
+  const isCompleted = COMPLETED_STATUSES.has(order.status);
 
   return (
     <div className={`flex flex-col rounded-xl border bg-white dark:bg-zinc-900 shadow-sm transition-all duration-150 ${
@@ -199,24 +203,26 @@ function PipelineCard({ order, currencySymbol, onCheckout, onCancel, isNew }: {
 
       <div className="flex flex-col gap-2 px-3 pb-3 pt-1.5 border-t border-zinc-100 dark:border-zinc-800">
         <span className="text-sm font-black text-brand-500">{currencySymbol}{order.totals.total}</span>
-        <div className={`grid gap-1.5 ${canCancel ? 'grid-cols-2' : 'grid-cols-1'}`}>
-          {canCancel && (
+        {!isCompleted && (
+          <div className={`grid gap-1.5 ${canCancel ? 'grid-cols-2' : 'grid-cols-1'}`}>
+            {canCancel && (
+              <button
+                onClick={() => onCancel(order.id)}
+                className="flex items-center justify-center gap-1 rounded-lg border border-red-200 dark:border-red-800 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 py-2 text-[10px] font-black transition-colors cursor-pointer"
+              >
+                <Ban className="h-3 w-3" />
+                CANCEL
+              </button>
+            )}
             <button
-              onClick={() => onCancel(order.id)}
-              className="flex items-center justify-center gap-1 rounded-lg border border-red-200 dark:border-red-800 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 py-2 text-[10px] font-black transition-colors cursor-pointer"
+              onClick={() => onCheckout(order.id)}
+              className="flex items-center justify-center gap-1 rounded-lg bg-zinc-900 dark:bg-zinc-700 hover:bg-brand-500 py-2 text-[10px] font-black text-white transition-colors cursor-pointer"
             >
-              <Ban className="h-3 w-3" />
-              CANCEL
+              <Receipt className="h-3 w-3" />
+              CHECKOUT
             </button>
-          )}
-          <button
-            onClick={() => onCheckout(order.id)}
-            className="flex items-center justify-center gap-1 rounded-lg bg-zinc-900 dark:bg-zinc-700 hover:bg-brand-500 py-2 text-[10px] font-black text-white transition-colors cursor-pointer"
-          >
-            <Receipt className="h-3 w-3" />
-            CHECKOUT
-          </button>
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -235,7 +241,7 @@ function PipelineView({ orders, currencySymbol, onCheckout, onCancel, newOrderId
         const colOrders = orders.filter(o => (col.statuses as readonly string[]).includes(o.status));
         const Icon = col.icon;
         return (
-          <div key={col.id} className={`flex shrink-0 w-[260px] flex-col rounded-xl border-t-2 ${col.accent} border-x border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-950/40 overflow-hidden`}>
+          <div key={col.id} className={`flex flex-1 min-w-[260px] flex-col rounded-xl border-t-2 ${col.accent} border-x border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-950/40 overflow-hidden`}>
             <div className={`flex items-center gap-2 px-3 py-2.5 ${col.headerBg}`}>
               <Icon className={`h-3.5 w-3.5 shrink-0 ${col.headerText}`} />
               <span className={`text-xs font-black ${col.headerText}`}>{col.title}</span>

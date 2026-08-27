@@ -209,7 +209,7 @@ export default function TablesPage() {
       <Loader
         size="md"
         text="Loading table interface..."
-        className="h-full w-full bg-zinc-50 dark:bg-zinc-955 rounded-xl border border-zinc-200 dark:border-zinc-800"
+        className="h-full w-full bg-zinc-50 dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800"
       />
     );
   }
@@ -382,12 +382,12 @@ export default function TablesPage() {
         </div>
 
         {/* List of active reservations */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-zinc-50/50">
+        <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-zinc-50/50 dark:bg-zinc-950/50">
           {bookings.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center text-zinc-400 p-6 text-center">
-              <CalendarDays className="h-10 w-10 stroke-[1.2] text-zinc-300 mb-2" />
-              <p className="text-xs font-bold text-zinc-505">No upcoming bookings</p>
-              <p className="text-[10px] text-zinc-400 mt-1 max-w-[170px]">
+            <div className="flex h-full flex-col items-center justify-center text-zinc-400 dark:text-zinc-500 p-6 text-center">
+              <CalendarDays className="h-10 w-10 stroke-[1.2] text-zinc-300 dark:text-zinc-700 mb-2" />
+              <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400">No upcoming bookings</p>
+              <p className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-1 max-w-[170px]">
                 Reservations scheduled for today onwards will appear in this feed.
               </p>
             </div>
@@ -409,7 +409,7 @@ export default function TablesPage() {
                   className={`flex flex-col border p-3 rounded-lg transition-all ${
                     isCheckedOut
                       ? 'border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950'
-                      : 'border-zinc-200 dark:border-zinc-805 bg-white dark:bg-zinc-900 shadow-xs hover:shadow-sm'
+                      : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs hover:shadow-sm'
                   }`}
                 >
                   {/* Top: Customer & Seats */}
@@ -419,24 +419,24 @@ export default function TablesPage() {
                         {booking.customerName}
                       </h4>
                       {booking.customerPhone && (
-                        <span className="text-[9px] font-semibold text-zinc-450 dark:text-zinc-500">
+                        <span className="text-[9px] font-semibold text-zinc-400 dark:text-zinc-500">
                           PH: {booking.customerPhone}
                         </span>
                       )}
                     </div>
-                    <span className="rounded bg-zinc-100 dark:bg-zinc-955 px-1.5 py-0.5 text-[9px] font-black text-zinc-650 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800">
+                    <span className="rounded bg-zinc-100 dark:bg-zinc-950 px-1.5 py-0.5 text-[9px] font-black text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800">
                       {booking.guestsCount} Guests
                     </span>
                   </div>
 
                   {/* Mid: Table assigned & Time */}
-                  <div className="flex items-center justify-between text-[10px] font-bold text-zinc-505 dark:text-zinc-450 py-1.5 border-t border-dashed border-zinc-150 dark:border-zinc-800">
-                    <span className={`flex items-center gap-1 font-extrabold uppercase ${isCheckedOut ? 'text-zinc-400' : 'text-brand-500'}`}>
+                  <div className="flex items-center justify-between text-[10px] font-bold text-zinc-500 dark:text-zinc-400 py-1.5 border-t border-dashed border-zinc-100 dark:border-zinc-800">
+                    <span className={`flex items-center gap-1 font-extrabold uppercase ${isCheckedOut ? 'text-zinc-400 dark:text-zinc-500' : 'text-brand-500'}`}>
                       <Armchair className="h-3.5 w-3.5" />
                       {booking.table ? booking.table.name : 'Unknown Table'}
                     </span>
                     <span className="flex items-center gap-1 font-mono">
-                      <Clock className="h-3 w-3 text-zinc-400" />
+                      <Clock className="h-3 w-3 text-zinc-400 dark:text-zinc-500" />
                       {bookingDateTime.toLocaleDateString([], { month: 'short', day: 'numeric' })} at{' '}
                       {bookingDateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
@@ -449,10 +449,10 @@ export default function TablesPage() {
                         isCheckedOut
                           ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 border border-zinc-200 dark:border-zinc-700'
                           : isSeated
-                          ? 'bg-emerald-50 dark:bg-emerald-955/20 text-emerald-700 dark:text-emerald-450 border border-emerald-250 dark:border-emerald-900'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900'
                           : isCancelled
-                          ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border border-zinc-200 dark:border-zinc-700'
-                          : 'bg-amber-50 dark:bg-amber-955/20 text-amber-700 dark:text-amber-505 border border-amber-250 dark:border-amber-900'
+                          ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700'
+                          : 'bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-500 border border-amber-200 dark:border-amber-900'
                       }`}
                     >
                       {isCheckedOut ? 'Checked Out' : booking.status}
@@ -462,7 +462,7 @@ export default function TablesPage() {
                       <div className="flex gap-1.5">
                         <button
                           onClick={() => handleCancelBooking(booking.id)}
-                          className="flex items-center gap-0.5 rounded border border-red-200 text-red-500 hover:bg-red-50 px-2 py-1 text-[9px] font-black transition-colors cursor-pointer uppercase"
+                          className="flex items-center gap-0.5 rounded border border-red-200 dark:border-red-900 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 px-2 py-1 text-[9px] font-black transition-colors cursor-pointer uppercase"
                         >
                           <X className="h-3 w-3" />
                           Cancel
@@ -490,7 +490,7 @@ export default function TablesPage() {
           <div className="w-full max-w-sm rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-2xl transition-all duration-200">
             
             <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3 mb-4">
-              <h3 className="text-xs font-black uppercase tracking-wider text-zinc-905 dark:text-zinc-50 flex items-center gap-1.5">
+              <h3 className="text-xs font-black uppercase tracking-wider text-zinc-900 dark:text-zinc-50 flex items-center gap-1.5">
                 <Armchair className="h-4.5 w-4.5 text-brand-500" />
                 <span>Configure Dining Table</span>
               </h3>
@@ -504,13 +504,13 @@ export default function TablesPage() {
 
             <form onSubmit={handleAddTable} className="space-y-4">
               {addTableError && (
-                <div className="rounded-lg bg-red-50 dark:bg-red-955/20 border border-red-200 dark:border-red-900 p-2.5 text-[10px] font-bold text-red-600 dark:text-red-400">
+                <div className="rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 p-2.5 text-[10px] font-bold text-red-600 dark:text-red-400">
                   {addTableError}
                 </div>
               )}
 
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1">
+                <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-400 mb-1">
                   Table Identifier / Name
                 </label>
                 <input
@@ -524,7 +524,7 @@ export default function TablesPage() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1">
+                <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-400 mb-1">
                   Seat Capacity
                 </label>
                 <select
@@ -544,7 +544,7 @@ export default function TablesPage() {
                 <button
                   type="button"
                   onClick={() => setIsAddTableOpen(false)}
-                  className="flex-1 rounded-lg border border-zinc-250 dark:border-zinc-850 py-2.5 text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-350 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+                  className="flex-1 rounded-lg border border-zinc-200 dark:border-zinc-800 py-2.5 text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -566,7 +566,7 @@ export default function TablesPage() {
           <div className="w-full max-w-md rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-2xl transition-all duration-200">
             
             <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3 mb-4">
-              <h3 className="text-xs font-black uppercase tracking-wider text-zinc-905 dark:text-zinc-50 flex items-center gap-1.5">
+              <h3 className="text-xs font-black uppercase tracking-wider text-zinc-900 dark:text-zinc-50 flex items-center gap-1.5">
                 <CalendarDays className="h-4.5 w-4.5 text-brand-500" />
                 <span>Reserve Dining Table</span>
               </h3>
@@ -580,14 +580,14 @@ export default function TablesPage() {
 
             <form onSubmit={handleAddBooking} className="space-y-3.5">
               {addBookingError && (
-                <div className="rounded-lg bg-red-50 dark:bg-red-955/20 border border-red-200 dark:border-red-900 p-2.5 text-[10px] font-bold text-red-600 dark:text-red-400">
+                <div className="rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 p-2.5 text-[10px] font-bold text-red-600 dark:text-red-400">
                   {addBookingError}
                 </div>
               )}
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2 sm:col-span-1">
-                  <label className="block text-[8px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-0.5">
+                  <label className="block text-[8px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-400 mb-0.5">
                     Customer Name
                   </label>
                   <input
@@ -595,12 +595,12 @@ export default function TablesPage() {
                     placeholder="e.g. John Doe"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-955 px-3 py-2 text-xs font-bold outline-none focus:border-brand-400 text-zinc-900 dark:text-zinc-100"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-xs font-bold outline-none focus:border-brand-400 text-zinc-900 dark:text-zinc-100"
                     required
                   />
                 </div>
                 <div className="col-span-2 sm:col-span-1">
-                  <label className="block text-[8px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-0.5">
+                  <label className="block text-[8px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-400 mb-0.5">
                     Contact Phone
                   </label>
                   <input
@@ -608,26 +608,26 @@ export default function TablesPage() {
                     placeholder="e.g. +1 555-0199"
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-955 px-3 py-2 text-xs font-bold outline-none focus:border-brand-400 text-zinc-900 dark:text-zinc-100"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-xs font-bold outline-none focus:border-brand-400 text-zinc-900 dark:text-zinc-100"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2 sm:col-span-1">
-                  <label className="block text-[8px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-0.5">
+                  <label className="block text-[8px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-400 mb-0.5">
                     Reservation Date & Time
                   </label>
                   <input
                     type="datetime-local"
                     value={bookingTime}
                     onChange={(e) => setBookingTime(e.target.value)}
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-955 px-3 py-2 text-xs font-bold outline-none focus:border-brand-400 text-zinc-900 dark:text-zinc-100 font-mono"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-xs font-bold outline-none focus:border-brand-400 text-zinc-900 dark:text-zinc-100 font-mono"
                     required
                   />
                 </div>
                 <div className="col-span-2 sm:col-span-1">
-                  <label className="block text-[8px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-0.5">
+                  <label className="block text-[8px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-400 mb-0.5">
                     Total Guest Count
                   </label>
                   <input
@@ -635,20 +635,20 @@ export default function TablesPage() {
                     min="1"
                     value={guestsCount}
                     onChange={(e) => setGuestsCount(e.target.value)}
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-955 px-3 py-2 text-xs font-bold outline-none focus:border-brand-400 text-zinc-900 dark:text-zinc-100"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-xs font-bold outline-none focus:border-brand-400 text-zinc-900 dark:text-zinc-100"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[8px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-0.5">
+                <label className="block text-[8px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-400 mb-0.5">
                   Allocate Dining Table
                 </label>
                 <select
                   value={selectedTableId}
                   onChange={(e) => setSelectedTableId(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-955 px-3 py-2 text-xs font-bold outline-none focus:border-brand-400 text-zinc-900 dark:text-zinc-100"
+                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-xs font-bold outline-none focus:border-brand-400 text-zinc-900 dark:text-zinc-100"
                   required
                 >
                   <option value="">-- Choose dining table --</option>
@@ -669,7 +669,7 @@ export default function TablesPage() {
                 </select>
 
                 {capacityWarning && (
-                  <p className="mt-1 text-[9px] font-bold text-amber-655 flex items-center gap-1.5 uppercase tracking-wide">
+                  <p className="mt-1 text-[9px] font-bold text-amber-600 flex items-center gap-1.5 uppercase tracking-wide">
                     <Sparkles className="h-3.5 w-3.5 shrink-0" />
                     <span>Warning: Guest count exceeds table capacity ({selectedTableCapacity} seats)!</span>
                   </p>
@@ -680,7 +680,7 @@ export default function TablesPage() {
                 <button
                   type="button"
                   onClick={() => setIsAddBookingOpen(false)}
-                  className="flex-1 rounded-lg border border-zinc-250 dark:border-zinc-855 py-2.5 text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-350 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+                  className="flex-1 rounded-lg border border-zinc-200 dark:border-zinc-800 py-2.5 text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
                 >
                   Cancel
                 </button>

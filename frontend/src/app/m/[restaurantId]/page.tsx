@@ -193,7 +193,7 @@ function PublicRestaurantMenuContent() {
     <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans pb-28">
       
       {/* RESTAURANT HEADER BANNER */}
-      <header className="relative overflow-hidden border-b border-zinc-850 bg-gradient-to-b from-brand-950/40 via-zinc-900 to-zinc-950 p-5 shadow-lg">
+      <header className="relative overflow-hidden border-b border-zinc-800 bg-gradient-to-b from-brand-950/40 via-zinc-900 to-zinc-950 p-5 shadow-lg">
         <div className="mx-auto max-w-2xl flex flex-col gap-3">
           
           <div className="flex items-center justify-between">
@@ -243,7 +243,7 @@ function PublicRestaurantMenuContent() {
       </header>
 
       {/* STICKY SEARCH & CATEGORY FILTER TABS */}
-      <div className="sticky top-0 z-30 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-850 p-3 shadow-md">
+      <div className="sticky top-0 z-30 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800 p-3 shadow-md">
         <div className="mx-auto max-w-2xl space-y-2.5">
           
           {/* Search Input */}
@@ -273,7 +273,7 @@ function PublicRestaurantMenuContent() {
               className={`rounded-xl px-3.5 py-1.5 text-[11px] font-black uppercase tracking-wider shrink-0 transition-all cursor-pointer ${
                 activeTab === 'ALL'
                   ? 'bg-brand-500 text-white shadow-md'
-                  : 'bg-zinc-900 border border-zinc-800 text-zinc-400 hover:bg-zinc-850'
+                  : 'bg-zinc-900 border border-zinc-800 text-zinc-400 hover:bg-zinc-800'
               }`}
             >
               All ({allItems.length})
@@ -286,7 +286,7 @@ function PublicRestaurantMenuContent() {
                 className={`rounded-xl px-3.5 py-1.5 text-[11px] font-black uppercase tracking-wider shrink-0 transition-all cursor-pointer ${
                   activeTab === cat.id
                     ? 'bg-brand-500 text-white shadow-md'
-                    : 'bg-zinc-900 border border-zinc-800 text-zinc-400 hover:bg-zinc-850'
+                    : 'bg-zinc-900 border border-zinc-800 text-zinc-400 hover:bg-zinc-800'
                 }`}
               >
                 {cat.name} ({cat.menuItems.length})
@@ -309,7 +309,7 @@ function PublicRestaurantMenuContent() {
               return (
                 <div
                   key={item.id}
-                  className="flex items-start gap-3 rounded-2xl border border-zinc-850 bg-zinc-900/60 p-3.5 shadow-sm transition-all hover:border-zinc-750"
+                  className="flex items-start gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3.5 shadow-sm transition-all hover:border-zinc-700"
                 >
                   {/* Dish Icon / Emoji */}
                   <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-zinc-950 text-2xl border border-zinc-800 select-none shadow-xs">
@@ -417,7 +417,7 @@ function PublicRestaurantMenuContent() {
             {/* Cart Items List */}
             <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
               {cart.map(({ item, quantity }) => (
-                <div key={item.id} className="flex items-center justify-between p-2.5 rounded-xl bg-zinc-950 border border-zinc-850">
+                <div key={item.id} className="flex items-center justify-between p-2.5 rounded-xl bg-zinc-950 border border-zinc-800">
                   <div className="flex items-center gap-2.5">
                     <span className="text-lg select-none">{item.image || '🍽️'}</span>
                     <div>

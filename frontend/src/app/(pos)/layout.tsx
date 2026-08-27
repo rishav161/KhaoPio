@@ -205,7 +205,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         {/* Mobile Close Button */}
-        <div className="md:hidden flex w-full justify-end p-2 border-b border-zinc-150 dark:border-zinc-800">
+        <div className="md:hidden flex w-full justify-end p-2 border-b border-zinc-100 dark:border-zinc-800">
           <button
             onClick={() => setIsSidebarOpen(false)}
             className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"

@@ -73,18 +73,18 @@ export function ConfirmDialog() {
             <h3 className="text-sm font-black uppercase tracking-wider text-zinc-900 dark:text-zinc-50">
               {options.title}
             </h3>
-            <p className="mt-1.5 text-xs text-zinc-550 dark:text-zinc-400 font-semibold leading-relaxed">
+            <p className="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400 font-semibold leading-relaxed">
               {options.message}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2.5 mt-6 pt-3 border-t border-zinc-100 dark:border-zinc-850">
+        <div className="flex items-center justify-end gap-2.5 mt-6 pt-3 border-t border-zinc-100 dark:border-zinc-800">
           {!isAlertOnly && (
             <button
               onClick={handleCancel}
               disabled={loading}
-              className="rounded-lg border border-zinc-250 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2.5 text-[10px] font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-350 hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer disabled:opacity-50 transition-all"
+              className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2.5 text-[10px] font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer disabled:opacity-50 transition-all"
             >
               {options.cancelText || 'Cancel'}
             </button>

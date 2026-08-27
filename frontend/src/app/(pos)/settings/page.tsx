@@ -217,7 +217,7 @@ export default function SettingsPage() {
           )}
           
           {success && (
-            <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950/25 border border-emerald-200 dark:border-emerald-900 p-3 text-xs font-bold text-emerald-650 dark:text-emerald-400 flex items-center gap-2 animate-bounce">
+            <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950/25 border border-emerald-200 dark:border-emerald-900 p-3 text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2 animate-bounce">
               <CheckCircle2 className="h-4.5 w-4.5 shrink-0" />
               <span>Settings updated successfully!</span>
             </div>
@@ -227,7 +227,7 @@ export default function SettingsPage() {
           <div className="space-y-4">
             <span className="block text-[10px] font-black uppercase tracking-widest text-brand-500">Personal Information</span>
             <div>
-              <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">Staff Member Name</label>
+              <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-400 mb-1.5 font-bold">Staff Member Name</label>
               <div className="relative">
                 <User className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-400" />
                 <input 
@@ -242,11 +242,11 @@ export default function SettingsPage() {
           </div>
 
           {/* Section 2: Restaurant Identity & POS configuration */}
-          <div className="border-t border-zinc-150 dark:border-zinc-800 pt-5 mt-5 space-y-4">
+          <div className="border-t border-zinc-100 dark:border-zinc-800 pt-5 mt-5 space-y-4">
             <span className="block text-[10px] font-black uppercase tracking-widest text-brand-500">Restaurant Settings</span>
             
             <div>
-              <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">Restaurant Workspace Name</label>
+              <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-400 mb-1.5 font-bold">Restaurant Workspace Name</label>
               <div className="relative">
                 <Landmark className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-400" />
                 <input 
@@ -264,7 +264,7 @@ export default function SettingsPage() {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">Default Tax (GST %)</label>
+                    <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-400 mb-1.5 font-bold">Default Tax (GST %)</label>
                     <input 
                       type="number" 
                       step="0.1"
@@ -276,7 +276,7 @@ export default function SettingsPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">Service Charge (%)</label>
+                    <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-400 mb-1.5 font-bold">Service Charge (%)</label>
                     <input 
                       type="number" 
                       step="0.1"
@@ -291,7 +291,7 @@ export default function SettingsPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">Store Phone Number</label>
+                    <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-400 mb-1.5 font-bold">Store Phone Number</label>
                     <div className="relative">
                       <Phone className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-400" />
                       <input 
@@ -304,7 +304,7 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">GSTIN / Tax ID</label>
+                    <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-400 mb-1.5 font-bold">GSTIN / Tax ID</label>
                     <div className="relative">
                       <FileText className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-400" />
                       <input 
@@ -319,7 +319,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">Store Address</label>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-400 mb-1.5 font-bold">Store Address</label>
                   <div className="relative">
                     <MapPin className="absolute top-3 left-3 h-4 w-4 text-zinc-400" />
                     <textarea 
@@ -333,7 +333,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">Store Logo</label>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-400 mb-1.5 font-bold">Store Logo</label>
                   <div className="flex items-center gap-4">
                     {/* Preview */}
                     <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border-2 border-dashed border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 overflow-hidden">
@@ -388,7 +388,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">Custom Invoice Footer</label>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-400 mb-1.5 font-bold">Custom Invoice Footer</label>
                   <div className="relative">
                     <MessageSquare className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-400" />
                     <input 
@@ -401,7 +401,7 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">Base Currency</label>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-400 mb-1.5 font-bold">Base Currency</label>
                   <select
                     value={profileCurrency}
                     onChange={(e) => setProfileCurrency(e.target.value)}
@@ -443,7 +443,7 @@ export default function SettingsPage() {
               {/* Digital Menu QR Code Card */}
               {user?.role === 'SUPER_ADMIN' && (
                 <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-sm">
-                  <div className="flex items-center justify-between border-b border-zinc-150 dark:border-zinc-800 pb-3.5 mb-5">
+                  <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3.5 mb-5">
                     <div className="flex items-center gap-2">
                       <div className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 dark:bg-brand-950/20 text-brand-500">
                         <QrCode className="h-4 w-4" />
@@ -582,7 +582,7 @@ export default function SettingsPage() {
             const labels = { current: 'Current Password', next: 'New Password', confirm: 'Confirm New Password' };
             return (
               <div key={field}>
-                <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">
+                <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-400 mb-1.5 font-bold">
                   {labels[field]}
                 </label>
                 <div className="relative">
