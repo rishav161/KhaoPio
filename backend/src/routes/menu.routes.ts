@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import {
   getMenu,
+  getPublicMenu,
+  regenerateQrCode,
   createCategory,
   updateCategory,
   deleteCategory,
@@ -11,6 +13,13 @@ import {
 import { authenticateJWT, requirePermission } from '../middlewares/auth.middleware';
 
 const router = Router();
+
+// Public Menu routes (Unauthenticated for QR code customers)
+router.get('/public', getPublicMenu as any);
+router.get('/public/:restaurantId', getPublicMenu as any);
+
+// Regenerate QR Code Token (restricted to Store Managers / Super Admins)
+router.post('/regenerate-qr', authenticateJWT, requirePermission('view:staff'), regenerateQrCode as any);
 
 // Read Menu (accessible to all authenticated staff: Waiters, Cashiers, Chefs, Admins)
 router.get('/', authenticateJWT, getMenu as any);

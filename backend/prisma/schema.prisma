@@ -190,6 +190,7 @@ enum OrderItemStatus {
 model Restaurant {
   id                   String         @id @default(uuid())
   name                 String
+  qrSlug               String?        @unique
   users                User[]
   invitations          Invitation[]
   categories           MenuCategory[]

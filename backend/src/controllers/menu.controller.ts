@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 import menuService from '../services/menu.service';
 
@@ -13,6 +13,33 @@ export const getMenu = async (req: AuthenticatedRequest, res: Response): Promise
     res.status(200).json(menu);
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Error fetching menu.' });
+  }
+};
+
+export const getPublicMenu = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { restaurantId } = req.params;
+    const publicMenu = await menuService.getPublicMenuByRestaurantId(restaurantId);
+    res.status(200).json(publicMenu);
+  } catch (error: any) {
+    res.status(404).json({ error: error.message || 'Restaurant menu not found.' });
+  }
+};
+
+export const regenerateQrCode = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const restaurantId = req.user?.restaurantId;
+    if (!restaurantId) {
+      res.status(401).json({ error: 'Unauthorized. Restaurant context missing.' });
+      return;
+    }
+    const result = await menuService.regenerateRestaurantQr(restaurantId);
+    res.status(200).json({
+      message: 'QR Code successfully regenerated. Previous printed QR codes have been revoked.',
+      ...result,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Error regenerating QR code.' });
   }
 };
 

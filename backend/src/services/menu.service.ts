@@ -21,6 +21,80 @@ export class MenuService {
   }
 
   /**
+   * Publicly fetches restaurant metadata and active menu items.
+   * Checks both restaurant ID and secret QR slug token.
+   */
+  async getPublicMenuByRestaurantId(targetRestaurantId?: string) {
+    let restaurant: any;
+    if (targetRestaurantId && targetRestaurantId !== 'default') {
+      restaurant = await prisma.restaurant.findFirst({
+        where: {
+          OR: [
+            { id: targetRestaurantId },
+            { qrSlug: targetRestaurantId } as any,
+          ],
+        },
+      });
+    } else {
+      restaurant = await prisma.restaurant.findFirst();
+    }
+
+    if (!restaurant) {
+      throw new Error('Restaurant not found or this QR code has been revoked/expired.');
+    }
+
+    const categories = await prisma.menuCategory.findMany({
+      where: { restaurantId: restaurant.id },
+      include: {
+        menuItems: {
+          where: {
+            isAvailable: true,
+          },
+          orderBy: {
+            name: 'asc',
+          },
+        },
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    });
+
+    return {
+      restaurant: {
+        id: restaurant.id,
+        name: restaurant.name,
+        address: restaurant.address,
+        phone: restaurant.phone,
+        logo: restaurant.logo,
+        currency: restaurant.currency,
+        qrSlug: restaurant.qrSlug || restaurant.id,
+        defaultTaxRate: restaurant.defaultTaxRate,
+        defaultServiceCharge: restaurant.defaultServiceCharge,
+      },
+      categories,
+    };
+  }
+
+  /**
+   * Regenerates a restaurant's secret QR slug token, revoking all previous printed QR codes.
+   */
+  async regenerateRestaurantQr(restaurantId: string) {
+    const crypto = await import('crypto');
+    const newQrSlug = `qr_${crypto.randomBytes(8).toString('hex')}`;
+
+    const updated: any = await prisma.restaurant.update({
+      where: { id: restaurantId },
+      data: { qrSlug: newQrSlug } as any,
+    });
+
+    return {
+      restaurantId: updated.id,
+      qrSlug: updated.qrSlug,
+    };
+  }
+
+  /**
    * Creates a new menu category.
    */
   async createCategory(restaurantId: string, name: string) {

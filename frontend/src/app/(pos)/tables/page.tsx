@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import { usePOSStore } from '@/store/usePOSStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Loader } from '@/components/Loader';
-import { Plus, Trash2, CalendarDays, Users, Check, X, Armchair, PlusCircle, Clock, Sparkles, Unlock } from 'lucide-react';
+import { Plus, Trash2, CalendarDays, Users, Check, X, Armchair, PlusCircle, Clock, Sparkles, Unlock, QrCode, Printer } from 'lucide-react';
 import { useConfirmStore } from '@/store/useConfirmStore';
+import { DiningTable } from '@/types/pos';
 
 export default function TablesPage() {
   const {
