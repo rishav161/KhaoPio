@@ -249,7 +249,7 @@ export default function StaffManagement() {
       case 'INVITED':
         return 'bg-amber-50 text-amber-700 border-amber-200';
       case 'INACTIVE':
-        return 'bg-zinc-100 text-zinc-550 border-zinc-300';
+        return 'bg-zinc-100 text-zinc-500 border-zinc-300';
       default:
         return 'bg-zinc-50 text-zinc-700 border-zinc-200';
     }
@@ -288,24 +288,24 @@ export default function StaffManagement() {
 
       {/* Banners */}
       {errorMsg && (
-        <div className="mb-4 flex items-center justify-between rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/20 p-3.5 text-xs font-bold text-red-650 dark:text-red-400">
+        <div className="mb-4 flex items-center justify-between rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/20 p-3.5 text-xs font-bold text-red-600 dark:text-red-400">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4.5 w-4.5 shrink-0" />
             <span>{errorMsg}</span>
           </div>
-          <button onClick={() => setErrorMsg('')} className="text-red-450 hover:text-red-750 cursor-pointer">
+          <button onClick={() => setErrorMsg('')} className="text-red-400 hover:text-red-700 cursor-pointer">
             <X className="h-4 w-4" />
           </button>
         </div>
       )}
 
       {successMsg && (
-        <div className="mb-4 flex items-center justify-between rounded-lg border border-emerald-250 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/20 p-3.5 text-xs font-bold text-emerald-700 dark:text-emerald-450">
+        <div className="mb-4 flex items-center justify-between rounded-lg border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/20 p-3.5 text-xs font-bold text-emerald-700 dark:text-emerald-400">
           <div className="flex items-center gap-2">
             <Check className="h-4.5 w-4.5 shrink-0" />
             <span>{successMsg}</span>
           </div>
-          <button onClick={() => setSuccessMsg('')} className="text-emerald-450 hover:text-emerald-750 cursor-pointer">
+          <button onClick={() => setSuccessMsg('')} className="text-emerald-400 hover:text-emerald-700 cursor-pointer">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -350,7 +350,7 @@ export default function StaffManagement() {
         <button
           onClick={fetchStaff}
           disabled={loading}
-          className="rounded-lg p-2 text-zinc-500 dark:text-zinc-450 hover:bg-zinc-100 dark:hover:bg-zinc-800 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+          className="rounded-lg p-2 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
           title="Reload Roster"
         >
           <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
@@ -366,7 +366,7 @@ export default function StaffManagement() {
           </div>
         ) : filteredStaff.length === 0 ? (
           <div className="flex h-full w-full flex-col items-center justify-center p-8 text-center">
-            <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-405 dark:text-zinc-500 mb-3">
+            <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 mb-3">
               <Users className="h-6 w-6" />
             </div>
             <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">No Staff Members Found</h3>
@@ -378,7 +378,7 @@ export default function StaffManagement() {
           <div className="min-w-full inline-block align-middle">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800 text-left text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                <thead className="bg-zinc-50 dark:bg-zinc-950/40 text-[10px] font-black uppercase tracking-wider text-zinc-550 dark:text-zinc-455">
+                <thead className="bg-zinc-50 dark:bg-zinc-950/40 text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                   <tr>
                     <th scope="col" className="px-4 py-3">Name</th>
                     <th scope="col" className="px-4 py-3">Email</th>
@@ -430,7 +430,7 @@ export default function StaffManagement() {
                           {canUpdate && staff.id !== user?.id && (
                             <button
                               onClick={() => handleToggleStatus(staff)}
-                              className="rounded p-1.5 text-zinc-555 hover:bg-zinc-100 hover:text-zinc-900 cursor-pointer transition-colors"
+                              className="rounded p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 cursor-pointer transition-colors"
                               title={staff.status === 'ACTIVE' ? 'Disable Terminal' : 'Enable Terminal'}
                             >
                               {staff.status === 'ACTIVE' ? (
@@ -452,7 +452,7 @@ export default function StaffManagement() {
                           {canDelete && staff.id !== user?.id && (
                             <button
                               onClick={() => openDeleteModal(staff)}
-                              className="rounded p-1.5 text-zinc-555 hover:bg-red-50 hover:text-red-600 cursor-pointer transition-colors"
+                              className="rounded p-1.5 text-zinc-500 hover:bg-red-50 hover:text-red-600 cursor-pointer transition-colors"
                               title="Remove Member"
                             >
                               <Trash2 className="h-4.5 w-4.5" />
@@ -477,7 +477,7 @@ export default function StaffManagement() {
             
             <button
               onClick={() => setIsInviteOpen(false)}
-              className="absolute right-4 top-4 rounded p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-850 hover:text-zinc-800 dark:hover:text-zinc-100 cursor-pointer"
+              className="absolute right-4 top-4 rounded p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-800 dark:hover:text-zinc-100 cursor-pointer"
             >
               <X className="h-5 w-5" />
             </button>
@@ -492,7 +492,7 @@ export default function StaffManagement() {
 
             <form onSubmit={handleInviteSubmit} className="mt-4 space-y-4">
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-550 dark:text-zinc-450 mb-1.5">
+                <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
                   Email Address
                 </label>
                 <div className="relative">
@@ -502,14 +502,14 @@ export default function StaffManagement() {
                     placeholder="e.g. staffmember@khaopio.com"
                     value={inviteForm.email}
                     onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
-                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-brand-400/20"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-brand-400/20"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-550 dark:text-zinc-450 mb-1.5">
+                <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
                   Staff Role
                 </label>
                 <div className="relative">
@@ -517,7 +517,7 @@ export default function StaffManagement() {
                   <select
                     value={inviteForm.role}
                     onChange={(e) => setInviteForm({ ...inviteForm, role: e.target.value })}
-                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition-all focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-brand-400/20 appearance-none cursor-pointer"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition-all focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-brand-400/20 appearance-none cursor-pointer"
                   >
                     <option value="STORE_MANAGER">Store Manager</option>
                     <option value="CASHIER">Cashier</option>
@@ -527,7 +527,7 @@ export default function StaffManagement() {
                 </div>
               </div>
 
-              <div className="mt-6 flex justify-end gap-2 border-t border-zinc-200 dark:border-zinc-805 pt-4">
+              <div className="mt-6 flex justify-end gap-2 border-t border-zinc-200 dark:border-zinc-800 pt-4">
                 <button
                   type="button"
                   onClick={() => setIsInviteOpen(false)}
@@ -556,7 +556,7 @@ export default function StaffManagement() {
 
             <button
               onClick={() => setIsEditOpen(false)}
-              className="absolute right-4 top-4 rounded p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-850 hover:text-zinc-800 dark:hover:text-zinc-100 cursor-pointer"
+              className="absolute right-4 top-4 rounded p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-800 dark:hover:text-zinc-100 cursor-pointer"
             >
               <X className="h-5 w-5" />
             </button>
@@ -571,20 +571,20 @@ export default function StaffManagement() {
 
             <form onSubmit={handleEditSubmit} className="mt-4 space-y-4">
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-550 dark:text-zinc-450 mb-1.5">
+                <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
                   Full Name
                 </label>
                 <input
                   type="text"
                   value={editForm.name}
                   onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                  className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-3 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-brand-400/20"
+                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-3 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-brand-400/20"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-550 dark:text-zinc-450 mb-1.5">
+                <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
                   System Role
                 </label>
                 <div className="relative">
@@ -593,7 +593,7 @@ export default function StaffManagement() {
                     value={editForm.role}
                     onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
                     disabled={editForm.role === 'SUPER_ADMIN'}
-                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition-all focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-brand-400/20 appearance-none cursor-pointer disabled:opacity-55 disabled:cursor-not-allowed"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition-all focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-brand-400/20 appearance-none cursor-pointer disabled:opacity-55 disabled:cursor-not-allowed"
                   >
                     {editForm.role === 'SUPER_ADMIN' && <option value="SUPER_ADMIN">Super Admin</option>}
                     <option value="STORE_MANAGER">Store Manager</option>
@@ -604,7 +604,7 @@ export default function StaffManagement() {
                 </div>
               </div>
 
-              <div className="mt-6 flex justify-end gap-2 border-t border-zinc-200 dark:border-zinc-805 pt-4">
+              <div className="mt-6 flex justify-end gap-2 border-t border-zinc-200 dark:border-zinc-800 pt-4">
                 <button
                   type="button"
                   onClick={() => setIsEditOpen(false)}
@@ -629,7 +629,7 @@ export default function StaffManagement() {
       {isDeleteOpen && userToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="relative w-full max-w-sm overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-2xl animate-in zoom-in-95 duration-150 text-zinc-900 dark:text-zinc-100">
-            <div className="absolute top-0 left-0 right-0 h-[3px] bg-red-650"></div>
+            <div className="absolute top-0 left-0 right-0 h-[3px] bg-red-600"></div>
 
             <h2 className="text-base font-extrabold text-zinc-900 dark:text-zinc-50 flex items-center gap-1.5">
               <Trash2 className="h-5 w-5 text-red-500" />
@@ -647,7 +647,7 @@ export default function StaffManagement() {
                   setIsDeleteOpen(false);
                   setUserToDelete(null);
                 }}
-                className="rounded-lg border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3.5 py-1.5 text-xs font-bold text-zinc-700 dark:text-zinc-355 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                className="rounded-lg border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3.5 py-1.5 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
               >
                 Cancel
               </button>

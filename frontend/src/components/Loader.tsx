@@ -17,7 +17,7 @@ export const Loader: React.FC<LoaderProps> = ({ size = 'md', text, className = '
     <div className={`flex flex-col items-center justify-center ${className}`}>
       <div className={`animate-spin rounded-full border-brand-500 border-t-transparent ${spinnerSizes[size]}`}></div>
       {text && (
-        <span className={`mt-2.5 font-bold text-zinc-400 dark:text-zinc-550 ${size === 'sm' ? 'text-[10px]' : 'text-xs'}`}>
+        <span className={`mt-2.5 font-bold text-zinc-400 dark:text-zinc-500 ${size === 'sm' ? 'text-[10px]' : 'text-xs'}`}>
           {text}
         </span>
       )}

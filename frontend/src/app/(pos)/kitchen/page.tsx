@@ -134,7 +134,7 @@ export default function KitchenPage() {
   }, [pendingCount]);
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden bg-zinc-100 dark:bg-zinc-955 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+    <div className="flex h-full w-full flex-col overflow-hidden bg-zinc-100 dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
       {/* KDS Header & Filter bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-brand-600 bg-gradient-to-r from-brand-500 to-brand-400 p-3">
         <div className="flex items-center gap-2 flex-wrap">
@@ -170,7 +170,7 @@ export default function KitchenPage() {
         {kitchenOrders.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-zinc-400 bg-white dark:bg-zinc-900 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-800">
             <Flame className="h-12 w-12 stroke-[1.2] text-zinc-300 mb-2 animate-pulse" />
-            <p className="text-xs font-black text-zinc-505 dark:text-zinc-450">No active kitchen orders</p>
+            <p className="text-xs font-black text-zinc-500 dark:text-zinc-400">No active kitchen orders</p>
             <p className="text-[10px] text-zinc-400 mt-1">
               New orders sent from the Billing counter will automatically appear here.
             </p>
@@ -190,18 +190,18 @@ export default function KitchenPage() {
                 >
                   {/* Order Ticket Header */}
                   <div
-                    className={`flex items-center justify-between border-b dark:border-zinc-805 px-3 py-2 rounded-t-lg ${
+                    className={`flex items-center justify-between border-b dark:border-zinc-800 px-3 py-2 rounded-t-lg ${
                       isPending ? 'bg-brand-50/80 dark:bg-brand-950/20 border-brand-200 dark:border-brand-800' : 'bg-blue-50/80 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800'
                     }`}
                   >
                     <div>
-                      <span className="text-sm font-black text-zinc-905 dark:text-zinc-50 leading-none">
+                      <span className="text-sm font-black text-zinc-900 dark:text-zinc-50 leading-none">
                         KOT #{kot.kotNumber} {kot.table ? `(${kot.table.name})` : '(Takeaway)'}
                       </span>
                       <div className="text-[9px] font-extrabold text-zinc-500 dark:text-zinc-400 mt-0.5">
                         Items: {kot.items.reduce((acc, ci) => acc + ci.quantity, 0)}
                       </div>
-                      <div className="text-[8px] font-black text-zinc-450 dark:text-zinc-550 leading-tight uppercase mt-0.5">
+                      <div className="text-[8px] font-black text-zinc-400 dark:text-zinc-500 leading-tight uppercase mt-0.5">
                         By: {kot.waiterName} ({kot.waiterRole?.replace('_', ' ')})
                       </div>
                     </div>
@@ -210,7 +210,7 @@ export default function KitchenPage() {
                   </div>
 
                   {/* Order Items (Readable, large-text list for screen mounting) */}
-                  <div className="flex-1 overflow-y-auto px-3 py-2.5 max-h-[300px] min-h-[160px] divide-y divide-zinc-105 dark:divide-zinc-800">
+                  <div className="flex-1 overflow-y-auto px-3 py-2.5 max-h-[300px] min-h-[160px] divide-y divide-zinc-100 dark:divide-zinc-800">
                     {kot.items.map((item) => (
                       <div key={item.id} className="py-2 space-y-1">
                         <div className="flex items-start justify-between">
@@ -238,7 +238,7 @@ export default function KitchenPage() {
                     ))}
                   </div>
 
-                  <div className="border-t border-zinc-200 dark:border-zinc-800 p-2 bg-zinc-55 dark:bg-zinc-950 rounded-b-xl">
+                  <div className="border-t border-zinc-200 dark:border-zinc-800 p-2 bg-zinc-50 dark:bg-zinc-950 rounded-b-xl">
                     {isPending ? (
                       <button
                         onClick={() => handleUpdateStatus(kot.id, 'PREPARING')}

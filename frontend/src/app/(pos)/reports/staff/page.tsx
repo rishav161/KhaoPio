@@ -54,7 +54,7 @@ export default function StaffActivityReport() {
         
         <button
           onClick={fetchStaff}
-          className="flex items-center gap-1.5 self-start rounded-lg border border-zinc-250 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3.5 py-2 text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100/50 dark:hover:bg-zinc-800 active:scale-95 transition-all cursor-pointer shadow-sm"
+          className="flex items-center gap-1.5 self-start rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3.5 py-2 text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100/50 dark:hover:bg-zinc-800 active:scale-95 transition-all cursor-pointer shadow-sm"
         >
           <RefreshCw className="h-3.5 w-3.5" />
           <span>Refresh List</span>
@@ -62,7 +62,7 @@ export default function StaffActivityReport() {
       </div>
 
       {error && (
-        <div className="mb-6 flex items-start gap-3 rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 p-4 text-xs font-bold text-red-650 dark:text-red-400">
+        <div className="mb-6 flex items-start gap-3 rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 p-4 text-xs font-bold text-red-600 dark:text-red-400">
           <span>{error}</span>
         </div>
       )}
@@ -90,7 +90,7 @@ export default function StaffActivityReport() {
                 <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[9px] font-black tracking-wider uppercase ${
                   user.status === 'ACTIVE' 
                     ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400' 
-                    : 'bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-450'
+                    : 'bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400'
                 }`}>
                   {user.status}
                 </span>

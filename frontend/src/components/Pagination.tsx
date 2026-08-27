@@ -36,7 +36,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
       </div>
       <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-semibold text-zinc-550 dark:text-zinc-400">
+          <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
             Showing page <span className="font-black text-zinc-900 dark:text-zinc-50">{currentPage}</span> of{' '}
             <span className="font-black text-zinc-900 dark:text-zinc-50">{totalPages}</span> pages
           </p>
@@ -47,7 +47,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
             <button
               onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
               disabled={currentPage === 1}
-              className="relative inline-flex items-center rounded-l-lg border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-2 py-2 text-zinc-450 hover:bg-zinc-50 dark:hover:bg-zinc-900 disabled:opacity-30 cursor-pointer"
+              className="relative inline-flex items-center rounded-l-lg border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-2 py-2 text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 disabled:opacity-30 cursor-pointer"
             >
               <span className="sr-only">Previous</span>
               <ChevronLeft className="h-4 w-4" aria-hidden="true" />
@@ -63,7 +63,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
                   className={`relative inline-flex items-center border px-3 py-1.5 text-xs font-black cursor-pointer transition-all ${
                     isCurrent
                       ? 'z-10 bg-brand-500 border-brand-500 text-white shadow-sm'
-                      : 'border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-650 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900'
+                      : 'border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900'
                   }`}
                 >
                   {p}
@@ -75,7 +75,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
             <button
               onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))}
               disabled={currentPage === totalPages}
-              className="relative inline-flex items-center rounded-r-lg border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-2 py-2 text-zinc-450 hover:bg-zinc-50 dark:hover:bg-zinc-900 disabled:opacity-30 cursor-pointer"
+              className="relative inline-flex items-center rounded-r-lg border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-2 py-2 text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 disabled:opacity-30 cursor-pointer"
             >
               <span className="sr-only">Next</span>
               <ChevronRight className="h-4 w-4" aria-hidden="true" />

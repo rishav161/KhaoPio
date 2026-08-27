@@ -129,7 +129,7 @@ function InvitationForm() {
         <div className="mt-8">
           <Link
             href="/login"
-            className="rounded-lg bg-zinc-900 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-850 px-5 py-2.5 text-xs font-bold text-white hover:bg-zinc-800 dark:hover:bg-zinc-900 transition-colors shadow-md"
+            className="rounded-lg bg-zinc-900 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 px-5 py-2.5 text-xs font-bold text-white hover:bg-zinc-800 dark:hover:bg-zinc-900 transition-colors shadow-md"
           >
             Return to Login
           </Link>
@@ -163,7 +163,7 @@ function InvitationForm() {
       )}
 
       {success ? (
-        <div className="flex flex-col items-center justify-center py-6 text-center text-zinc-850 dark:text-zinc-100">
+        <div className="flex flex-col items-center justify-center py-6 text-center text-zinc-800 dark:text-zinc-100">
           <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400">
             <CheckCircle2 className="h-8 w-8 animate-bounce" />
           </div>
@@ -183,7 +183,7 @@ function InvitationForm() {
                 placeholder="e.g. Rahul Sharma"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-brand-400/20"
+                className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-brand-400/20"
                 required
               />
             </div>
@@ -197,7 +197,7 @@ function InvitationForm() {
               type="text"
               value={invitation?.email || ''}
               disabled
-              className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-100/70 dark:bg-zinc-950/40 py-2.5 px-3 text-sm text-zinc-500 dark:text-zinc-450 outline-none cursor-not-allowed"
+              className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-100/70 dark:bg-zinc-950/40 py-2.5 px-3 text-sm text-zinc-500 dark:text-zinc-400 outline-none cursor-not-allowed"
             />
           </div>
 
@@ -215,7 +215,7 @@ function InvitationForm() {
                   placeholder="e.g. 123456"
                   value={form.pin}
                   onChange={(e) => setForm({ ...form, pin: e.target.value.replace(/\D/g, '') })}
-                  className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none tracking-widest transition-all focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-brand-400/20"
+                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none tracking-widest transition-all focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-brand-400/20"
                   required
                 />
               </div>
@@ -233,7 +233,7 @@ function InvitationForm() {
                   placeholder="e.g. 123456"
                   value={form.confirmPin}
                   onChange={(e) => setForm({ ...form, confirmPin: e.target.value.replace(/\D/g, '') })}
-                  className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none tracking-widest transition-all focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-brand-400/20"
+                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none tracking-widest transition-all focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-brand-400/20"
                   required
                 />
               </div>
@@ -260,13 +260,13 @@ function InvitationForm() {
                     placeholder="••••••••"
                     value={form.password}
                     onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-10 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-brand-400/20"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-10 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-brand-400/20"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-250 cursor-pointer"
+                    className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -284,13 +284,13 @@ function InvitationForm() {
                     placeholder="••••••••"
                     value={form.confirmPassword}
                     onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-10 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-brand-400/20"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-10 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-brand-400/20"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-250 cursor-pointer"
+                    className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer"
                   >
                     {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>

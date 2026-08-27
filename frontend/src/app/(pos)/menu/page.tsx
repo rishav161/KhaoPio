@@ -347,24 +347,24 @@ export default function MenuPage() {
 
       {/* Success/Error Alert banners */}
       {errorMsg && (
-        <div className="mb-4 flex items-center justify-between rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/20 p-3.5 text-xs font-bold text-red-605 dark:text-red-400">
+        <div className="mb-4 flex items-center justify-between rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/20 p-3.5 text-xs font-bold text-red-600 dark:text-red-400">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4.5 w-4.5 shrink-0" />
             <span>{errorMsg}</span>
           </div>
-          <button onClick={() => setErrorMsg('')} className="text-red-400 hover:text-red-750 cursor-pointer">
+          <button onClick={() => setErrorMsg('')} className="text-red-400 hover:text-red-700 cursor-pointer">
             <X className="h-4 w-4" />
           </button>
         </div>
       )}
 
       {successMsg && (
-        <div className="mb-4 flex items-center justify-between rounded-lg border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/20 p-3.5 text-xs font-bold text-emerald-700 dark:text-emerald-450">
+        <div className="mb-4 flex items-center justify-between rounded-lg border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/20 p-3.5 text-xs font-bold text-emerald-700 dark:text-emerald-400">
           <div className="flex items-center gap-2">
             <Check className="h-4.5 w-4.5 shrink-0" />
             <span>{successMsg}</span>
           </div>
-          <button onClick={() => setSuccessMsg('')} className="text-emerald-400 hover:text-emerald-750 cursor-pointer">
+          <button onClick={() => setSuccessMsg('')} className="text-emerald-400 hover:text-emerald-700 cursor-pointer">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -383,14 +383,14 @@ export default function MenuPage() {
           </div>
 
           {/* Add Category Form */}
-          <form onSubmit={handleCreateCategory} className="p-3 border-b border-zinc-200 dark:border-zinc-850">
+          <form onSubmit={handleCreateCategory} className="p-3 border-b border-zinc-200 dark:border-zinc-800">
             <div className="flex gap-2">
               <input
                 type="text"
                 placeholder="New Category..."
                 value={newCatName}
                 onChange={(e) => setNewCatName(e.target.value)}
-                className="flex-1 rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-1.5 px-3 text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none focus:border-brand-400"
+                className="flex-1 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-1.5 px-3 text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none focus:border-brand-400"
               />
               <button
                 type="submit"
@@ -418,7 +418,7 @@ export default function MenuPage() {
                         type="text"
                         value={catEditingName}
                         onChange={(e) => setCatEditingName(e.target.value)}
-                        className="flex-1 rounded border border-zinc-300 dark:border-zinc-850 bg-zinc-50 dark:bg-zinc-950 py-0.5 px-2 text-xs outline-none"
+                        className="flex-1 rounded border border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-0.5 px-2 text-xs outline-none"
                       />
                       <button 
                         onClick={() => handleUpdateCategory(cat.id)}
@@ -435,7 +435,7 @@ export default function MenuPage() {
                     </div>
                   ) : (
                     <div className="flex flex-col min-w-0">
-                      <span className="text-xs font-black truncate text-zinc-905 dark:text-zinc-50">
+                      <span className="text-xs font-black truncate text-zinc-900 dark:text-zinc-50">
                         {cat.name}
                       </span>
                       <span className="text-[9px] text-zinc-400 font-bold">
@@ -451,14 +451,14 @@ export default function MenuPage() {
                           setCatEditingId(cat.id);
                           setCatEditingName(cat.name);
                         }}
-                        className="text-zinc-450 hover:text-brand-500 dark:hover:text-brand-400 p-1 transition-colors cursor-pointer"
+                        className="text-zinc-400 hover:text-brand-500 dark:hover:text-brand-400 p-1 transition-colors cursor-pointer"
                         title="Rename"
                       >
                         <Edit3 className="h-3.5 w-3.5" />
                       </button>
                       <button
                         onClick={() => handleDeleteCategory(cat.id, cat.name)}
-                        className="text-zinc-450 hover:text-red-500 p-1 transition-colors cursor-pointer"
+                        className="text-zinc-400 hover:text-red-500 p-1 transition-colors cursor-pointer"
                         title="Delete Category"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -481,7 +481,7 @@ export default function MenuPage() {
               className={`rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer shrink-0 ${
                 activeTab === 'ALL'
                   ? 'bg-brand-500 text-white shadow-sm'
-                  : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-550 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                  : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
               }`}
             >
               All Items ({allItems.length})
@@ -493,7 +493,7 @@ export default function MenuPage() {
                 className={`rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer shrink-0 ${
                   activeTab === cat.id
                     ? 'bg-brand-500 text-white shadow-sm'
-                    : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-550 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                    : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                 }`}
               >
                 {cat.name} ({cat.menuItems?.length || 0})
@@ -510,7 +510,7 @@ export default function MenuPage() {
                 <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 mb-3">
                   <Package className="h-6 w-6" />
                 </div>
-                <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-550">No Menu Items Found</h3>
+                <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-500">No Menu Items Found</h3>
                 <p className="text-xs text-zinc-500 mt-1">
                   Add items to this category or seed templates.
                 </p>
@@ -523,7 +523,7 @@ export default function MenuPage() {
                     className={`flex items-start gap-3 p-3 rounded-xl border bg-white dark:bg-zinc-900 shadow-sm transition-all ${
                       item.isAvailable 
                         ? 'border-zinc-200 dark:border-zinc-800' 
-                        : 'border-red-200 dark:border-red-955 opacity-70 bg-zinc-50/50 dark:bg-zinc-950/20'
+                        : 'border-red-200 dark:border-red-950 opacity-70 bg-zinc-50/50 dark:bg-zinc-950/20'
                     }`}
                   >
                     {/* Item Image / Emoji */}
@@ -553,7 +553,7 @@ export default function MenuPage() {
 
                         <span className={`text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full border ${
                           item.isAvailable
-                            ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-450 border-emerald-200 dark:border-emerald-900'
+                            ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900'
                             : 'bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900'
                         }`}>
                           {item.isAvailable ? 'Available' : 'Sold Out'}
@@ -574,14 +574,14 @@ export default function MenuPage() {
                       </button>
                       <button
                         onClick={() => handleOpenEditItem(item)}
-                        className="p-1 rounded text-zinc-450 hover:text-brand-500 dark:hover:text-brand-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                        className="p-1 rounded text-zinc-400 hover:text-brand-500 dark:hover:text-brand-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                         title="Edit Item"
                       >
                         <Edit3 className="h-3.5 w-3.5" />
                       </button>
                       <button
                         onClick={() => handleDeleteItem(item.id, item.name)}
-                        className="p-1 rounded text-zinc-450 hover:text-red-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                        className="p-1 rounded text-zinc-400 hover:text-red-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                         title="Delete Item"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -602,7 +602,7 @@ export default function MenuPage() {
             
             <button
               onClick={() => setIsItemModalOpen(false)}
-              className="absolute right-4 top-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-250 cursor-pointer"
+              className="absolute right-4 top-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer"
             >
               <X className="h-5 w-5" />
             </button>
@@ -615,7 +615,7 @@ export default function MenuPage() {
             <form onSubmit={handleSaveItem} className="space-y-4">
               <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-2">
-                  <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-450 mb-1">
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1">
                     Item Name
                   </label>
                   <input
@@ -623,12 +623,12 @@ export default function MenuPage() {
                     value={itemForm.name}
                     onChange={(e) => setItemForm({ ...itemForm, name: e.target.value })}
                     placeholder="e.g. Garlic Naan"
-                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-brand-400"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-brand-400"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-450 mb-1">
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1">
                     Short Code
                   </label>
                   <input
@@ -636,27 +636,27 @@ export default function MenuPage() {
                     value={itemForm.code}
                     onChange={(e) => setItemForm({ ...itemForm, code: e.target.value })}
                     placeholder="e.g. G02"
-                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-brand-400 font-mono tracking-widest text-center"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-brand-400 font-mono tracking-widest text-center"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-450 mb-1">
+                <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1">
                   Description
                 </label>
                 <textarea
                   value={itemForm.description}
                   onChange={(e) => setItemForm({ ...itemForm, description: e.target.value })}
                   placeholder="Provide ingredients, cooking preparation details..."
-                  className="w-full h-18 rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-1.5 px-3 text-xs outline-none focus:border-brand-400 resize-none"
+                  className="w-full h-18 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-1.5 px-3 text-xs outline-none focus:border-brand-400 resize-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-455 mb-1">
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1">
                     Price ({currencySymbol})
                   </label>
                   <input
@@ -664,12 +664,12 @@ export default function MenuPage() {
                     value={itemForm.price}
                     onChange={(e) => setItemForm({ ...itemForm, price: e.target.value.replace(/[^0-9.]/g, '') })}
                     placeholder="5.99"
-                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-brand-400 font-mono"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-brand-400 font-mono"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-450 mb-1 flex items-center justify-between">
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1 flex items-center justify-between">
                     <span>Dish Icon</span>
                     <button
                       type="button"
@@ -684,7 +684,7 @@ export default function MenuPage() {
                     <button
                       type="button"
                       onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                      className="h-9 w-9 rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-950 flex items-center justify-center text-xl shrink-0 cursor-pointer hover:border-brand-400 transition-colors shadow-xs"
+                      className="h-9 w-9 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-950 flex items-center justify-center text-xl shrink-0 cursor-pointer hover:border-brand-400 transition-colors shadow-xs"
                       title="Click to select food icon"
                     >
                       {itemForm.image || '🍽️'}
@@ -694,7 +694,7 @@ export default function MenuPage() {
                       value={itemForm.image}
                       onChange={(e) => setItemForm({ ...itemForm, image: e.target.value })}
                       placeholder="e.g. 🍔 or URL"
-                      className="flex-1 rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-2.5 text-xs outline-none focus:border-brand-400"
+                      className="flex-1 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-2.5 text-xs outline-none focus:border-brand-400"
                     />
                   </div>
                 </div>
@@ -728,7 +728,7 @@ export default function MenuPage() {
 
               {/* Full Searchable Emoji Picker Drawer */}
               {showEmojiPicker && (
-                <div className="rounded-xl border border-zinc-250 dark:border-zinc-800 overflow-hidden shadow-lg animate-in fade-in zoom-in-95 duration-150">
+                <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-lg animate-in fade-in zoom-in-95 duration-150">
                   <EmojiPicker
                     onEmojiClick={(emojiData: any) => {
                       setItemForm({ ...itemForm, image: emojiData.emoji });
@@ -743,13 +743,13 @@ export default function MenuPage() {
               )}
 
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-450 mb-1">
+                <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1">
                   Menu Category
                 </label>
                 <select
                   value={itemForm.categoryId || (categories.length > 0 ? categories[0].id : '')}
                   onChange={(e) => setItemForm({ ...itemForm, categoryId: e.target.value })}
-                  className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-brand-400"
+                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-brand-400"
                   required
                 >
                   {categories.map((cat) => (
@@ -766,14 +766,14 @@ export default function MenuPage() {
                   id="modalIsAvailable"
                   checked={itemForm.isAvailable}
                   onChange={(e) => setItemForm({ ...itemForm, isAvailable: e.target.checked })}
-                  className="h-4.5 w-4.5 rounded border-zinc-350 bg-zinc-50 dark:bg-zinc-950 text-brand-500 focus:ring-2 focus:ring-brand-400/20"
+                  className="h-4.5 w-4.5 rounded border-zinc-300 bg-zinc-50 dark:bg-zinc-950 text-brand-500 focus:ring-2 focus:ring-brand-400/20"
                 />
-                <label htmlFor="modalIsAvailable" className="text-xs font-bold text-zinc-700 dark:text-zinc-350 cursor-pointer select-none">
+                <label htmlFor="modalIsAvailable" className="text-xs font-bold text-zinc-700 dark:text-zinc-300 cursor-pointer select-none">
                   Make this dish available for order immediately
                 </label>
               </div>
 
-              <div className="flex gap-3 border-t border-zinc-150 dark:border-zinc-800 pt-4 mt-6">
+              <div className="flex gap-3 border-t border-zinc-100 dark:border-zinc-800 pt-4 mt-6">
                 <button
                   type="button"
                   onClick={() => setIsItemModalOpen(false)}
