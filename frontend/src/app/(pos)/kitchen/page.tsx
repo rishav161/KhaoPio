@@ -136,7 +136,7 @@ export default function KitchenPage() {
   return (
     <div className="flex h-full w-full flex-col overflow-hidden bg-zinc-100 dark:bg-zinc-955 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
       {/* KDS Header & Filter bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-orange-600 bg-gradient-to-r from-orange-500 to-orange-400 p-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-brand-600 bg-gradient-to-r from-brand-500 to-brand-400 p-3">
         <div className="flex items-center gap-2 flex-wrap">
           <ChefHat className="h-5 w-5 text-white" />
           <h1 className="text-xs sm:text-sm font-black uppercase tracking-wider text-white">
@@ -155,7 +155,7 @@ export default function KitchenPage() {
               onClick={() => setFilter(tab)}
               className={`rounded-md px-3 py-1 text-[10px] font-black tracking-wide transition-all cursor-pointer ${
                 filter === tab
-                  ? 'bg-white text-orange-600 shadow-sm'
+                  ? 'bg-white text-brand-600 shadow-sm'
                   : 'text-white/75 hover:text-white hover:bg-white/10'
               }`}
             >
@@ -184,14 +184,14 @@ export default function KitchenPage() {
                   key={kot.id}
                   className={`flex w-72 flex-col rounded-xl border-2 bg-white dark:bg-zinc-900 shadow-md transition-all duration-200 shrink-0 ${
                     isPending
-                      ? 'border-orange-500 ring-2 ring-orange-500/20'
+                      ? 'border-brand-500 ring-2 ring-brand-500/20'
                       : 'border-blue-500 ring-2 ring-blue-500/20'
                   }`}
                 >
                   {/* Order Ticket Header */}
                   <div
                     className={`flex items-center justify-between border-b dark:border-zinc-805 px-3 py-2 rounded-t-lg ${
-                      isPending ? 'bg-orange-50/80 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800' : 'bg-blue-50/80 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800'
+                      isPending ? 'bg-brand-50/80 dark:bg-brand-950/20 border-brand-200 dark:border-brand-800' : 'bg-blue-50/80 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800'
                     }`}
                   >
                     <div>
@@ -243,7 +243,7 @@ export default function KitchenPage() {
                       <button
                         onClick={() => handleUpdateStatus(kot.id, 'PREPARING')}
                         disabled={submittingKotIds[kot.id]}
-                        className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 py-2.5 text-xs font-black text-white transition-all shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 py-2.5 text-xs font-black text-white transition-all shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {submittingKotIds[kot.id] ? (
                           <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>

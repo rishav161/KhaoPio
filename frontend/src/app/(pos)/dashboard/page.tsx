@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
-  TrendingUp, ShoppingBag, RefreshCw, ArrowUpRight, ShieldAlert,
-  BadgeCent, Flame, Calendar, IndianRupee, Trophy, Clock, CreditCard,
+  ShoppingBag, RefreshCw, ArrowUpRight, ShieldAlert,
+  BadgeCent, Sparkles, IndianRupee, Trophy, Clock,
+  Table2, ArrowRight,
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -14,6 +15,9 @@ import { Table } from '@/components/Table';
 import { Pagination } from '@/components/Pagination';
 import { Loader } from '@/components/Loader';
 import { useCurrencySymbol } from '@/utils/currency';
+import { useAuthStore, consumeJustLoggedIn } from '@/store/useAuthStore';
+import { usePOSStore } from '@/store/usePOSStore';
+import { useRouter } from 'next/navigation';
 
 interface DashboardStats {
   metrics: {
@@ -39,9 +43,9 @@ interface DashboardStats {
 }
 
 const PAYMENT_COLORS: Record<string, string> = {
-  CASH: 'rgb(34,197,94)',
+  CASH: 'oklch(0.56 0.13 162)',
   CARD: 'rgb(59,130,246)',
-  UPI: 'rgb(168,85,247)',
+  UPI: 'rgb(217,164,4)',
 };
 
 const PAYMENT_LABELS: Record<string, string> = {
@@ -51,31 +55,88 @@ const PAYMENT_LABELS: Record<string, string> = {
 };
 
 const PRESETS = [
-  { key: 'today', label: 'Today' },
-  { key: 'yesterday', label: 'Yesterday' },
-  { key: '7days', label: '7 Days' },
-  { key: '30days', label: '30 Days' },
+  { key: 'today', label: 'Today', days: 1 },
+  { key: 'week', label: 'This week', days: 7 },
+  { key: 'month', label: 'This month', days: 30 },
 ] as const;
+
+function fmtDate(iso: string) {
+  return iso.split('T')[0];
+}
+
+function addDays(date: Date, days: number) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+function StatCard({
+  icon, iconBg, label, value, delta, mono = true,
+}: { icon: React.ReactNode; iconBg: string; label: string; value: string; delta?: string; mono?: boolean }) {
+  return (
+    <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+      <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${iconBg} mb-3`}>{icon}</div>
+      <p className="text-xs text-zinc-500">{label}</p>
+      <p className={`mt-1 text-2xl font-bold text-zinc-900 ${mono ? 'font-mono' : ''}`}>{value}</p>
+      {delta && <p className="mt-1 text-xs font-medium text-brand-600">{delta}</p>}
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const currencySymbol = useCurrencySymbol();
+  const router = useRouter();
+  const userName = useAuthStore((s) => s.user?.name) ?? '';
+  const tables = usePOSStore((s) => s.tables);
+  const fetchTables = usePOSStore((s) => s.fetchTables);
 
-  const [startDate, setStartDate] = useState(() => {
-    const d = new Date(); d.setDate(d.getDate() - 7); return d.toISOString().split('T')[0];
-  });
-  const [endDate, setEndDate] = useState(() => new Date().toISOString().split('T')[0]);
-  const [activePreset, setActivePreset] = useState<string>('7days');
+  const [activePreset, setActivePreset] = useState<(typeof PRESETS)[number]['key']>('week');
   const [page, setPage] = useState(1);
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [prevStats, setPrevStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [greetingMounted, setGreetingMounted] = useState(false);
+  const [greetingVisible, setGreetingVisible] = useState(false);
 
-  const fetchStats = async (sd = startDate, ed = endDate, pg = page) => {
+  // Greeting toast: only right after a fresh login/signup redirect — fade in,
+  // hold briefly, fade out, then unmount. A plain refresh or repeat visit to
+  // /dashboard finds no flag and never shows it.
+  useEffect(() => {
+    if (!consumeJustLoggedIn()) return;
+    setGreetingMounted(true);
+    const raf = requestAnimationFrame(() => setGreetingVisible(true));
+    const hide = setTimeout(() => setGreetingVisible(false), 3500);
+    const unmount = setTimeout(() => setGreetingMounted(false), 4000);
+    return () => { cancelAnimationFrame(raf); clearTimeout(hide); clearTimeout(unmount); };
+  }, []);
+
+  const range = useMemo(() => {
+    const preset = PRESETS.find((p) => p.key === activePreset) ?? PRESETS[1];
+    const end = new Date();
+    const start = addDays(end, -(preset.days - 1));
+    const prevEnd = addDays(start, -1);
+    const prevStart = addDays(prevEnd, -(preset.days - 1));
+    return {
+      startDate: fmtDate(start.toISOString()),
+      endDate: fmtDate(end.toISOString()),
+      prevStartDate: fmtDate(prevStart.toISOString()),
+      prevEndDate: fmtDate(prevEnd.toISOString()),
+    };
+  }, [activePreset]);
+
+  const fetchStats = async (pg = 1) => {
     setLoading(true); setError('');
     try {
-      const q = new URLSearchParams({ startDate: sd, endDate: ed, page: pg.toString(), limit: '5' });
-      const data = await apiFetch<DashboardStats>(`/dashboard/stats?${q}`);
-      setStats(data); setPage(pg);
+      const q = new URLSearchParams({ startDate: range.startDate, endDate: range.endDate, page: pg.toString(), limit: '5' });
+      const prevQ = new URLSearchParams({ startDate: range.prevStartDate, endDate: range.prevEndDate, page: '1', limit: '1' });
+      const [data, prevData] = await Promise.all([
+        apiFetch<DashboardStats>(`/dashboard/stats?${q}`),
+        apiFetch<DashboardStats>(`/dashboard/stats?${prevQ}`),
+      ]);
+      setStats(data);
+      setPrevStats(prevData);
+      setPage(pg);
     } catch (err: any) {
       setError(err.message || 'Failed to load dashboard statistics.');
     } finally {
@@ -83,48 +144,54 @@ export default function Dashboard() {
     }
   };
 
-  useEffect(() => { fetchStats(); }, []);
-
-  const applyPreset = (preset: typeof PRESETS[number]['key']) => {
-    const today = new Date();
-    let start = new Date(), end = new Date();
-    if (preset === 'today') { start = today; end = today; }
-    else if (preset === 'yesterday') { start.setDate(today.getDate() - 1); end.setDate(today.getDate() - 1); }
-    else if (preset === '7days') { start.setDate(today.getDate() - 6); end = today; }
-    else if (preset === '30days') { start.setDate(today.getDate() - 29); end = today; }
-    const sd = start.toISOString().split('T')[0];
-    const ed = end.toISOString().split('T')[0];
-    setStartDate(sd); setEndDate(ed); setActivePreset(preset);
-    fetchStats(sd, ed, 1);
-  };
-
-  const handleApplyFilters = (e: React.FormEvent) => { e.preventDefault(); setActivePreset(''); fetchStats(startDate, endDate, 1); };
+  useEffect(() => { fetchStats(1); fetchTables(); }, [activePreset]);
 
   if (loading && !stats) return (
-    <Loader size="lg" text="Compiling analytics..." className="h-full w-full bg-zinc-50 dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800" />
+    <Loader size="lg" text="Compiling analytics..." className="h-full w-full bg-[var(--background)] rounded-xl border border-zinc-200" />
   );
 
   if (error && !stats) return (
     <div className="flex h-full items-center justify-center p-8 text-center">
       <div className="max-w-sm">
         <ShieldAlert className="mx-auto h-12 w-12 text-red-400 mb-3" />
-        <h2 className="text-sm font-black text-zinc-800 dark:text-zinc-100">Failed to load dashboard</h2>
+        <h2 className="text-sm font-black text-zinc-800">Failed to load dashboard</h2>
         <p className="text-xs text-zinc-500 mt-1 mb-4">{error}</p>
-        <button onClick={() => fetchStats()} className="rounded-lg bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 text-xs font-black cursor-pointer">Retry</button>
+        <button onClick={() => fetchStats()} className="rounded-lg bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 text-xs font-black cursor-pointer">Retry</button>
       </div>
     </div>
   );
 
   const metrics = stats?.metrics ?? { totalSales: 0, ordersCount: 0, aov: 0, activeOrdersCount: 0 };
+  const prevMetrics = prevStats?.metrics ?? { totalSales: 0, ordersCount: 0, aov: 0, activeOrdersCount: 0 };
   const salesTrend = stats?.salesTrend ?? [];
   const topItems = stats?.topItems ?? [];
   const paymentBreakdown = stats?.paymentBreakdown ?? [];
   const hourlyOrders = stats?.hourlyOrders ?? [];
   const recentOrders = stats?.recentOrders ?? [];
 
+  const pctDelta = (curr: number, prev: number) => {
+    if (prev === 0) return curr > 0 ? 100 : 0;
+    return ((curr - prev) / prev) * 100;
+  };
+  const revenueDelta = pctDelta(metrics.totalSales, prevMetrics.totalSales);
+  const ordersDelta = pctDelta(metrics.ordersCount, prevMetrics.ordersCount);
+  const aovDelta = pctDelta(metrics.aov, prevMetrics.aov);
+
+  const occupiedTables = tables.filter((t) => t.status === 'OCCUPIED').length;
+  const totalTables = tables.length;
+  const occupancyPct = totalTables > 0 ? Math.round((occupiedTables / totalTables) * 100) : 0;
+
+  const busiestDay = salesTrend.length > 0
+    ? salesTrend.reduce((max, d) => (d.amount > max.amount ? d : max), salesTrend[0])
+    : null;
+  const busiestDayName = busiestDay ? new Date(busiestDay.date).toLocaleDateString(undefined, { weekday: 'long' }) : null;
+
+  const hour = new Date().getHours();
+  const timeGreeting = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+  const firstName = userName.split(' ')[0] || 'there';
+
   const totalPaymentAmount = paymentBreakdown.reduce((s, p) => s + p.amount, 0);
 
-  // Only show operating hours (6am–11pm) for peak hours chart
   const peakHours = hourlyOrders.filter(h => h.hour >= 6 && h.hour <= 23).map(h => ({
     label: h.hour === 0 ? '12a' : h.hour < 12 ? `${h.hour}a` : h.hour === 12 ? '12p' : `${h.hour - 12}p`,
     count: h.count,
@@ -132,357 +199,285 @@ export default function Dashboard() {
   }));
   const maxHourCount = Math.max(...peakHours.map(h => h.count), 1);
 
-  // Format trend data for Recharts
   const chartData = salesTrend.map(s => ({
     date: new Date(s.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
     amount: s.amount,
     orders: s.count,
   }));
 
-  // Bar chart
   const maxQty = Math.max(...topItems.map(i => i.quantity), 1);
   const medalColors = ['text-amber-500', 'text-zinc-400', 'text-amber-700', 'text-zinc-500', 'text-zinc-400'];
-  const barColors = ['from-orange-400 to-orange-500', 'from-orange-300 to-orange-400', 'from-orange-200 to-orange-300', 'from-zinc-300 to-zinc-400', 'from-zinc-200 to-zinc-300'];
+  const barColors = ['from-brand-400 to-brand-500', 'from-brand-300 to-brand-400', 'from-brand-200 to-brand-300', 'from-zinc-300 to-zinc-400', 'from-zinc-200 to-zinc-300'];
 
   const getStatusBadge = (status: string) => {
-    if (status === 'PAID') return <span className="rounded-md bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 text-[10px] font-black text-emerald-700 dark:text-emerald-400">PAID</span>;
-    if (status === 'CANCELLED') return <span className="rounded-md bg-red-50 dark:bg-red-950/30 px-2 py-0.5 text-[10px] font-black text-red-600 dark:text-red-400">CANCELLED</span>;
-    return <span className="rounded-md bg-amber-50 dark:bg-amber-950/30 px-2 py-0.5 text-[10px] font-black text-amber-700 dark:text-amber-400">{status}</span>;
+    if (status === 'PAID') return <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-black text-emerald-700">PAID</span>;
+    if (status === 'CANCELLED') return <span className="rounded-md bg-red-50 px-2 py-0.5 text-[10px] font-black text-red-600">CANCELLED</span>;
+    return <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-black text-amber-700">{status}</span>;
   };
 
   return (
-    <div className="flex h-full flex-col gap-4 overflow-y-auto bg-zinc-50 dark:bg-zinc-950 p-1 pr-2">
+    <div className="flex h-full flex-col gap-5 overflow-y-auto bg-[var(--background)] p-1 pr-2 pb-4">
 
-      {/* ── Header ── */}
-      <div className="rounded-xl bg-gradient-to-r from-orange-500 to-orange-400 p-4 shadow-md">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      {/* ── Transient greeting toast — fades in, holds briefly, fades out ── */}
+      {greetingMounted && (
+        <div
+          className={`fixed top-20 right-6 z-40 flex items-center gap-3 rounded-2xl border border-zinc-200 bg-white px-5 py-3.5 shadow-lg transition-all duration-500 ease-out ${
+            greetingVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
+          }`}
+        >
           <div>
-            <h1 className="flex items-center gap-2 text-xl font-black text-white">
-              <TrendingUp className="h-5 w-5 text-white shrink-0" />
-              Dashboard
-            </h1>
-            <p className="text-xs font-semibold text-orange-100 mt-0.5">Track revenue, orders, and real-time kitchen activity</p>
-          </div>
-
-          {/* Preset pills */}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {PRESETS.map(p => (
-              <button key={p.key} onClick={() => applyPreset(p.key)}
-                className={`rounded-lg px-3 py-1.5 text-[11px] font-black transition-all cursor-pointer ${
-                  activePreset === p.key
-                    ? 'bg-white text-orange-600 shadow-sm'
-                    : 'bg-white/20 text-white hover:bg-white/30'
-                }`}>
-                {p.label}
-              </button>
-            ))}
+            <p className="flex items-center gap-1.5 text-sm font-semibold text-zinc-900">
+              Good {timeGreeting}, {firstName}
+              <Sparkles className="h-4 w-4 text-brand-500 shrink-0" />
+            </p>
+            <p className="text-xs text-zinc-500">Here&apos;s what&apos;s happening at your restaurant today.</p>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* ── Filter toolbar ── */}
-      <div className="flex flex-wrap items-center gap-2">
-        {/* Custom date range */}
-        <form onSubmit={handleApplyFilters} className="flex items-center gap-2 flex-wrap">
-          <input type="date" value={startDate} onChange={e => { setStartDate(e.target.value); setActivePreset(''); }}
-            className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 py-1.5 text-[11px] font-bold text-zinc-700 dark:text-zinc-300 outline-none focus:border-orange-400 cursor-pointer" />
-          <span className="text-xs text-zinc-400">→</span>
-          <input type="date" value={endDate} onChange={e => { setEndDate(e.target.value); setActivePreset(''); }}
-            className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 py-1.5 text-[11px] font-bold text-zinc-700 dark:text-zinc-300 outline-none focus:border-orange-400 cursor-pointer" />
-          <button type="submit"
-            className="flex items-center gap-1 rounded-lg bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-700 dark:hover:bg-zinc-300 text-white dark:text-zinc-900 px-3 py-1.5 text-[11px] font-black transition-all cursor-pointer">
-            <Calendar className="h-3 w-3" />Apply
+      {/* ── Insight banner ── */}
+      {busiestDay && (
+        <div className="flex items-center justify-between gap-4 rounded-2xl bg-[oklch(0.2_0.03_158)] px-6 py-5 text-white">
+          <div className="flex items-center gap-4 min-w-0">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10">
+              <Sparkles className="h-5 w-5 text-brand-400" />
+            </span>
+            <div className="min-w-0">
+              <p className="font-semibold">
+                {revenueDelta >= 0 ? 'Great momentum this ' + (activePreset === 'today' ? 'day' : activePreset === 'month' ? 'month' : 'week') : 'Revenue is down this ' + (activePreset === 'today' ? 'day' : activePreset === 'month' ? 'month' : 'week')}
+              </p>
+              <p className="mt-0.5 text-sm text-white/60">
+                Revenue is {revenueDelta >= 0 ? 'up' : 'down'} {Math.abs(revenueDelta).toFixed(1)}% compared to the previous period. {busiestDayName} was your busiest day.
+              </p>
+            </div>
+          </div>
+          <button onClick={() => router.push('/reports')} className="flex shrink-0 items-center gap-1.5 text-sm font-semibold text-white hover:text-brand-300 transition-colors cursor-pointer">
+            View insights <ArrowRight className="h-4 w-4" />
           </button>
-        </form>
+        </div>
+      )}
 
-        <button onClick={() => fetchStats()}
-          className="flex items-center gap-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-1.5 text-[11px] font-black text-zinc-600 dark:text-zinc-400 hover:text-orange-500 hover:border-orange-300 transition-all cursor-pointer">
+      {/* ── Period tabs ── */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-1 rounded-xl bg-zinc-100 p-1">
+          {PRESETS.map((p) => (
+            <button key={p.key} onClick={() => setActivePreset(p.key)}
+              className={`rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all cursor-pointer ${
+                activePreset === p.key ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'
+              }`}>
+              {p.label}
+            </button>
+          ))}
+        </div>
+        <span className="text-sm text-zinc-400">
+          {new Date(range.startDate).toLocaleDateString(undefined, { day: 'numeric', month: 'long' })}
+          {' — '}
+          {new Date(range.endDate).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}
+        </span>
+        <button onClick={() => fetchStats(page)}
+          className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-500 hover:text-brand-600 hover:border-brand-300 transition-all cursor-pointer">
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
         </button>
       </div>
 
-      {/* ── KPI Cards ── */}
+      {/* ── Stat cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {/* Total Sales */}
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-sm flex items-center gap-4">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-500 shadow-md shadow-orange-200 dark:shadow-none">
-            <IndianRupee className="h-5 w-5 text-white" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Total Sales</p>
-            <p className="text-xl font-black font-mono text-zinc-900 dark:text-zinc-50 truncate">
-              {currencySymbol}{metrics.totalSales.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </p>
-          </div>
-        </div>
-
-        {/* Paid Orders */}
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-sm flex items-center gap-4">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-500 shadow-md shadow-blue-200 dark:shadow-none">
-            <ShoppingBag className="h-5 w-5 text-white" />
-          </div>
-          <div>
-            <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Paid Orders</p>
-            <p className="text-xl font-black font-mono text-zinc-900 dark:text-zinc-50">{metrics.ordersCount}</p>
-          </div>
-        </div>
-
-        {/* AOV */}
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-sm flex items-center gap-4">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-500 shadow-md shadow-violet-200 dark:shadow-none">
-            <BadgeCent className="h-5 w-5 text-white" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Avg Order Value</p>
-            <p className="text-xl font-black font-mono text-zinc-900 dark:text-zinc-50 truncate">
-              {currencySymbol}{metrics.aov.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </p>
-          </div>
-        </div>
-
-        {/* Active KOT */}
-        <div className={`rounded-xl border p-4 shadow-sm flex items-center gap-4 transition-colors ${
-          metrics.activeOrdersCount > 0
-            ? 'border-orange-200 dark:border-orange-900/40 bg-orange-50 dark:bg-orange-950/20'
-            : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'
-        }`}>
-          <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl shadow-md ${
-            metrics.activeOrdersCount > 0 ? 'bg-orange-500 shadow-orange-200 dark:shadow-none animate-pulse' : 'bg-zinc-200 dark:bg-zinc-800 shadow-none'
-          }`}>
-            <Flame className={`h-5 w-5 ${metrics.activeOrdersCount > 0 ? 'text-white' : 'text-zinc-400'}`} />
-          </div>
-          <div>
-            <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Active KOT</p>
-            <p className={`text-xl font-black font-mono ${metrics.activeOrdersCount > 0 ? 'text-orange-500' : 'text-zinc-900 dark:text-zinc-50'}`}>
-              {metrics.activeOrdersCount}
-            </p>
-          </div>
-        </div>
+        <StatCard
+          icon={<IndianRupee className="h-4.5 w-4.5 text-brand-700" />}
+          iconBg="bg-brand-100"
+          label={activePreset === 'today' ? "Today's revenue" : 'Revenue'}
+          value={`${currencySymbol}${metrics.totalSales.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+          delta={`${revenueDelta >= 0 ? '↗' : '↘'} ${Math.abs(revenueDelta).toFixed(1)}% vs previous period`}
+        />
+        <StatCard
+          icon={<ShoppingBag className="h-4.5 w-4.5 text-blue-700" />}
+          iconBg="bg-blue-100"
+          label="Total orders"
+          value={`${metrics.ordersCount}`}
+          delta={`${ordersDelta >= 0 ? '↗' : '↘'} ${Math.abs(ordersDelta).toFixed(1)}% vs previous period`}
+        />
+        <StatCard
+          icon={<BadgeCent className="h-4.5 w-4.5 text-amber-700" />}
+          iconBg="bg-amber-100"
+          label="Average order value"
+          value={`${currencySymbol}${metrics.aov.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+          delta={`${aovDelta >= 0 ? '↗' : '↘'} ${Math.abs(aovDelta).toFixed(1)}% vs previous period`}
+        />
+        <StatCard
+          icon={<Table2 className="h-4.5 w-4.5 text-violet-700" />}
+          iconBg="bg-violet-100"
+          label="Active tables"
+          value={totalTables > 0 ? `${occupiedTables} / ${totalTables}` : '—'}
+          delta={totalTables > 0 ? `${occupancyPct}% occupancy now` : 'No tables configured'}
+        />
       </div>
 
       {/* ── Charts row ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
 
-        {/* Sales Trend line chart */}
-        <div className="relative lg:col-span-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-sm">
+        <div className="relative lg:col-span-2 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
           {loading && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm">
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/80 backdrop-blur-sm">
               <Loader size="sm" text="Loading trend..." />
             </div>
           )}
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              <TrendingUp className="h-4 w-4 text-orange-500" />Sales Trend
-            </h3>
-            {salesTrend.length > 0 && (
-              <span className="text-[10px] font-bold text-zinc-400">
-                {new Date(salesTrend[0].date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                {' → '}
-                {new Date(salesTrend[salesTrend.length - 1].date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-              </span>
-            )}
+          <div className="flex items-center justify-between mb-1">
+            <div>
+              <h3 className="text-base font-semibold text-zinc-900">Revenue overview</h3>
+              <p className="text-xs text-zinc-500">Daily performance for the selected period</p>
+            </div>
           </div>
+          <p className="mt-3 flex items-baseline gap-2">
+            <span className="text-2xl font-bold font-mono text-zinc-900">
+              {currencySymbol}{metrics.totalSales.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+            </span>
+            <span className={`text-xs font-semibold ${revenueDelta >= 0 ? 'text-brand-600' : 'text-red-500'}`}>
+              {revenueDelta >= 0 ? '↗' : '↘'} {Math.abs(revenueDelta).toFixed(1)}%
+            </span>
+            <span className="text-xs text-zinc-400">Revenue this {activePreset === 'today' ? 'day' : activePreset === 'month' ? 'month' : 'week'}</span>
+          </p>
 
           {chartData.length === 0 ? (
-            <div className="flex h-52 items-center justify-center text-xs text-zinc-400 font-semibold">
-              No data for this range
-            </div>
+            <div className="flex h-52 items-center justify-center text-xs text-zinc-400 font-semibold">No data for this range</div>
           ) : (
-            <ResponsiveContainer width="100%" height={208}>
-              <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+            <ResponsiveContainer width="100%" height={200}>
+              <AreaChart data={chartData} margin={{ top: 12, right: 4, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="rgb(249,115,22)" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="rgb(249,115,22)" stopOpacity={0} />
+                    <stop offset="5%" stopColor="oklch(0.56 0.13 162)" stopOpacity={0.18} />
+                    <stop offset="95%" stopColor="oklch(0.56 0.13 162)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(161,161,170,0.15)" vertical={false} />
-                <XAxis
-                  dataKey="date"
-                  tick={{ fontSize: 10, fontWeight: 700, fill: 'rgb(161,161,170)' }}
-                  axisLine={false}
-                  tickLine={false}
-                  interval="preserveStartEnd"
-                />
+                <XAxis dataKey="date" tick={{ fontSize: 10, fontWeight: 600, fill: 'rgb(161,161,170)' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
                 <YAxis
-                  tick={{ fontSize: 10, fontWeight: 700, fill: 'rgb(161,161,170)' }}
-                  axisLine={false}
-                  tickLine={false}
-                  width={52}
+                  tick={{ fontSize: 10, fontWeight: 600, fill: 'rgb(161,161,170)' }}
+                  axisLine={false} tickLine={false} width={52}
                   tickFormatter={(v) => `${currencySymbol}${v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v}`}
                 />
                 <Tooltip
-                  contentStyle={{
-                    background: 'rgb(24,24,27)',
-                    border: '1px solid rgb(63,63,70)',
-                    borderRadius: '10px',
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    color: 'white',
-                    padding: '8px 12px',
-                  }}
-                  labelStyle={{ color: 'rgb(161,161,170)', marginBottom: 4 }}
-                  formatter={(value, name) => [
-                    name === 'amount' ? `${currencySymbol}${Number(value).toFixed(2)}` : value,
-                    name === 'amount' ? 'Sales' : 'Orders',
-                  ]}
-                  cursor={{ stroke: 'rgb(249,115,22)', strokeWidth: 1, strokeDasharray: '4 2' }}
+                  contentStyle={{ background: 'oklch(0.2 0.03 158)', border: 'none', borderRadius: '10px', fontSize: '11px', fontWeight: 600, color: 'white', padding: '8px 12px' }}
+                  labelStyle={{ color: 'rgba(255,255,255,0.6)', marginBottom: 4 }}
+                  formatter={(value, name) => [name === 'amount' ? `${currencySymbol}${Number(value).toFixed(2)}` : value, name === 'amount' ? 'Sales' : 'Orders']}
+                  cursor={{ stroke: 'oklch(0.56 0.13 162)', strokeWidth: 1, strokeDasharray: '4 2' }}
                 />
-                <Area
-                  type="monotone"
-                  dataKey="amount"
-                  stroke="rgb(249,115,22)"
-                  strokeWidth={2.5}
-                  fill="url(#salesGrad)"
-                  dot={{ fill: 'rgb(249,115,22)', strokeWidth: 2, stroke: 'white', r: 3 }}
-                  activeDot={{ r: 5, fill: 'rgb(249,115,22)', stroke: 'white', strokeWidth: 2 }}
-                />
+                <Area type="monotone" dataKey="amount" stroke="oklch(0.56 0.13 162)" strokeWidth={2.5} fill="url(#salesGrad)" dot={false} activeDot={{ r: 5, fill: 'oklch(0.56 0.13 162)', stroke: 'white', strokeWidth: 2 }} />
               </AreaChart>
             </ResponsiveContainer>
           )}
         </div>
 
-        {/* Top dishes bar chart */}
-        <div className="relative rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-sm flex flex-col">
+        {/* Payment breakdown donut (real "where revenue comes from" data) */}
+        <div className="relative rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
           {loading && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm">
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/80 backdrop-blur-sm">
+              <Loader size="sm" text="Loading..." />
+            </div>
+          )}
+          <h3 className="text-base font-semibold text-zinc-900">Payment methods</h3>
+          <p className="text-xs text-zinc-500">How today&apos;s bills were paid</p>
+
+          {paymentBreakdown.length === 0 ? (
+            <div className="flex h-44 items-center justify-center text-xs text-zinc-400 font-semibold">No payment data</div>
+          ) : (
+            <>
+              <div className="relative mt-2 flex items-center justify-center">
+                <ResponsiveContainer width="100%" height={180}>
+                  <PieChart>
+                    <Pie data={paymentBreakdown} cx="50%" cy="50%" innerRadius={56} outerRadius={80} paddingAngle={3} dataKey="count" strokeWidth={0}>
+                      {paymentBreakdown.map((entry, i) => (
+                        <Cell key={i} fill={PAYMENT_COLORS[entry.method] ?? 'rgb(161,161,170)'} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{ background: 'oklch(0.2 0.03 158)', border: 'none', borderRadius: '10px', fontSize: '11px', fontWeight: 600, color: 'white', padding: '8px 12px' }}
+                      formatter={(value) => [value, 'Orders']}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="pointer-events-none absolute flex flex-col items-center">
+                  <span className="text-2xl font-bold font-mono text-zinc-900">{metrics.ordersCount}</span>
+                  <span className="text-xs text-zinc-400">orders</span>
+                </div>
+              </div>
+              <div className="mt-3 flex flex-col gap-2">
+                {paymentBreakdown.map((p, i) => {
+                  const pct = totalPaymentAmount > 0 ? ((p.amount / totalPaymentAmount) * 100).toFixed(0) : '0';
+                  return (
+                    <div key={i} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="h-2.5 w-2.5 rounded-full" style={{ background: PAYMENT_COLORS[p.method] ?? 'rgb(161,161,170)' }} />
+                        <span className="text-zinc-600">{PAYMENT_LABELS[p.method] ?? p.method}</span>
+                      </div>
+                      <span className="font-semibold text-zinc-900">{p.count} <span className="text-zinc-400 font-normal">{pct}%</span></span>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* ── Top dishes + Peak hours ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <div className="relative rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm flex flex-col">
+          {loading && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/80 backdrop-blur-sm">
               <Loader size="sm" text="Loading dishes..." />
             </div>
           )}
-          <h3 className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-4">
-            <Trophy className="h-4 w-4 text-orange-500" />Top Dishes
+          <h3 className="flex items-center gap-1.5 text-base font-semibold text-zinc-900 mb-4">
+            <Trophy className="h-4 w-4 text-brand-600" />Top dishes
           </h3>
-
           {topItems.length === 0 ? (
-            <div className="flex flex-1 items-center justify-center text-xs text-zinc-400 font-semibold py-12">
-              No orders in this range
-            </div>
+            <div className="flex flex-1 items-center justify-center text-xs text-zinc-400 font-semibold py-12">No orders in this range</div>
           ) : (
             <div className="flex-1 flex flex-col justify-center gap-3.5">
               {topItems.map((item, i) => (
                 <div key={i} className="space-y-1">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <span className={`text-[11px] font-black shrink-0 ${medalColors[i] || 'text-zinc-400'}`}>#{i + 1}</span>
-                      <span className="truncate text-[11px] font-bold text-zinc-700 dark:text-zinc-300">{item.name}</span>
+                      <span className={`text-xs font-black shrink-0 ${medalColors[i] || 'text-zinc-400'}`}>#{i + 1}</span>
+                      <span className="truncate text-sm font-medium text-zinc-700">{item.name}</span>
                     </div>
-                    <span className="text-[10px] font-black font-mono text-zinc-500 shrink-0">{item.quantity}</span>
+                    <span className="text-xs font-bold font-mono text-zinc-500 shrink-0">{item.quantity}</span>
                   </div>
-                  <div className="h-2 w-full rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
-                    <div
-                      className={`h-full rounded-full bg-gradient-to-r ${barColors[i] || 'from-zinc-300 to-zinc-400'} transition-all duration-700 ease-out`}
-                      style={{ width: `${(item.quantity / maxQty) * 100}%` }}
-                    />
+                  <div className="h-2 w-full rounded-full bg-zinc-100 overflow-hidden">
+                    <div className={`h-full rounded-full bg-gradient-to-r ${barColors[i] || 'from-zinc-300 to-zinc-400'} transition-all duration-700 ease-out`} style={{ width: `${(item.quantity / maxQty) * 100}%` }} />
                   </div>
                 </div>
               ))}
             </div>
           )}
         </div>
-      </div>
 
-      {/* ── Payment breakdown + Peak hours ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-
-        {/* Payment method donut */}
-        <div className="relative rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-sm">
+        <div className="relative rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
           {loading && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm">
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/80 backdrop-blur-sm">
               <Loader size="sm" text="Loading..." />
             </div>
           )}
-          <h3 className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-4">
-            <CreditCard className="h-4 w-4 text-orange-500" />Payment Breakdown
+          <h3 className="flex items-center gap-1.5 text-base font-semibold text-zinc-900 mb-3">
+            <Clock className="h-4 w-4 text-brand-600" />Peak hours
           </h3>
-
-          {paymentBreakdown.length === 0 ? (
-            <div className="flex h-44 items-center justify-center text-xs text-zinc-400 font-semibold">No payment data</div>
-          ) : (
-            <div className="flex items-center gap-6">
-              <ResponsiveContainer width={160} height={160}>
-                <PieChart>
-                  <Pie
-                    data={paymentBreakdown}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={44}
-                    outerRadius={72}
-                    paddingAngle={3}
-                    dataKey="amount"
-                    strokeWidth={0}
-                  >
-                    {paymentBreakdown.map((entry, i) => (
-                      <Cell key={i} fill={PAYMENT_COLORS[entry.method] ?? 'rgb(161,161,170)'} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      background: 'rgb(24,24,27)', border: '1px solid rgb(63,63,70)',
-                      borderRadius: '10px', fontSize: '11px', fontWeight: 700, color: 'white', padding: '8px 12px',
-                    }}
-                    formatter={(value) => [`${currencySymbol}${Number(value).toFixed(2)}`, 'Amount']}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-
-              <div className="flex flex-col gap-2.5 flex-1 min-w-0">
-                {paymentBreakdown.map((p, i) => {
-                  const pct = totalPaymentAmount > 0 ? ((p.amount / totalPaymentAmount) * 100).toFixed(1) : '0';
-                  return (
-                    <div key={i} className="space-y-1">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                          <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: PAYMENT_COLORS[p.method] ?? 'rgb(161,161,170)' }} />
-                          <span className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300">{PAYMENT_LABELS[p.method] ?? p.method}</span>
-                        </div>
-                        <span className="text-[10px] font-black text-zinc-500">{pct}%</span>
-                      </div>
-                      <div className="h-1.5 w-full rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
-                        <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: PAYMENT_COLORS[p.method] ?? 'rgb(161,161,170)' }} />
-                      </div>
-                      <p className="text-[10px] text-zinc-400">{currencySymbol}{p.amount.toFixed(2)} · {p.count} orders</p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Peak hours bar chart */}
-        <div className="relative rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-sm">
-          {loading && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm">
-              <Loader size="sm" text="Loading..." />
-            </div>
-          )}
-          <h3 className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-3">
-            <Clock className="h-4 w-4 text-orange-500" />Peak Hours
-          </h3>
-
           {peakHours.every(h => h.count === 0) ? (
             <div className="flex h-44 items-center justify-center text-xs text-zinc-400 font-semibold">No data for this range</div>
           ) : (
             <ResponsiveContainer width="100%" height={176}>
               <BarChart data={peakHours} margin={{ top: 4, right: 4, left: -20, bottom: 0 }} barSize={14}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(161,161,170,0.15)" vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 9, fontWeight: 700, fill: 'rgb(161,161,170)' }} axisLine={false} tickLine={false} interval={1} />
-                <YAxis tick={{ fontSize: 9, fontWeight: 700, fill: 'rgb(161,161,170)' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 9, fontWeight: 600, fill: 'rgb(161,161,170)' }} axisLine={false} tickLine={false} interval={1} />
+                <YAxis tick={{ fontSize: 9, fontWeight: 600, fill: 'rgb(161,161,170)' }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip
-                  contentStyle={{
-                    background: 'rgb(24,24,27)', border: '1px solid rgb(63,63,70)',
-                    borderRadius: '10px', fontSize: '11px', fontWeight: 700, color: 'white', padding: '8px 12px',
-                  }}
+                  contentStyle={{ background: 'oklch(0.2 0.03 158)', border: 'none', borderRadius: '10px', fontSize: '11px', fontWeight: 600, color: 'white', padding: '8px 12px' }}
                   formatter={(value) => [value, 'Orders']}
                   labelFormatter={(label) => `Hour: ${label}`}
-                  cursor={{ fill: 'rgba(249,115,22,0.08)' }}
+                  cursor={{ fill: 'oklch(0.56 0.13 162 / 0.08)' }}
                 />
                 <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                   {peakHours.map((entry, i) => (
-                    <Cell
-                      key={i}
-                      fill={entry.count === maxHourCount ? 'rgb(249,115,22)' : 'rgb(228,228,231)'}
-                    />
+                    <Cell key={i} fill={entry.count === maxHourCount ? 'oklch(0.56 0.13 162)' : 'rgb(228,228,231)'} />
                   ))}
                 </Bar>
               </BarChart>
@@ -492,12 +487,12 @@ export default function Dashboard() {
       </div>
 
       {/* ── Recent orders table ── */}
-      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100 dark:border-zinc-800">
-          <h3 className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            <ArrowUpRight className="h-4 w-4 text-orange-500" />Recent Orders
+      <div className="rounded-2xl border border-zinc-200 bg-white shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100">
+          <h3 className="flex items-center gap-1.5 text-base font-semibold text-zinc-900">
+            <ArrowUpRight className="h-4 w-4 text-brand-600" />Recent orders
           </h3>
-          {stats && <span className="text-[10px] font-bold text-zinc-400">{stats.pagination.total} total</span>}
+          {stats && <span className="text-xs text-zinc-400">{stats.pagination.total} total</span>}
         </div>
 
         <Table
@@ -506,19 +501,19 @@ export default function Dashboard() {
           loading={loading}
           emptyMessage="No orders found for this date range."
           renderRow={(order) => (
-            <tr key={order.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-950/20 transition-colors">
-              <td className="px-4 py-3 text-xs font-black font-mono text-zinc-900 dark:text-zinc-100">#{order.orderNumber}</td>
+            <tr key={order.id} className="hover:bg-zinc-50/50 transition-colors">
+              <td className="px-4 py-3 text-xs font-black font-mono text-zinc-900">#{order.orderNumber}</td>
               <td className="px-4 py-3 text-xs font-mono text-zinc-400">
                 {new Date(order.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
               </td>
-              <td className="px-4 py-3 text-xs font-bold text-zinc-700 dark:text-zinc-300">{order.waiterName}</td>
+              <td className="px-4 py-3 text-xs font-bold text-zinc-700">{order.waiterName}</td>
               <td className="px-4 py-3">
-                <span className="rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-2 py-0.5 text-[10px] font-black text-zinc-600 dark:text-zinc-300">
+                <span className="rounded-full bg-zinc-100 border border-zinc-200 px-2 py-0.5 text-[10px] font-black text-zinc-600">
                   {order.paymentMethod}
                 </span>
               </td>
               <td className="px-4 py-3">{getStatusBadge(order.status)}</td>
-              <td className="px-4 py-3 text-xs font-black font-mono text-zinc-900 dark:text-zinc-50">
+              <td className="px-4 py-3 text-xs font-black font-mono text-zinc-900">
                 {currencySymbol}{order.grandTotal.toFixed(2)}
               </td>
             </tr>
@@ -526,8 +521,8 @@ export default function Dashboard() {
         />
 
         {stats && (
-          <div className="border-t border-zinc-100 dark:border-zinc-800 px-4 py-2">
-            <Pagination currentPage={page} totalPages={stats.pagination.totalPages} onPageChange={setPage} />
+          <div className="border-t border-zinc-100 px-4 py-2">
+            <Pagination currentPage={page} totalPages={stats.pagination.totalPages} onPageChange={(p) => fetchStats(p)} />
           </div>
         )}
       </div>

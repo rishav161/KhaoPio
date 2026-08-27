@@ -312,14 +312,14 @@ export default function MenuPage() {
     <div className="flex h-full flex-col overflow-hidden bg-zinc-50 dark:bg-zinc-950 p-4 transition-colors duration-250">
       
       {/* Title Header */}
-      <div className="mb-4 rounded-xl bg-gradient-to-r from-orange-500 to-orange-400 p-4 shadow-md">
+      <div className="mb-4 rounded-xl bg-gradient-to-r from-brand-500 to-brand-400 p-4 shadow-md">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
               <Layers className="h-6 w-6 text-white" />
               <span>Menu Configuration</span>
             </h1>
-            <p className="text-xs font-semibold text-orange-100">
+            <p className="text-xs font-semibold text-brand-100">
               Define kitchen categories, publish dishes, manage pricing, and toggle menu availability.
             </p>
           </div>
@@ -336,7 +336,7 @@ export default function MenuPage() {
 
             <button
               onClick={handleOpenCreateItem}
-              className="flex items-center gap-1.5 rounded-lg bg-white text-orange-600 px-4 py-2.5 text-xs font-black uppercase tracking-wider shadow-md hover:bg-orange-50 active:scale-95 transition-all cursor-pointer"
+              className="flex items-center gap-1.5 rounded-lg bg-white text-brand-600 px-4 py-2.5 text-xs font-black uppercase tracking-wider shadow-md hover:bg-brand-50 active:scale-95 transition-all cursor-pointer"
             >
               <Plus className="h-4.5 w-4.5" />
               <span>Add Menu Item</span>
@@ -375,7 +375,7 @@ export default function MenuPage() {
         
         {/* LEFT COLUMN: Categories list management console */}
         <div className="lg:col-span-1 flex flex-col rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden shadow-sm">
-          <div className="p-3 border-b border-orange-600 bg-gradient-to-r from-orange-500 to-orange-400 flex items-center justify-between rounded-t-xl">
+          <div className="p-3 border-b border-brand-600 bg-gradient-to-r from-brand-500 to-brand-400 flex items-center justify-between rounded-t-xl">
             <h2 className="text-[10px] font-black uppercase tracking-wider text-white">
               Menu Categories
             </h2>
@@ -390,11 +390,11 @@ export default function MenuPage() {
                 placeholder="New Category..."
                 value={newCatName}
                 onChange={(e) => setNewCatName(e.target.value)}
-                className="flex-1 rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-1.5 px-3 text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none focus:border-orange-400"
+                className="flex-1 rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-1.5 px-3 text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none focus:border-brand-400"
               />
               <button
                 type="submit"
-                className="rounded-lg bg-orange-500 text-white p-2 hover:bg-orange-600 transition-colors cursor-pointer"
+                className="rounded-lg bg-brand-500 text-white p-2 hover:bg-brand-600 transition-colors cursor-pointer"
                 title="Add Category"
               >
                 <Plus className="h-4 w-4" />
@@ -451,7 +451,7 @@ export default function MenuPage() {
                           setCatEditingId(cat.id);
                           setCatEditingName(cat.name);
                         }}
-                        className="text-zinc-450 hover:text-orange-500 dark:hover:text-orange-400 p-1 transition-colors cursor-pointer"
+                        className="text-zinc-450 hover:text-brand-500 dark:hover:text-brand-400 p-1 transition-colors cursor-pointer"
                         title="Rename"
                       >
                         <Edit3 className="h-3.5 w-3.5" />
@@ -480,7 +480,7 @@ export default function MenuPage() {
               onClick={() => setActiveTab('ALL')}
               className={`rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer shrink-0 ${
                 activeTab === 'ALL'
-                  ? 'bg-orange-500 text-white shadow-sm'
+                  ? 'bg-brand-500 text-white shadow-sm'
                   : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-550 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
               }`}
             >
@@ -492,7 +492,7 @@ export default function MenuPage() {
                 onClick={() => setActiveTab(cat.id)}
                 className={`rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer shrink-0 ${
                   activeTab === cat.id
-                    ? 'bg-orange-500 text-white shadow-sm'
+                    ? 'bg-brand-500 text-white shadow-sm'
                     : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-550 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                 }`}
               >
@@ -547,7 +547,7 @@ export default function MenuPage() {
                       </p>
 
                       <div className="mt-2 flex items-center justify-between">
-                        <span className="text-xs font-black text-orange-500 font-mono">
+                        <span className="text-xs font-black text-brand-500 font-mono">
                           {currencySymbol}{item.price.toFixed(2)}
                         </span>
 
@@ -574,7 +574,7 @@ export default function MenuPage() {
                       </button>
                       <button
                         onClick={() => handleOpenEditItem(item)}
-                        className="p-1 rounded text-zinc-450 hover:text-orange-500 dark:hover:text-orange-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                        className="p-1 rounded text-zinc-450 hover:text-brand-500 dark:hover:text-brand-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                         title="Edit Item"
                       >
                         <Edit3 className="h-3.5 w-3.5" />
@@ -608,7 +608,7 @@ export default function MenuPage() {
             </button>
 
             <h2 className="text-base font-black tracking-tight text-zinc-950 dark:text-zinc-50 border-b border-zinc-100 dark:border-zinc-800 pb-2 mb-4 flex items-center gap-1.5">
-              <Package className="h-5 w-5 text-orange-500" />
+              <Package className="h-5 w-5 text-brand-500" />
               <span>{editingItem ? 'Edit Dish Details' : 'Create New Menu Item'}</span>
             </h2>
 
@@ -623,7 +623,7 @@ export default function MenuPage() {
                     value={itemForm.name}
                     onChange={(e) => setItemForm({ ...itemForm, name: e.target.value })}
                     placeholder="e.g. Garlic Naan"
-                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-orange-400"
+                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-brand-400"
                     required
                   />
                 </div>
@@ -636,7 +636,7 @@ export default function MenuPage() {
                     value={itemForm.code}
                     onChange={(e) => setItemForm({ ...itemForm, code: e.target.value })}
                     placeholder="e.g. G02"
-                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-orange-400 font-mono tracking-widest text-center"
+                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-brand-400 font-mono tracking-widest text-center"
                     required
                   />
                 </div>
@@ -650,7 +650,7 @@ export default function MenuPage() {
                   value={itemForm.description}
                   onChange={(e) => setItemForm({ ...itemForm, description: e.target.value })}
                   placeholder="Provide ingredients, cooking preparation details..."
-                  className="w-full h-18 rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-1.5 px-3 text-xs outline-none focus:border-orange-400 resize-none"
+                  className="w-full h-18 rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-1.5 px-3 text-xs outline-none focus:border-brand-400 resize-none"
                 />
               </div>
 
@@ -664,7 +664,7 @@ export default function MenuPage() {
                     value={itemForm.price}
                     onChange={(e) => setItemForm({ ...itemForm, price: e.target.value.replace(/[^0-9.]/g, '') })}
                     placeholder="5.99"
-                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-orange-400 font-mono"
+                    className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-brand-400 font-mono"
                     required
                   />
                 </div>
@@ -674,7 +674,7 @@ export default function MenuPage() {
                     <button
                       type="button"
                       onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                      className="text-orange-500 hover:underline flex items-center gap-0.5 cursor-pointer lowercase font-bold"
+                      className="text-brand-500 hover:underline flex items-center gap-0.5 cursor-pointer lowercase font-bold"
                     >
                       <Smile className="h-3 w-3" />
                       <span>{showEmojiPicker ? 'close' : 'browse'}</span>
@@ -684,7 +684,7 @@ export default function MenuPage() {
                     <button
                       type="button"
                       onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                      className="h-9 w-9 rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-950 flex items-center justify-center text-xl shrink-0 cursor-pointer hover:border-orange-400 transition-colors shadow-xs"
+                      className="h-9 w-9 rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-950 flex items-center justify-center text-xl shrink-0 cursor-pointer hover:border-brand-400 transition-colors shadow-xs"
                       title="Click to select food icon"
                     >
                       {itemForm.image || '🍽️'}
@@ -694,7 +694,7 @@ export default function MenuPage() {
                       value={itemForm.image}
                       onChange={(e) => setItemForm({ ...itemForm, image: e.target.value })}
                       placeholder="e.g. 🍔 or URL"
-                      className="flex-1 rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-2.5 text-xs outline-none focus:border-orange-400"
+                      className="flex-1 rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-2.5 text-xs outline-none focus:border-brand-400"
                     />
                   </div>
                 </div>
@@ -716,7 +716,7 @@ export default function MenuPage() {
                       }}
                       className={`h-7 w-7 rounded-md text-base flex items-center justify-center transition-all cursor-pointer ${
                         itemForm.image === emoji
-                          ? 'bg-orange-500 text-white shadow-xs scale-110'
+                          ? 'bg-brand-500 text-white shadow-xs scale-110'
                           : 'hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:scale-105'
                       }`}
                     >
@@ -749,7 +749,7 @@ export default function MenuPage() {
                 <select
                   value={itemForm.categoryId || (categories.length > 0 ? categories[0].id : '')}
                   onChange={(e) => setItemForm({ ...itemForm, categoryId: e.target.value })}
-                  className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-orange-400"
+                  className="w-full rounded-lg border border-zinc-250 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-brand-400"
                   required
                 >
                   {categories.map((cat) => (
@@ -766,7 +766,7 @@ export default function MenuPage() {
                   id="modalIsAvailable"
                   checked={itemForm.isAvailable}
                   onChange={(e) => setItemForm({ ...itemForm, isAvailable: e.target.checked })}
-                  className="h-4.5 w-4.5 rounded border-zinc-350 bg-zinc-50 dark:bg-zinc-950 text-orange-500 focus:ring-2 focus:ring-orange-400/20"
+                  className="h-4.5 w-4.5 rounded border-zinc-350 bg-zinc-50 dark:bg-zinc-950 text-brand-500 focus:ring-2 focus:ring-brand-400/20"
                 />
                 <label htmlFor="modalIsAvailable" className="text-xs font-bold text-zinc-700 dark:text-zinc-350 cursor-pointer select-none">
                   Make this dish available for order immediately
@@ -784,7 +784,7 @@ export default function MenuPage() {
                 <button
                   type="submit"
                   disabled={itemLoading}
-                  className="flex-1 rounded-lg bg-orange-500 hover:bg-orange-600 text-white py-2.5 text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer"
+                  className="flex-1 rounded-lg bg-brand-500 hover:bg-brand-600 text-white py-2.5 text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer"
                 >
                   {itemLoading ? 'Saving...' : 'Save Item'}
                 </button>
@@ -806,13 +806,13 @@ export default function MenuPage() {
             </button>
 
             <div className="text-center">
-              <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-500 text-white text-xl font-black shadow-md border border-orange-400">
+              <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500 text-white text-xl font-black shadow-md border border-brand-400">
                 🍽️
               </div>
               <h2 className="text-lg font-black tracking-tight text-zinc-950 dark:text-zinc-50">
                 {user?.restaurantName || 'KhaoPio Restaurant'}
               </h2>
-              <p className="text-xs font-bold text-orange-500 uppercase tracking-widest mt-0.5">
+              <p className="text-xs font-bold text-brand-500 uppercase tracking-widest mt-0.5">
                 Master Public Digital Menu QR Code
               </p>
             </div>
@@ -830,7 +830,7 @@ export default function MenuPage() {
 
               <div className="mt-3 text-center">
                 <p className="text-xs font-black uppercase text-zinc-800 dark:text-zinc-200 tracking-wider flex items-center justify-center gap-1">
-                  <QrCode className="h-3.5 w-3.5 text-orange-500" />
+                  <QrCode className="h-3.5 w-3.5 text-brand-500" />
                   <span>Scan to View Live Menu</span>
                 </p>
                 <p className="text-[9px] text-zinc-400 mt-1 font-mono break-all max-w-[240px]">
@@ -883,7 +883,7 @@ export default function MenuPage() {
                               color: #18181b;
                             }
                             .card {
-                              border: 3px solid #f97316;
+                              border: 3px solid #3b5a73;
                               border-radius: 24px;
                               padding: 28px;
                               width: 100%;
@@ -893,7 +893,7 @@ export default function MenuPage() {
                             }
                             .logo { font-size: 36px; margin-bottom: 4px; }
                             .title { font-size: 22px; font-weight: 900; margin: 0 0 4px 0; color: #09090b; }
-                            .subtitle { font-size: 11px; font-weight: 800; color: #f97316; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px; }
+                            .subtitle { font-size: 11px; font-weight: 800; color: #3b5a73; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px; }
                             .qr-box { background: #fafafa; border: 2px dashed #e4e4e7; border-radius: 16px; padding: 16px; display: inline-block; margin-bottom: 16px; }
                             .instruction { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #27272a; margin: 0; }
                             .url { font-size: 9px; color: #a1a1aa; word-break: break-all; margin-top: 8px; font-family: monospace; }
@@ -923,7 +923,7 @@ export default function MenuPage() {
                     `);
                     printWindow.document.close();
                   }}
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white py-2.5 text-xs font-black uppercase tracking-wider shadow-md transition-all cursor-pointer"
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white py-2.5 text-xs font-black uppercase tracking-wider shadow-md transition-all cursor-pointer"
                 >
                   <Printer className="h-4 w-4" />
                   Print QR Card

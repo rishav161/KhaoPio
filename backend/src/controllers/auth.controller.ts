@@ -249,8 +249,8 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
       res.status(400).json({ error: 'Field "email" is required.' });
       return;
     }
-    const result = await authService.sendPasswordResetOtp(email);
-    res.status(200).json({ message: 'Password reset code sent to your email.', otp: result.otp });
+    await authService.sendPasswordResetOtp(email);
+    res.status(200).json({ message: 'Password reset code sent to your email.' });
   } catch (error: any) {
     res.status(400).json({ error: error.message || 'Error sending reset code.' });
   }

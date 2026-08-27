@@ -32,8 +32,8 @@ export function ConfirmDialog() {
   };
 
   // Color schemes based on dialog type
-  let iconColor = 'text-orange-500 bg-orange-50 dark:bg-orange-950/20';
-  let confirmBtnColor = 'bg-orange-500 hover:bg-orange-600 shadow-orange-100';
+  let iconColor = 'text-brand-500 bg-brand-50 dark:bg-brand-950/20';
+  let confirmBtnColor = 'bg-brand-500 hover:bg-brand-600 shadow-brand-100';
   let Icon = HelpCircle;
 
   if (options.type === 'danger') {

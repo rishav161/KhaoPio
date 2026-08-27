@@ -221,7 +221,7 @@ export default function TablesPage() {
       <div className="flex w-full lg:w-[65%] flex-col border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-xl shadow-sm overflow-hidden shrink-0">
 
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-gradient-to-r from-orange-500 to-orange-400 px-4 py-3">
+        <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-gradient-to-r from-brand-500 to-brand-400 px-4 py-3">
           <div className="flex items-center gap-2">
             <Armchair className="h-5 w-5 text-white" />
             <h1 className="text-xs sm:text-sm font-black uppercase tracking-wider text-white">
@@ -367,14 +367,14 @@ export default function TablesPage() {
         {/* Header */}
         <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-gradient-to-r from-zinc-900 to-zinc-700 dark:from-zinc-950 dark:to-zinc-800 px-4 py-3">
           <div className="flex items-center gap-2">
-            <CalendarDays className="h-5 w-5 text-orange-400" />
+            <CalendarDays className="h-5 w-5 text-brand-400" />
             <h2 className="text-xs font-black uppercase tracking-wider text-white">
               Active Reservations
             </h2>
           </div>
           <button
             onClick={() => setIsAddBookingOpen(true)}
-            className="flex items-center gap-1 rounded-lg bg-orange-500 hover:bg-orange-400 text-white font-black py-1.5 px-2.5 text-[9px] uppercase shadow-sm tracking-wide transition-all cursor-pointer"
+            className="flex items-center gap-1 rounded-lg bg-brand-500 hover:bg-brand-400 text-white font-black py-1.5 px-2.5 text-[9px] uppercase shadow-sm tracking-wide transition-all cursor-pointer"
           >
             <PlusCircle className="h-3.5 w-3.5" />
             New Book
@@ -431,7 +431,7 @@ export default function TablesPage() {
 
                   {/* Mid: Table assigned & Time */}
                   <div className="flex items-center justify-between text-[10px] font-bold text-zinc-505 dark:text-zinc-450 py-1.5 border-t border-dashed border-zinc-150 dark:border-zinc-800">
-                    <span className={`flex items-center gap-1 font-extrabold uppercase ${isCheckedOut ? 'text-zinc-400' : 'text-orange-500'}`}>
+                    <span className={`flex items-center gap-1 font-extrabold uppercase ${isCheckedOut ? 'text-zinc-400' : 'text-brand-500'}`}>
                       <Armchair className="h-3.5 w-3.5" />
                       {booking.table ? booking.table.name : 'Unknown Table'}
                     </span>
@@ -491,7 +491,7 @@ export default function TablesPage() {
             
             <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3 mb-4">
               <h3 className="text-xs font-black uppercase tracking-wider text-zinc-905 dark:text-zinc-50 flex items-center gap-1.5">
-                <Armchair className="h-4.5 w-4.5 text-orange-500" />
+                <Armchair className="h-4.5 w-4.5 text-brand-500" />
                 <span>Configure Dining Table</span>
               </h3>
               <button
@@ -518,7 +518,7 @@ export default function TablesPage() {
                   placeholder="e.g. Table 9"
                   value={newTableName}
                   onChange={(e) => setNewTableName(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-xs font-bold outline-none focus:border-orange-400 text-zinc-900 dark:text-zinc-100"
+                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-xs font-bold outline-none focus:border-brand-400 text-zinc-900 dark:text-zinc-100"
                   required
                 />
               </div>
@@ -530,7 +530,7 @@ export default function TablesPage() {
                 <select
                   value={newTableCapacity}
                   onChange={(e) => setNewTableCapacity(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-xs font-bold outline-none focus:border-orange-400 text-zinc-900 dark:text-zinc-100"
+                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-xs font-bold outline-none focus:border-brand-400 text-zinc-900 dark:text-zinc-100"
                 >
                   <option value="2">2 Seats (Duet)</option>
                   <option value="4">4 Seats (Family)</option>
@@ -550,7 +550,7 @@ export default function TablesPage() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 rounded-lg bg-orange-500 hover:bg-orange-600 text-white py-2.5 text-xs font-black uppercase tracking-wider shadow-md transition-all cursor-pointer"
+                  className="flex-1 rounded-lg bg-brand-500 hover:bg-brand-600 text-white py-2.5 text-xs font-black uppercase tracking-wider shadow-md transition-all cursor-pointer"
                 >
                   Save Table
                 </button>
@@ -567,7 +567,7 @@ export default function TablesPage() {
             
             <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3 mb-4">
               <h3 className="text-xs font-black uppercase tracking-wider text-zinc-905 dark:text-zinc-50 flex items-center gap-1.5">
-                <CalendarDays className="h-4.5 w-4.5 text-orange-500" />
+                <CalendarDays className="h-4.5 w-4.5 text-brand-500" />
                 <span>Reserve Dining Table</span>
               </h3>
               <button
@@ -595,7 +595,7 @@ export default function TablesPage() {
                     placeholder="e.g. John Doe"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-955 px-3 py-2 text-xs font-bold outline-none focus:border-orange-400 text-zinc-900 dark:text-zinc-100"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-955 px-3 py-2 text-xs font-bold outline-none focus:border-brand-400 text-zinc-900 dark:text-zinc-100"
                     required
                   />
                 </div>
@@ -608,7 +608,7 @@ export default function TablesPage() {
                     placeholder="e.g. +1 555-0199"
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-955 px-3 py-2 text-xs font-bold outline-none focus:border-orange-400 text-zinc-900 dark:text-zinc-100"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-955 px-3 py-2 text-xs font-bold outline-none focus:border-brand-400 text-zinc-900 dark:text-zinc-100"
                   />
                 </div>
               </div>
@@ -622,7 +622,7 @@ export default function TablesPage() {
                     type="datetime-local"
                     value={bookingTime}
                     onChange={(e) => setBookingTime(e.target.value)}
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-955 px-3 py-2 text-xs font-bold outline-none focus:border-orange-400 text-zinc-900 dark:text-zinc-100 font-mono"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-955 px-3 py-2 text-xs font-bold outline-none focus:border-brand-400 text-zinc-900 dark:text-zinc-100 font-mono"
                     required
                   />
                 </div>
@@ -635,7 +635,7 @@ export default function TablesPage() {
                     min="1"
                     value={guestsCount}
                     onChange={(e) => setGuestsCount(e.target.value)}
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-955 px-3 py-2 text-xs font-bold outline-none focus:border-orange-400 text-zinc-900 dark:text-zinc-100"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-955 px-3 py-2 text-xs font-bold outline-none focus:border-brand-400 text-zinc-900 dark:text-zinc-100"
                     required
                   />
                 </div>
@@ -648,7 +648,7 @@ export default function TablesPage() {
                 <select
                   value={selectedTableId}
                   onChange={(e) => setSelectedTableId(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-955 px-3 py-2 text-xs font-bold outline-none focus:border-orange-400 text-zinc-900 dark:text-zinc-100"
+                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-955 px-3 py-2 text-xs font-bold outline-none focus:border-brand-400 text-zinc-900 dark:text-zinc-100"
                   required
                 >
                   <option value="">-- Choose dining table --</option>
@@ -687,7 +687,7 @@ export default function TablesPage() {
                 <button
                   type="submit"
                   disabled={isBookingSubmitting}
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white py-2.5 text-xs font-black uppercase tracking-wider shadow-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 text-white py-2.5 text-xs font-black uppercase tracking-wider shadow-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isBookingSubmitting ? (
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
