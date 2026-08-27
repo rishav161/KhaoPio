@@ -173,7 +173,7 @@ function CheckoutContent() {
       await completePayment(selectedOrderForBill.id, { couponCode: couponCodeInput || undefined, manualDiscount: manualDiscountInput ? discountVal : undefined, payments: finalPayments });
       const paidAfter = alreadyPaid + finalPayments.reduce((s, p) => s + p.amount, 0);
       if (paidAfter >= parseFloat(selectedOrderForBill.totals.total)) {
-        confettiExplosion({ particleCount: 80, spread: 60, origin: { y: 0.7 }, colors: ['#f97316', '#10b981', '#3b82f6', '#f59e0b'] });
+        confettiExplosion({ particleCount: 80, spread: 60, origin: { y: 0.7 }, colors: ['#3b5a73', '#10b981', '#3b82f6', '#f59e0b'] });
         setCouponSuccess('Order fully paid!');
         setTimeout(() => triggerPrint(), 800);
       } else {
@@ -260,7 +260,7 @@ function CheckoutContent() {
 
       {/* ── LEFT: Ready for checkout ── */}
       <div className="flex w-full lg:w-[55%] flex-col rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm overflow-hidden shrink-0">
-        <div className="flex items-center gap-2.5 border-b border-orange-600 bg-gradient-to-r from-orange-500 to-orange-400 px-4 py-3">
+        <div className="flex items-center gap-2.5 border-b border-brand-600 bg-gradient-to-r from-brand-500 to-brand-400 px-4 py-3">
           <ShoppingBag className="h-4 w-4 text-white" />
           <h2 className="text-xs font-black uppercase tracking-wider text-white">Ready for Checkout</h2>
           <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-white/20 px-1 text-[10px] font-black text-white">{readyOrders.length}</span>
@@ -333,7 +333,7 @@ function CheckoutContent() {
                 {/* Footer */}
                 <div className="flex items-center justify-between px-3 py-2.5 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/20">
                   <div className="flex items-center gap-2">
-                    <span className="text-base font-black text-orange-500">
+                    <span className="text-base font-black text-brand-500">
                       {currencySymbol}{order.totals.total}
                     </span>
                     <button
@@ -346,7 +346,7 @@ function CheckoutContent() {
                   </div>
                   <button
                     onClick={() => setSelectedOrderForBill(order)}
-                    className="flex items-center gap-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 active:scale-[0.98] px-4 py-2 text-[11px] font-black text-white transition-all shadow-sm shadow-orange-200 cursor-pointer"
+                    className="flex items-center gap-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 active:scale-[0.98] px-4 py-2 text-[11px] font-black text-white transition-all shadow-sm shadow-brand-200 cursor-pointer"
                   >
                     <Receipt className="h-3.5 w-3.5" />
                     CHECKOUT
@@ -369,7 +369,7 @@ function CheckoutContent() {
           <select
             value={completedFilter}
             onChange={(e) => setCompletedFilter(e.target.value as any)}
-            className="rounded-lg border border-zinc-600 bg-zinc-800 px-2 py-1 text-[10px] font-black outline-none focus:border-orange-400 cursor-pointer text-zinc-100"
+            className="rounded-lg border border-zinc-600 bg-zinc-800 px-2 py-1 text-[10px] font-black outline-none focus:border-brand-400 cursor-pointer text-zinc-100"
           >
             <option value="today">Today</option>
             <option value="yesterday">Yesterday</option>
@@ -406,7 +406,7 @@ function CheckoutContent() {
                 </div>
                 <button
                   onClick={() => setSelectedOrderForBill(order)}
-                  className="flex items-center gap-1 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 hover:border-orange-300 hover:text-orange-500 px-2.5 py-1.5 text-[10px] font-black text-zinc-600 dark:text-zinc-400 transition-colors cursor-pointer"
+                  className="flex items-center gap-1 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 hover:border-brand-300 hover:text-brand-500 px-2.5 py-1.5 text-[10px] font-black text-zinc-600 dark:text-zinc-400 transition-colors cursor-pointer"
                 >
                   <Printer className="h-3.5 w-3.5" />REPRINT
                 </button>
@@ -424,7 +424,7 @@ function CheckoutContent() {
             {/* Modal header */}
             <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-5 py-3.5">
               <div className="flex items-center gap-2.5">
-                <Receipt className="h-4 w-4 text-orange-500" />
+                <Receipt className="h-4 w-4 text-brand-500" />
                 <span className="text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
                   {selectedOrderForBill.status === 'PAID' ? 'Invoice Preview' : `Order #${selectedOrderForBill.orderNumber} · ${selectedOrderForBill.table?.name || 'Takeaway'}`}
                 </span>
@@ -462,7 +462,7 @@ function CheckoutContent() {
                       )}
                       <div className="flex justify-between items-center border-t border-zinc-700 pt-2">
                         <span className="text-xs font-black text-zinc-300">Remaining</span>
-                        <span className={`text-xl font-black ${remainingBalance === 0 ? 'text-emerald-400' : 'text-orange-400'}`}>
+                        <span className={`text-xl font-black ${remainingBalance === 0 ? 'text-emerald-400' : 'text-brand-400'}`}>
                           {currencySymbol}{remainingBalance.toFixed(2)}
                         </span>
                       </div>
@@ -478,7 +478,7 @@ function CheckoutContent() {
                             <button key={m.key} onClick={() => setPaymentMethodInput(m.key)}
                               className={`flex flex-col items-center justify-center gap-1 rounded-xl border py-3 text-[11px] font-black transition-all cursor-pointer ${
                                 paymentMethodInput === m.key
-                                  ? 'border-orange-400 bg-orange-50 dark:bg-orange-950/20 text-orange-500'
+                                  ? 'border-brand-400 bg-brand-50 dark:bg-brand-950/20 text-brand-500'
                                   : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-500 hover:border-zinc-300 dark:hover:border-zinc-700'
                               }`}>
                               {m.icon}
@@ -494,7 +494,7 @@ function CheckoutContent() {
                         <div className="flex gap-2">
                           <input type="number" step="0.01" placeholder="0.00" value={paymentAmountInput}
                             onChange={(e) => setPaymentAmountInput(e.target.value)}
-                            className="flex-1 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2.5 text-sm font-black outline-none focus:border-orange-400 dark:text-zinc-100" />
+                            className="flex-1 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2.5 text-sm font-black outline-none focus:border-brand-400 dark:text-zinc-100" />
                           <button onClick={handleAddPayment}
                             className="flex items-center gap-1 rounded-xl bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-700 text-white px-3 text-[11px] font-black transition-all cursor-pointer">
                             <Plus className="h-3.5 w-3.5" />SPLIT
@@ -502,7 +502,7 @@ function CheckoutContent() {
                         </div>
                         <input type="text" placeholder="Reference / UTR / Last 4 digits (optional)" value={paymentRefInput}
                           onChange={(e) => setPaymentRefInput(e.target.value)}
-                          className="mt-2 w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-[10px] font-bold outline-none focus:border-orange-400 dark:text-zinc-100" />
+                          className="mt-2 w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-[10px] font-bold outline-none focus:border-brand-400 dark:text-zinc-100" />
                       </div>
 
                       {/* Pending split payments */}
@@ -516,10 +516,10 @@ function CheckoutContent() {
                             </div>
                           ))}
                           {localPayments.map((p, i) => (
-                            <div key={i} className="flex justify-between items-center rounded-lg bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-900 px-3 py-2 text-[11px]">
-                              <span className="font-bold text-orange-700 dark:text-orange-400 uppercase">{p.paymentMethod}{p.transactionReference ? ` · ${p.transactionReference}` : ''}</span>
+                            <div key={i} className="flex justify-between items-center rounded-lg bg-brand-50 dark:bg-brand-950/20 border border-brand-200 dark:border-brand-900 px-3 py-2 text-[11px]">
+                              <span className="font-bold text-brand-700 dark:text-brand-400 uppercase">{p.paymentMethod}{p.transactionReference ? ` · ${p.transactionReference}` : ''}</span>
                               <div className="flex items-center gap-2">
-                                <span className="font-black text-orange-700 dark:text-orange-400">{currencySymbol}{p.amount.toFixed(2)}</span>
+                                <span className="font-black text-brand-700 dark:text-brand-400">{currencySymbol}{p.amount.toFixed(2)}</span>
                                 <button onClick={() => handleRemovePayment(i)} className="text-zinc-400 hover:text-red-500 cursor-pointer"><Trash2 className="h-3 w-3" /></button>
                               </div>
                             </div>
@@ -530,22 +530,22 @@ function CheckoutContent() {
                       {/* Discounts */}
                       <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-3 space-y-3">
                         <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400 flex items-center gap-1.5">
-                          <Tag className="h-3 w-3 text-orange-500" />Discounts & Coupons
+                          <Tag className="h-3 w-3 text-brand-500" />Discounts & Coupons
                         </p>
                         <div className="relative">
                           <Percent className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
                           <input type="number" step="0.01" placeholder="Manual discount amount" value={manualDiscountInput}
                             onChange={(e) => setManualDiscountInput(e.target.value)}
-                            className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 pl-8 pr-3 text-xs font-bold outline-none focus:border-orange-400 dark:text-zinc-100" />
+                            className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 pl-8 pr-3 text-xs font-bold outline-none focus:border-brand-400 dark:text-zinc-100" />
                         </div>
                         <div className="relative">
                           <Tag className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
                           <input type="text" placeholder="Coupon code (e.g. WELCOME10)" value={couponCodeInput}
                             onChange={(e) => setCouponCodeInput(e.target.value)}
-                            className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 pl-8 pr-3 text-xs font-bold outline-none focus:border-orange-400 uppercase dark:text-zinc-100" />
+                            className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 pl-8 pr-3 text-xs font-bold outline-none focus:border-brand-400 uppercase dark:text-zinc-100" />
                         </div>
                         <button onClick={handleApplyDiscountAndCoupon} disabled={loadingDiscounts}
-                          className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 py-2 text-[11px] font-black text-zinc-600 dark:text-zinc-400 hover:border-orange-300 hover:text-orange-500 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5">
+                          className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 py-2 text-[11px] font-black text-zinc-600 dark:text-zinc-400 hover:border-brand-300 hover:text-brand-500 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5">
                           {loadingDiscounts ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-zinc-400 border-t-transparent" /> : null}
                           APPLY DISCOUNT / COUPON
                         </button>
@@ -558,7 +558,7 @@ function CheckoutContent() {
                     <div className="border-t border-zinc-200 dark:border-zinc-800 p-3 shrink-0 space-y-2">
                       <button
                         onClick={() => setShowMobileReceipt(v => !v)}
-                        className="md:hidden w-full rounded-xl border border-zinc-200 dark:border-zinc-800 py-2 text-[11px] font-black text-zinc-500 dark:text-zinc-400 hover:border-orange-300 hover:text-orange-500 transition-all cursor-pointer flex items-center justify-center gap-1.5">
+                        className="md:hidden w-full rounded-xl border border-zinc-200 dark:border-zinc-800 py-2 text-[11px] font-black text-zinc-500 dark:text-zinc-400 hover:border-brand-300 hover:text-brand-500 transition-all cursor-pointer flex items-center justify-center gap-1.5">
                         <Receipt className="h-3.5 w-3.5" />
                         {showMobileReceipt ? 'HIDE RECEIPT' : 'VIEW RECEIPT'}
                       </button>

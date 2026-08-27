@@ -93,7 +93,7 @@ export default function ArticlePage() {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-7 w-7 animate-spin text-[#f97316]" />
+        <Loader2 className="h-7 w-7 animate-spin text-[#3b5a73]" />
       </div>
     );
   }
@@ -105,7 +105,7 @@ export default function ArticlePage() {
         <p className="text-sm font-semibold text-[#78716C]">{error || 'Article not found'}</p>
         <button
           onClick={() => router.push('/help')}
-          className="mt-2 text-xs font-bold text-[#f97316] hover:underline cursor-pointer"
+          className="mt-2 text-xs font-bold text-[#3b5a73] hover:underline cursor-pointer"
         >
           Back to Help Center
         </button>
@@ -127,7 +127,7 @@ export default function ArticlePage() {
         <div className="flex items-center gap-2 mb-6">
           <button
             onClick={() => router.push('/help')}
-            className="flex items-center gap-1.5 text-[11px] font-bold text-[#78716C] dark:text-zinc-500 hover:text-[#f97316] transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 text-[11px] font-bold text-[#78716C] dark:text-zinc-500 hover:text-[#3b5a73] transition-colors cursor-pointer"
           >
             <ArrowLeft className="h-3 w-3" />
             All articles
@@ -218,12 +218,12 @@ export default function ArticlePage() {
               <button
                 key={rel.id}
                 onClick={() => router.push(`/help/${rel.slug}`)}
-                className="group w-full flex items-center justify-between gap-4 rounded-xl border border-[#E7E5E4] dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-3 text-left hover:border-[#f97316]/50 hover:shadow-sm transition-all cursor-pointer"
+                className="group w-full flex items-center justify-between gap-4 rounded-xl border border-[#E7E5E4] dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-3 text-left hover:border-[#3b5a73]/50 hover:shadow-sm transition-all cursor-pointer"
               >
-                <p className="text-xs font-bold text-[#1C1917] dark:text-zinc-200 group-hover:text-[#f97316] transition-colors">
+                <p className="text-xs font-bold text-[#1C1917] dark:text-zinc-200 group-hover:text-[#3b5a73] transition-colors">
                   {rel.title}
                 </p>
-                <LucideIcons.ChevronRight className="h-3.5 w-3.5 text-[#D6D3D1] dark:text-zinc-600 group-hover:text-[#f97316] group-hover:translate-x-0.5 transition-all shrink-0" />
+                <LucideIcons.ChevronRight className="h-3.5 w-3.5 text-[#D6D3D1] dark:text-zinc-600 group-hover:text-[#3b5a73] group-hover:translate-x-0.5 transition-all shrink-0" />
               </button>
             ))}
           </div>

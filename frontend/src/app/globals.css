@@ -3,29 +3,73 @@
 @variant dark (.dark &); /* Support class-based dark mode in Tailwind v4 */
 
 @theme {
-  --color-primary: #f97316; /* orange-500 */
-  --color-primary-hover: #ea6c0a; /* orange-600 */
+  --color-primary: oklch(0.56 0.13 162); /* brand-600 */
+  --color-primary-hover: oklch(0.46 0.115 162); /* brand-700 */
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* Brand scale — Emerald Forest, anchored at 600 = the theme's primary green */
+  --color-brand-50: oklch(0.97 0.02 162);
+  --color-brand-100: oklch(0.94 0.035 160);
+  --color-brand-200: oklch(0.88 0.06 160);
+  --color-brand-250: oklch(0.83 0.075 160);
+  --color-brand-300: oklch(0.78 0.09 161);
+  --color-brand-400: oklch(0.68 0.115 162);
+  --color-brand-450: oklch(0.62 0.125 162);
+  --color-brand-500: oklch(0.585 0.13 162);
+  --color-brand-600: oklch(0.56 0.13 162);
+  --color-brand-700: oklch(0.46 0.115 162);
+  --color-brand-750: oklch(0.41 0.105 161);
+  --color-brand-800: oklch(0.365 0.09 160);
+  --color-brand-900: oklch(0.28 0.065 158);
+  --color-brand-950: oklch(0.2 0.045 157);
 }
 
 :root {
-  --background: #fafafa;
-  --foreground: #18181b;
-  --card: #ffffff;
-  --card-border: #e4e4e7;
+  --background: oklch(0.965 0.015 95);
+  --foreground: oklch(0.24 0.03 155);
+  --card: oklch(0.995 0.008 95);
+  --card-border: oklch(0.9 0.02 150);
+  --gradient-ink: linear-gradient(160deg, oklch(0.28 0.04 155), oklch(0.19 0.03 158));
 }
 
 .dark {
-  --background: #09090b;
-  --foreground: #f4f4f5;
-  --card: #18181b;
-  --card-border: #27272a;
+  --background: oklch(0.18 0.025 158);
+  --foreground: oklch(0.96 0.012 95);
+  --card: oklch(0.22 0.03 158);
+  --card-border: oklch(1 0 0 / 10%);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out both;
+}
+
+/* Brand-consistent text selection */
+::selection {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+/* Brand-consistent keyboard focus ring, replacing the browser-default blue outline */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 /* Custom micro-animations */
@@ -87,9 +131,9 @@ body {
 
 /* Success flash on send-to-kitchen */
 @keyframes success-flash {
-  0%   { background-color: rgb(249,115,22); box-shadow: 0 0 0 0 rgba(34,197,94,0.6); }
+  0%   { background-color: rgb(59,90,115); box-shadow: 0 0 0 0 rgba(34,197,94,0.6); }
   30%  { background-color: rgb(22,163,74);  box-shadow: 0 0 0 8px rgba(34,197,94,0); }
-  100% { background-color: rgb(249,115,22); box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+  100% { background-color: rgb(59,90,115); box-shadow: 0 0 0 0 rgba(34,197,94,0); }
 }
 .animate-success-flash {
   animation: success-flash 0.7s ease-out forwards;
@@ -147,8 +191,8 @@ body {
 }
 .dark .article-content code { background: #292524; color: #fb923c; }
 
-.article-content a { color: #f97316; text-decoration: underline; }
-.article-content a:hover { color: #ea6c0a; }
+.article-content a { color: #3b5a73; text-decoration: underline; }
+.article-content a:hover { color: #2e4a5f; }
 
 .article-content hr {
   border: none;
@@ -158,12 +202,12 @@ body {
 .dark .article-content hr { border-top-color: #27272a; }
 
 .article-content blockquote {
-  border-left: 3px solid #f97316;
+  border-left: 3px solid #3b5a73;
   padding-left: 1rem;
   color: #78716C;
   font-style: italic;
   margin: 1rem 0;
-  background: #FFF7ED;
+  background: #eef2f5;
   border-radius: 0 0.5rem 0.5rem 0;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;

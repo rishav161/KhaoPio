@@ -196,7 +196,7 @@ export default function SettingsPage() {
     <div className="h-full w-full overflow-y-auto pb-8 pr-1">
       <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3.5 mb-6">
         <div className="flex items-center gap-2">
-          <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-orange-50 dark:bg-orange-950/20 text-orange-500">
+          <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-brand-50 dark:bg-brand-950/20 text-brand-500">
             <Settings className="h-5 w-5" />
           </div>
           <div>
@@ -225,7 +225,7 @@ export default function SettingsPage() {
 
           {/* Section 1: Personal Credentials */}
           <div className="space-y-4">
-            <span className="block text-[10px] font-black uppercase tracking-widest text-orange-500">Personal Information</span>
+            <span className="block text-[10px] font-black uppercase tracking-widest text-brand-500">Personal Information</span>
             <div>
               <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">Staff Member Name</label>
               <div className="relative">
@@ -234,7 +234,7 @@ export default function SettingsPage() {
                   type="text" 
                   value={profileName}
                   onChange={(e) => setProfileName(e.target.value.replace(/[^a-zA-Z\s'\-]/g, ''))}
-                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
+                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-semibold outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
                   required
                 />
               </div>
@@ -243,7 +243,7 @@ export default function SettingsPage() {
 
           {/* Section 2: Restaurant Identity & POS configuration */}
           <div className="border-t border-zinc-150 dark:border-zinc-800 pt-5 mt-5 space-y-4">
-            <span className="block text-[10px] font-black uppercase tracking-widest text-orange-500">Restaurant Settings</span>
+            <span className="block text-[10px] font-black uppercase tracking-widest text-brand-500">Restaurant Settings</span>
             
             <div>
               <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 dark:text-zinc-400 mb-1.5 font-bold">Restaurant Workspace Name</label>
@@ -254,7 +254,7 @@ export default function SettingsPage() {
                   value={profileRestaurant}
                   onChange={(e) => setProfileRestaurant(e.target.value)}
                   disabled={user?.role !== 'SUPER_ADMIN'}
-                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-semibold outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
                   required
                 />
               </div>
@@ -271,7 +271,7 @@ export default function SettingsPage() {
                       min="0"
                       value={profileTaxRate}
                       onChange={(e) => setProfileTaxRate(e.target.value)}
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2.5 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2.5 text-xs font-semibold outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
                       required
                     />
                   </div>
@@ -283,7 +283,7 @@ export default function SettingsPage() {
                       min="0"
                       value={profileServiceCharge}
                       onChange={(e) => setProfileServiceCharge(e.target.value)}
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2.5 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2.5 text-xs font-semibold outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
                       required
                     />
                   </div>
@@ -299,7 +299,7 @@ export default function SettingsPage() {
                         value={profilePhone}
                         onChange={(e) => setProfilePhone(e.target.value.replace(/[^0-9+\-\s()]/g, ''))}
                         placeholder="+91 98765 43210"
-                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
+                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-semibold outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
                       />
                     </div>
                   </div>
@@ -312,7 +312,7 @@ export default function SettingsPage() {
                         value={profileGstin}
                         onChange={(e) => setProfileGstin(e.target.value)}
                         placeholder="27AAAAA1111A1Z1"
-                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
+                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-semibold outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
                       />
                     </div>
                   </div>
@@ -327,7 +327,7 @@ export default function SettingsPage() {
                       onChange={(e) => setProfileAddress(e.target.value)}
                       placeholder="e.g. 123 Main Street, City, Pin Code"
                       rows={2}
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all resize-none"
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-semibold outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all resize-none"
                     />
                   </div>
                 </div>
@@ -352,8 +352,8 @@ export default function SettingsPage() {
                     <div className="flex-1 space-y-1.5">
                       <label className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-3 text-xs font-black transition-all ${
                         logoUploading
-                          ? 'border-orange-300 bg-orange-50 dark:bg-orange-950/20 text-orange-500'
-                          : 'border-zinc-200 dark:border-zinc-700 hover:border-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950/10 text-zinc-500 hover:text-orange-500'
+                          ? 'border-brand-300 bg-brand-50 dark:bg-brand-950/20 text-brand-500'
+                          : 'border-zinc-200 dark:border-zinc-700 hover:border-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/10 text-zinc-500 hover:text-brand-500'
                       }`}>
                         {logoUploading ? (
                           <><Loader2 className="h-4 w-4 animate-spin" /><span>Uploading...</span></>
@@ -396,7 +396,7 @@ export default function SettingsPage() {
                       value={profileThankYouMessage}
                       onChange={(e) => setProfileThankYouMessage(e.target.value)}
                       placeholder="Thank you for dining with us!"
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-semibold outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
                     />
                   </div>
                 </div>
@@ -405,7 +405,7 @@ export default function SettingsPage() {
                   <select
                     value={profileCurrency}
                     onChange={(e) => setProfileCurrency(e.target.value)}
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2.5 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all cursor-pointer"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2.5 text-xs font-semibold outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all cursor-pointer"
                   >
                     {SUPPORTED_CURRENCIES.map((c) => (
                       <option key={c.code} value={c.code}>
@@ -423,7 +423,7 @@ export default function SettingsPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full flex items-center justify-center gap-1.5 cursor-pointer rounded-lg bg-orange-500 hover:bg-orange-600 text-white py-3 text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50 active:scale-[0.98] shadow-md shadow-orange-100 dark:shadow-none"
+                    className="w-full flex items-center justify-center gap-1.5 cursor-pointer rounded-lg bg-brand-500 hover:bg-brand-600 text-white py-3 text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50 active:scale-[0.98] shadow-md shadow-brand-100 dark:shadow-none"
                   >
                     {loading ? (
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
@@ -445,11 +445,11 @@ export default function SettingsPage() {
                 <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-sm">
                   <div className="flex items-center justify-between border-b border-zinc-150 dark:border-zinc-800 pb-3.5 mb-5">
                     <div className="flex items-center gap-2">
-                      <div className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-orange-50 dark:bg-orange-950/20 text-orange-500">
+                      <div className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 dark:bg-brand-950/20 text-brand-500">
                         <QrCode className="h-4 w-4" />
                       </div>
                       <div>
-                        <span className="block text-[10px] font-black uppercase tracking-widest text-orange-500">Public Digital Menu</span>
+                        <span className="block text-[10px] font-black uppercase tracking-widest text-brand-500">Public Digital Menu</span>
                         <span className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">Master QR Code & Link</span>
                       </div>
                     </div>
@@ -469,7 +469,7 @@ export default function SettingsPage() {
                       <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
                         Live Menu Public Link:
                       </p>
-                      <p className="text-[10px] font-mono text-orange-500 bg-orange-50 dark:bg-orange-950/30 p-2 rounded-lg border border-orange-200 dark:border-orange-900/40 break-all select-all text-center">
+                      <p className="text-[10px] font-mono text-brand-500 bg-brand-50 dark:bg-brand-950/30 p-2 rounded-lg border border-brand-200 dark:border-brand-900/40 break-all select-all text-center">
                         {typeof window !== 'undefined' ? `${window.location.origin}/m/${activeQrSlug || user?.restaurantId || 'default'}` : ''}
                       </p>
 
@@ -491,10 +491,10 @@ export default function SettingsPage() {
                                   <style>
                                     @media print { @page { size: 4in 6in; margin: 0; } body { margin: 0; } }
                                     body { font-family: system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; text-align: center; background: #fff; color: #18181b; }
-                                    .card { border: 3px solid #f97316; border-radius: 24px; padding: 28px; width: 100%; max-width: 320px; box-sizing: border-box; box-shadow: 0 10px 30px rgba(0,0,0,0.12); }
+                                    .card { border: 3px solid #3b5a73; border-radius: 24px; padding: 28px; width: 100%; max-width: 320px; box-sizing: border-box; box-shadow: 0 10px 30px rgba(0,0,0,0.12); }
                                     .logo { font-size: 36px; margin-bottom: 4px; }
                                     .title { font-size: 22px; font-weight: 900; margin: 0 0 4px 0; color: #09090b; }
-                                    .subtitle { font-size: 11px; font-weight: 800; color: #f97316; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px; }
+                                    .subtitle { font-size: 11px; font-weight: 800; color: #3b5a73; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px; }
                                     .qr-box { background: #fafafa; border: 2px dashed #e4e4e7; border-radius: 16px; padding: 16px; display: inline-block; margin-bottom: 16px; }
                                     .instruction { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #27272a; margin: 0; }
                                     .url { font-size: 9px; color: #a1a1aa; word-break: break-all; margin-top: 8px; font-family: monospace; }
@@ -519,7 +519,7 @@ export default function SettingsPage() {
                             `);
                             printWindow.document.close();
                           }}
-                          className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white py-2.5 text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-xs"
+                          className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 text-white py-2.5 text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-xs"
                         >
                           <Printer className="h-3.5 w-3.5" />
                           <span>Print QR Poster</span>
@@ -555,11 +555,11 @@ export default function SettingsPage() {
       {/* Change Password card */}
       <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-sm">
         <div className="flex items-center gap-2 mb-5">
-          <div className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-orange-50 dark:bg-orange-950/20 text-orange-500">
+          <div className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 dark:bg-brand-950/20 text-brand-500">
             <KeyRound className="h-4 w-4" />
           </div>
           <div>
-            <span className="block text-[10px] font-black uppercase tracking-widest text-orange-500">Security</span>
+            <span className="block text-[10px] font-black uppercase tracking-widest text-brand-500">Security</span>
             <span className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">Change Password</span>
           </div>
         </div>
@@ -592,7 +592,7 @@ export default function SettingsPage() {
                     onChange={(e) => setPwForm({ ...pwForm, [field]: e.target.value })}
                     autoComplete="new-password"
                     placeholder="••••••••"
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pl-3 pr-10 text-xs font-semibold outline-none focus:border-orange-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pl-3 pr-10 text-xs font-semibold outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all"
                     required
                   />
                   <button type="button"
@@ -607,7 +607,7 @@ export default function SettingsPage() {
 
           <div className="flex pt-1">
             <button type="submit" disabled={pwLoading}
-              className="w-full flex items-center justify-center gap-1.5 cursor-pointer rounded-lg bg-orange-500 hover:bg-orange-600 text-white py-3 text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50 active:scale-[0.98] shadow-md shadow-orange-100 dark:shadow-none">
+              className="w-full flex items-center justify-center gap-1.5 cursor-pointer rounded-lg bg-brand-500 hover:bg-brand-600 text-white py-3 text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50 active:scale-[0.98] shadow-md shadow-brand-100 dark:shadow-none">
               {pwLoading ? (
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
               ) : (

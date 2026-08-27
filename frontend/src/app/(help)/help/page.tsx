@@ -77,7 +77,7 @@ export default function HelpCenterPage() {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-7 w-7 animate-spin text-[#f97316]" />
+        <Loader2 className="h-7 w-7 animate-spin text-[#3b5a73]" />
       </div>
     );
   }
@@ -95,9 +95,9 @@ export default function HelpCenterPage() {
     <div className="min-h-screen">
 
       {/* ── Hero search ── */}
-      <div className="relative overflow-hidden bg-gradient-to-b from-orange-50 to-[#FAFAF9] dark:from-orange-950/20 dark:to-zinc-950 border-b border-[#E7E5E4] dark:border-zinc-800 px-4 pb-0 pt-10">
+      <div className="relative overflow-hidden bg-gradient-to-b from-brand-50 to-[#FAFAF9] dark:from-brand-950/20 dark:to-zinc-950 border-b border-[#E7E5E4] dark:border-zinc-800 px-4 pb-0 pt-10">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="mb-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#f97316]">
+          <p className="mb-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#3b5a73]">
             Help Center
           </p>
           <h1 className="text-[1.75rem] font-black leading-tight tracking-tight text-[#1C1917] dark:text-zinc-50">
@@ -116,12 +116,12 @@ export default function HelpCenterPage() {
               placeholder="Search articles…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full rounded-2xl border border-[#E7E5E4] dark:border-zinc-700 bg-white dark:bg-zinc-900 pl-11 pr-4 py-3.5 text-sm font-medium text-[#1C1917] dark:text-zinc-100 placeholder:text-[#A8A29E] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f97316]/40 focus:border-[#f97316] dark:focus:border-[#f97316] transition-all"
+              className="w-full rounded-2xl border border-[#E7E5E4] dark:border-zinc-700 bg-white dark:bg-zinc-900 pl-11 pr-4 py-3.5 text-sm font-medium text-[#1C1917] dark:text-zinc-100 placeholder:text-[#A8A29E] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#3b5a73]/40 focus:border-[#3b5a73] dark:focus:border-[#3b5a73] transition-all"
             />
             {query && (
               <button
                 onClick={() => setQuery('')}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-full bg-[#E7E5E4] dark:bg-zinc-700 text-[#78716C] hover:bg-[#f97316] hover:text-white transition-colors cursor-pointer"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-full bg-[#E7E5E4] dark:bg-zinc-700 text-[#78716C] hover:bg-[#3b5a73] hover:text-white transition-colors cursor-pointer"
               >
                 <LucideIcons.X className="h-3 w-3" />
               </button>
@@ -137,8 +137,8 @@ export default function HelpCenterPage() {
                   onClick={() => scrollToCategory(cat.id)}
                   className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[11px] font-bold transition-all cursor-pointer whitespace-nowrap ${
                     activeCategory === cat.id
-                      ? 'border-[#f97316] bg-[#f97316] text-white shadow-sm'
-                      : 'border-[#E7E5E4] dark:border-zinc-700 bg-white dark:bg-zinc-900 text-[#57534E] dark:text-zinc-400 hover:border-[#f97316] hover:text-[#f97316]'
+                      ? 'border-[#3b5a73] bg-[#3b5a73] text-white shadow-sm'
+                      : 'border-[#E7E5E4] dark:border-zinc-700 bg-white dark:bg-zinc-900 text-[#57534E] dark:text-zinc-400 hover:border-[#3b5a73] hover:text-[#3b5a73]'
                   }`}
                 >
                   <DynamicIcon name={cat.icon} className="h-3 w-3" />
@@ -190,7 +190,7 @@ export default function HelpCenterPage() {
               <section key={cat.id} id={`cat-${cat.id}`} className="space-y-2.5 scroll-mt-16">
                 {/* Section label */}
                 <div className="flex items-center gap-2.5 mb-3">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[#f97316] text-white">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[#3b5a73] text-white">
                     <DynamicIcon name={cat.icon} className="h-3 w-3" />
                   </div>
                   <h2 className="text-[11px] font-black uppercase tracking-[0.14em] text-[#1C1917] dark:text-zinc-200">
@@ -228,10 +228,10 @@ function ArticleRow({
   return (
     <button
       onClick={onClick}
-      className="group w-full flex items-center justify-between gap-4 rounded-xl border border-[#E7E5E4] dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-3.5 text-left hover:border-[#f97316]/50 hover:shadow-sm hover:shadow-orange-100/60 dark:hover:shadow-none transition-all cursor-pointer"
+      className="group w-full flex items-center justify-between gap-4 rounded-xl border border-[#E7E5E4] dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-3.5 text-left hover:border-[#3b5a73]/50 hover:shadow-sm hover:shadow-brand-100/60 dark:hover:shadow-none transition-all cursor-pointer"
     >
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-bold text-[#1C1917] dark:text-zinc-100 group-hover:text-[#f97316] transition-colors leading-snug">
+        <p className="text-sm font-bold text-[#1C1917] dark:text-zinc-100 group-hover:text-[#3b5a73] transition-colors leading-snug">
           {article.title}
         </p>
         {article.excerpt && (
@@ -240,7 +240,7 @@ function ArticleRow({
           </p>
         )}
       </div>
-      <ChevronRight className="h-4 w-4 text-[#D6D3D1] dark:text-zinc-600 group-hover:text-[#f97316] group-hover:translate-x-0.5 transition-all shrink-0" />
+      <ChevronRight className="h-4 w-4 text-[#D6D3D1] dark:text-zinc-600 group-hover:text-[#3b5a73] group-hover:translate-x-0.5 transition-all shrink-0" />
     </button>
   );
 }
