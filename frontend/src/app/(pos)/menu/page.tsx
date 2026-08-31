@@ -3,10 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { QRCodeSVG } from 'qrcode.react';
-import { 
-  FolderPlus, Edit3, Trash2, Plus, Sparkles, AlertCircle, Check, 
-  X, ClipboardCheck, ArrowRight, Eye, EyeOff, LayoutGrid, Tag, 
-  Layers, Package, Coins, Hash, RefreshCw, ToggleLeft, ToggleRight, Smile, QrCode, Printer
+import {
+  Edit3, Trash2, Plus, AlertCircle, Check,
+  X, Search, Package, Smile, QrCode, Printer, RefreshCw
 } from 'lucide-react';
 import { apiFetch } from '@/utils/api';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -17,11 +16,11 @@ import { useCurrencySymbol } from '@/utils/currency';
 const EmojiPicker: any = dynamic(() => import('emoji-picker-react'), { ssr: false });
 
 const PRESET_FOOD_EMOJIS = [
-  '🍔', '🍕', '🍟', '🌭', '🥪', '🌮', '🌯', '🫔', 
-  '🍗', '🥩', '🥓', '🍳', '🥞', '🧇', '🧀', '🥗', 
-  '🍲', '🥣', '🍜', '🍝', '🍛', '🍱', '🍣', '🍤', 
-  '🥟', '🍦', '🍧', '🍨', '🍩', '🍪', '🎂', '🍰', 
-  '🧁', '🥧', '🍫', '🍬', '☕', '🍵', '🧃', '🥤', 
+  '🍔', '🍕', '🍟', '🌭', '🥪', '🌮', '🌯', '🫔',
+  '🍗', '🥩', '🥓', '🍳', '🥞', '🧇', '🧀', '🥗',
+  '🍲', '🥣', '🍜', '🍝', '🍛', '🍱', '🍣', '🍤',
+  '🥟', '🍦', '🍧', '🍨', '🍩', '🍪', '🎂', '🍰',
+  '🧁', '🥧', '🍫', '🍬', '☕', '🍵', '🧃', '🥤',
   '🧋', '🍺', '🍻', '🥂', '🍷', '🥃', '🍸', '🍹'
 ];
 
@@ -57,8 +56,13 @@ export default function MenuPage() {
   const [showMasterQrModal, setShowMasterQrModal] = useState(false);
   const [activeQrSlug, setActiveQrSlug] = useState<string>('');
 
+  // Search
+  const [showSearch, setShowSearch] = useState(false);
+  const [query, setQuery] = useState('');
+
   // Category Forms
   const [newCatName, setNewCatName] = useState('');
+  const [showAddCategory, setShowAddCategory] = useState(false);
   const [catEditingId, setCatEditingId] = useState<string | null>(null);
   const [catEditingName, setCatEditingName] = useState('');
 
@@ -77,7 +81,7 @@ export default function MenuPage() {
   });
   const [itemLoading, setItemLoading] = useState(false);
 
-  // Active Category tab filter on items grid
+  // Active Category filter chip
   const [activeTab, setActiveTab] = useState<string>('ALL');
 
   // Fetch Menu from API
@@ -115,6 +119,7 @@ export default function MenuPage() {
       });
       setSuccessMsg(`Created category "${newCatName.trim()}".`);
       setNewCatName('');
+      setShowAddCategory(false);
       fetchMenu();
     } catch (err: any) {
       setErrorMsg(err.message || 'Error creating category.');
@@ -154,6 +159,7 @@ export default function MenuPage() {
             method: 'DELETE',
           });
           setSuccessMsg(`Deleted category "${name}" and its items.`);
+          if (activeTab === id) setActiveTab('ALL');
           fetchMenu();
         } catch (err: any) {
           setErrorMsg(err.message || 'Error deleting category.');
@@ -288,11 +294,13 @@ export default function MenuPage() {
     }
   };
 
-  // Compile flat items list for tab filtering
+  // Compile flat items list for chip + search filtering
   const allItems = categories.flatMap(cat => cat.menuItems.map(item => ({ ...item, categoryName: cat.name })));
-  const filteredItems = activeTab === 'ALL' 
-    ? allItems 
-    : allItems.filter(item => item.categoryId === activeTab);
+  const visibleItems = allItems.filter(item => {
+    const matchesCategory = activeTab === 'ALL' || item.categoryId === activeTab;
+    const matchesQuery = query.trim().length === 0 || item.name.toLowerCase().includes(query.trim().toLowerCase());
+    return matchesCategory && matchesQuery;
+  });
 
   if (!canManage) {
     return (
@@ -309,45 +317,145 @@ export default function MenuPage() {
   }
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-zinc-50 dark:bg-zinc-950 p-4 transition-colors duration-250">
-      
-      {/* Title Header */}
-      <div className="mb-4 rounded-xl bg-gradient-to-r from-brand-500 to-brand-400 p-4 shadow-md">
-        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-          <div>
-            <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-              <Layers className="h-6 w-6 text-white" />
-              <span>Menu Configuration</span>
+    <div className="flex h-full flex-col overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm">
+
+      {/* Slim header */}
+      <div className="shrink-0 bg-zinc-900 dark:bg-zinc-950 px-5 pb-4 pt-4">
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="truncate text-lg font-black tracking-tight text-white">
+              Menu Configuration
             </h1>
-            <p className="text-xs font-semibold text-brand-100">
-              Define kitchen categories, publish dishes, manage pricing, and toggle menu availability.
+            <p className="text-xs text-zinc-400">
+              {allItems.length} items · {categories.length} categories
             </p>
           </div>
-
-          <div className="flex items-center gap-2 self-start">
+          <div className="flex shrink-0 gap-2">
             <button
-              onClick={() => setShowMasterQrModal(true)}
-              className="flex items-center gap-1.5 rounded-lg border border-white/40 bg-white/10 hover:bg-white/20 text-white px-3.5 py-2.5 text-xs font-black uppercase tracking-wider shadow-sm transition-all cursor-pointer backdrop-blur-xs"
-              title="View & Print Master Menu QR Code"
+              type="button"
+              aria-label="Search menu"
+              onClick={() => setShowSearch((v) => !v)}
+              className={`rounded-lg p-2 transition-colors cursor-pointer ${
+                showSearch ? 'bg-brand-500 text-white' : 'bg-white/10 text-white hover:bg-white/20'
+              }`}
             >
-              <QrCode className="h-4 w-4 text-white" />
-              <span>Public Menu QR</span>
+              <Search className="h-4.5 w-4.5" />
             </button>
-
             <button
-              onClick={handleOpenCreateItem}
-              className="flex items-center gap-1.5 rounded-lg bg-white text-brand-600 px-4 py-2.5 text-xs font-black uppercase tracking-wider shadow-md hover:bg-brand-50 active:scale-95 transition-all cursor-pointer"
+              type="button"
+              aria-label="Public menu QR"
+              title="View & Print Master Menu QR Code"
+              onClick={() => setShowMasterQrModal(true)}
+              className="rounded-lg bg-white/10 p-2 text-white transition-colors hover:bg-white/20 cursor-pointer"
             >
-              <Plus className="h-4.5 w-4.5" />
-              <span>Add Menu Item</span>
+              <QrCode className="h-4.5 w-4.5" />
             </button>
           </div>
         </div>
+        {showSearch && (
+          <div className="mt-3">
+            <input
+              autoFocus
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search dishes…"
+              className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder-white/50 outline-none focus:ring-2 focus:ring-brand-400/40"
+            />
+          </div>
+        )}
       </div>
+
+      {/* Category filter chips */}
+      <nav aria-label="Menu categories" className="shrink-0 flex items-center gap-2 overflow-x-auto border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-3 scrollbar-none">
+        <CategoryChip
+          label={`All Items (${allItems.length})`}
+          active={activeTab === 'ALL'}
+          onClick={() => setActiveTab('ALL')}
+        />
+        {categories.map((cat) => {
+          const isActive = activeTab === cat.id;
+          const isEditingThis = catEditingId === cat.id;
+
+          if (isEditingThis) {
+            return (
+              <div key={cat.id} className="flex shrink-0 items-center gap-1 rounded-full border border-brand-400 bg-white dark:bg-zinc-900 pl-3 pr-1.5 py-1">
+                <input
+                  autoFocus
+                  value={catEditingName}
+                  onChange={(e) => setCatEditingName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleUpdateCategory(cat.id)}
+                  className="w-24 bg-transparent text-xs font-bold text-zinc-900 dark:text-zinc-100 outline-none"
+                />
+                <button onClick={() => handleUpdateCategory(cat.id)} className="p-1 text-emerald-600 hover:text-emerald-700 cursor-pointer" title="Save">
+                  <Check className="h-3.5 w-3.5" />
+                </button>
+                <button onClick={() => { setCatEditingId(null); setCatEditingName(''); }} className="p-1 text-zinc-400 hover:text-zinc-600 cursor-pointer" title="Cancel">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            );
+          }
+
+          return (
+            <div key={cat.id} className="flex shrink-0 items-center gap-1">
+              <CategoryChip
+                label={`${cat.name} (${cat.menuItems?.length || 0})`}
+                active={isActive}
+                onClick={() => setActiveTab(cat.id)}
+              />
+              {isActive && (
+                <span className="flex items-center gap-0.5">
+                  <button
+                    onClick={() => { setCatEditingId(cat.id); setCatEditingName(cat.name); }}
+                    className="p-1 text-zinc-400 hover:text-brand-600 dark:hover:text-brand-400 cursor-pointer"
+                    title="Rename category"
+                  >
+                    <Edit3 className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteCategory(cat.id, cat.name)}
+                    className="p-1 text-zinc-400 hover:text-red-500 cursor-pointer"
+                    title="Delete category"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </span>
+              )}
+            </div>
+          );
+        })}
+
+        {showAddCategory ? (
+          <form onSubmit={handleCreateCategory} className="flex shrink-0 items-center gap-1 rounded-full border border-brand-400 bg-white dark:bg-zinc-900 pl-3 pr-1.5 py-1">
+            <input
+              autoFocus
+              value={newCatName}
+              onChange={(e) => setNewCatName(e.target.value)}
+              placeholder="Category name"
+              className="w-28 bg-transparent text-xs font-bold text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none"
+            />
+            <button type="submit" className="p-1 text-emerald-600 hover:text-emerald-700 cursor-pointer" title="Add">
+              <Check className="h-3.5 w-3.5" />
+            </button>
+            <button type="button" onClick={() => { setShowAddCategory(false); setNewCatName(''); }} className="p-1 text-zinc-400 hover:text-zinc-600 cursor-pointer" title="Cancel">
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </form>
+        ) : (
+          <button
+            type="button"
+            aria-label="Add category"
+            onClick={() => setShowAddCategory(true)}
+            className="shrink-0 rounded-full bg-zinc-100 dark:bg-zinc-800 p-1.5 text-zinc-500 dark:text-zinc-400 transition-colors hover:bg-zinc-200 dark:hover:bg-zinc-700 cursor-pointer"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
+        )}
+      </nav>
 
       {/* Success/Error Alert banners */}
       {errorMsg && (
-        <div className="mb-4 flex items-center justify-between rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/20 p-3.5 text-xs font-bold text-red-600 dark:text-red-400">
+        <div className="shrink-0 mx-4 mt-3 flex items-center justify-between rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/20 p-3 text-xs font-bold text-red-600 dark:text-red-400">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4.5 w-4.5 shrink-0" />
             <span>{errorMsg}</span>
@@ -357,9 +465,8 @@ export default function MenuPage() {
           </button>
         </div>
       )}
-
       {successMsg && (
-        <div className="mb-4 flex items-center justify-between rounded-lg border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/20 p-3.5 text-xs font-bold text-emerald-700 dark:text-emerald-400">
+        <div className="shrink-0 mx-4 mt-3 flex items-center justify-between rounded-lg border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/20 p-3 text-xs font-bold text-emerald-700 dark:text-emerald-400">
           <div className="flex items-center gap-2">
             <Check className="h-4.5 w-4.5 shrink-0" />
             <span>{successMsg}</span>
@@ -370,236 +477,116 @@ export default function MenuPage() {
         </div>
       )}
 
-      {/* Main dashboard configuration workspace */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 overflow-hidden">
-        
-        {/* LEFT COLUMN: Categories list management console */}
-        <div className="lg:col-span-1 flex flex-col rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden shadow-sm">
-          <div className="p-3 border-b border-brand-600 bg-gradient-to-r from-brand-500 to-brand-400 flex items-center justify-between rounded-t-xl">
-            <h2 className="text-[10px] font-black uppercase tracking-wider text-white">
-              Menu Categories
-            </h2>
-            <Layers className="h-4 w-4 text-white/80" />
-          </div>
-
-          {/* Add Category Form */}
-          <form onSubmit={handleCreateCategory} className="p-3 border-b border-zinc-200 dark:border-zinc-800">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="New Category..."
-                value={newCatName}
-                onChange={(e) => setNewCatName(e.target.value)}
-                className="flex-1 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-1.5 px-3 text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none focus:border-brand-400"
-              />
-              <button
-                type="submit"
-                className="rounded-lg bg-brand-500 text-white p-2 hover:bg-brand-600 transition-colors cursor-pointer"
-                title="Add Category"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
-            </div>
-          </form>
-
-          {/* Categories list */}
-          <div className="flex-1 overflow-y-auto p-2 space-y-1 bg-zinc-50/20 dark:bg-zinc-900/10">
-            {categories.map((cat) => {
-              const isEditing = catEditingId === cat.id;
-
-              return (
-                <div 
-                  key={cat.id}
-                  className="flex items-center justify-between p-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm"
-                >
-                  {isEditing ? (
-                    <div className="flex items-center gap-1.5 flex-1 mr-2">
-                      <input
-                        type="text"
-                        value={catEditingName}
-                        onChange={(e) => setCatEditingName(e.target.value)}
-                        className="flex-1 rounded border border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-0.5 px-2 text-xs outline-none"
-                      />
-                      <button 
-                        onClick={() => handleUpdateCategory(cat.id)}
-                        className="text-emerald-600 hover:text-emerald-700 p-1"
-                      >
-                        <Check className="h-3.5 w-3.5" />
-                      </button>
-                      <button 
-                        onClick={() => { setCatEditingId(null); setCatEditingName(''); }}
-                        className="text-zinc-400 hover:text-zinc-600 p-1"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-xs font-black truncate text-zinc-900 dark:text-zinc-50">
-                        {cat.name}
-                      </span>
-                      <span className="text-[9px] text-zinc-400 font-bold">
-                        {cat.menuItems?.length || 0} items
-                      </span>
-                    </div>
-                  )}
-
-                  {!isEditing && (
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={() => {
-                          setCatEditingId(cat.id);
-                          setCatEditingName(cat.name);
-                        }}
-                        className="text-zinc-400 hover:text-brand-500 dark:hover:text-brand-400 p-1 transition-colors cursor-pointer"
-                        title="Rename"
-                      >
-                        <Edit3 className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteCategory(cat.id, cat.name)}
-                        className="text-zinc-400 hover:text-red-500 p-1 transition-colors cursor-pointer"
-                        title="Delete Category"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* RIGHT COLUMN: Food Items filtering and grid list */}
-        <div className="lg:col-span-2 flex flex-col rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden shadow-sm">
-          
-          {/* Header filter tabs */}
-          <div className="p-2.5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 overflow-x-auto flex gap-1.5 scrollbar-none">
-            <button
-              onClick={() => setActiveTab('ALL')}
-              className={`rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer shrink-0 ${
-                activeTab === 'ALL'
-                  ? 'bg-brand-500 text-white shadow-sm'
-                  : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
-              }`}
-            >
-              All Items ({allItems.length})
-            </button>
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setActiveTab(cat.id)}
-                className={`rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer shrink-0 ${
-                  activeTab === cat.id
-                    ? 'bg-brand-500 text-white shadow-sm'
-                    : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+      {/* Compact item list */}
+      <main className="flex-1 overflow-y-auto px-3 py-3 bg-zinc-50/40 dark:bg-zinc-950/20">
+        {loading ? (
+          <Loader size="md" text="Querying active menu items..." className="h-full w-full py-10" />
+        ) : (
+          <div className="space-y-2">
+            {visibleItems.map((item) => (
+              <article
+                key={item.id}
+                className={`flex items-center gap-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2.5 shadow-sm transition-opacity ${
+                  !item.isAvailable ? 'opacity-60' : ''
                 }`}
               >
-                {cat.name} ({cat.menuItems?.length || 0})
-              </button>
-            ))}
-          </div>
-
-          {/* Grid listing */}
-          <div className="flex-1 overflow-y-auto p-4 bg-zinc-50/20 dark:bg-zinc-900/10">
-            {loading ? (
-              <Loader size="md" text="Querying active menu items..." className="h-full w-full py-10" />
-            ) : filteredItems.length === 0 ? (
-              <div className="flex h-full w-full flex-col items-center justify-center p-8 text-center">
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 mb-3">
-                  <Package className="h-6 w-6" />
+                <div className={`grid h-[60px] w-[60px] shrink-0 place-items-center rounded-xl bg-zinc-100 dark:bg-zinc-800 text-3xl ${!item.isAvailable ? 'grayscale' : ''}`}>
+                  {item.image || '🍽️'}
                 </div>
-                <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-500">No Menu Items Found</h3>
-                <p className="text-xs text-zinc-500 mt-1">
-                  Add items to this category or seed templates.
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {filteredItems.map((item) => (
-                  <div 
-                    key={item.id}
-                    className={`flex items-start gap-3 p-3 rounded-xl border bg-white dark:bg-zinc-900 shadow-sm transition-all ${
-                      item.isAvailable 
-                        ? 'border-zinc-200 dark:border-zinc-800' 
-                        : 'border-red-200 dark:border-red-950 opacity-70 bg-zinc-50/50 dark:bg-zinc-950/20'
-                    }`}
-                  >
-                    {/* Item Image / Emoji */}
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-950 text-2xl border border-zinc-200 dark:border-zinc-800 select-none">
-                      {item.image || '🍽️'}
+                <div className="min-w-0 flex-1">
+                  <div className="mb-0.5 flex items-start justify-between gap-2">
+                    <div className="flex min-w-0 items-center gap-1.5">
+                      <span className="shrink-0 rounded border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 text-[10px] font-mono font-bold text-zinc-500 dark:text-zinc-400">
+                        {item.code}
+                      </span>
+                      <h2 className="truncate text-sm font-bold text-zinc-900 dark:text-zinc-50">
+                        {item.name}
+                      </h2>
                     </div>
-
-                    {/* Details */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-xs font-black text-zinc-950 dark:text-zinc-50 truncate leading-tight">
-                          {item.name}
-                        </span>
-                        <span className="text-[8px] font-mono font-black uppercase tracking-widest text-zinc-400 bg-zinc-100 dark:bg-zinc-950 px-1 py-0.5 rounded">
-                          {item.code}
-                        </span>
-                      </div>
-                      
-                      <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5 line-clamp-2 leading-relaxed">
-                        {item.description || 'No description provided.'}
-                      </p>
-
-                      <div className="mt-2 flex items-center justify-between">
-                        <span className="text-xs font-black text-brand-500 font-mono">
-                          {currencySymbol}{item.price.toFixed(2)}
-                        </span>
-
-                        <span className={`text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full border ${
-                          item.isAvailable
-                            ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900'
-                            : 'bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900'
-                        }`}>
-                          {item.isAvailable ? 'Available' : 'Sold Out'}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Action buttons (flex aligned) */}
-                    <div className="flex flex-col gap-1.5 shrink-0 self-stretch justify-center items-center border-l border-zinc-100 dark:border-zinc-800 pl-2.5">
+                    <span className="shrink-0 text-sm font-black text-brand-600 dark:text-brand-400 font-mono">
+                      {currencySymbol}{item.price.toFixed(2)}
+                    </span>
+                  </div>
+                  <p className="mb-2 line-clamp-1 text-[11px] text-zinc-500 dark:text-zinc-400">
+                    {item.description || 'No description provided.'}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex gap-1">
                       <button
-                        onClick={() => toggleItemAvailability(item)}
-                        className={`p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer ${
-                          item.isAvailable ? 'text-emerald-500' : 'text-zinc-400'
-                        }`}
-                        title={item.isAvailable ? 'Mark Sold Out' : 'Mark Available'}
-                      >
-                        {item.isAvailable ? <ToggleRight className="h-4.5 w-4.5" /> : <ToggleLeft className="h-4.5 w-4.5" />}
-                      </button>
-                      <button
+                        type="button"
+                        aria-label={`Edit ${item.name}`}
                         onClick={() => handleOpenEditItem(item)}
-                        className="p-1 rounded text-zinc-400 hover:text-brand-500 dark:hover:text-brand-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
-                        title="Edit Item"
+                        className="rounded-md p-1.5 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-brand-600 dark:hover:text-brand-400 transition-colors cursor-pointer"
                       >
-                        <Edit3 className="h-3.5 w-3.5" />
+                        <Edit3 className="h-4 w-4" />
                       </button>
                       <button
+                        type="button"
+                        aria-label={`Delete ${item.name}`}
                         onClick={() => handleDeleteItem(item.id, item.name)}
-                        className="p-1 rounded text-zinc-400 hover:text-red-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
-                        title="Delete Item"
+                        className="rounded-md p-1.5 text-zinc-400 hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-500 transition-colors cursor-pointer"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`text-[10px] font-semibold uppercase tracking-wide ${item.isAvailable ? 'text-zinc-400' : 'text-red-500'}`}>
+                        {item.isAvailable ? 'Available' : 'Out'}
+                      </span>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={item.isAvailable}
+                        aria-label={`Toggle availability for ${item.name}`}
+                        onClick={() => toggleItemAvailability(item)}
+                        className={`relative h-4 w-7 rounded-full transition-colors cursor-pointer ${item.isAvailable ? 'bg-brand-500' : 'bg-zinc-300 dark:bg-zinc-700'}`}
+                      >
+                        <span className={`absolute top-0.5 h-3 w-3 rounded-full bg-white shadow-sm transition-all ${item.isAvailable ? 'right-0.5' : 'left-0.5'}`} />
                       </button>
                     </div>
                   </div>
-                ))}
+                </div>
+              </article>
+            ))}
+
+            {!loading && visibleItems.length === 0 && (
+              <div className="rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-8 text-center">
+                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">No dishes found</p>
+                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Try a different category or search term.</p>
               </div>
             )}
           </div>
+        )}
+      </main>
+
+      {/* Bottom primary actions */}
+      <footer className="shrink-0 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3">
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={handleOpenCreateItem}
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand-500 hover:bg-brand-600 py-3 text-sm font-bold text-white shadow-sm transition-colors cursor-pointer"
+          >
+            <Plus className="h-4 w-4" />
+            Add Menu Item
+          </button>
+          <button
+            type="button"
+            aria-label="Public menu QR"
+            title="View & Print Master Menu QR Code"
+            onClick={() => setShowMasterQrModal(true)}
+            className="flex w-14 items-center justify-center rounded-2xl bg-zinc-900 dark:bg-zinc-800 text-white transition-colors hover:bg-zinc-800 dark:hover:bg-zinc-700 cursor-pointer"
+          >
+            <QrCode className="h-5 w-5" />
+          </button>
         </div>
-      </div>
+      </footer>
 
       {/* CREATE/EDIT ITEM MODAL POPUP */}
       {isItemModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
-          <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-2xl animate-in zoom-in-95 duration-200 text-zinc-900 dark:text-zinc-100">
-            
+          <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-2xl animate-in zoom-in-95 duration-200 text-zinc-900 dark:text-zinc-100 max-h-[90vh] overflow-y-auto">
+
             <button
               onClick={() => setIsItemModalOpen(false)}
               className="absolute right-4 top-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer"
@@ -793,11 +780,12 @@ export default function MenuPage() {
           </div>
         </div>
       )}
+
       {/* MASTER PUBLIC MENU QR CODE MODAL */}
       {showMasterQrModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 animate-in fade-in duration-150">
           <div className="relative w-full max-w-sm overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-2xl animate-in zoom-in-95 duration-150 text-zinc-900 dark:text-zinc-100">
-            
+
             <button
               onClick={() => setShowMasterQrModal(false)}
               className="absolute right-4 top-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer"
@@ -904,7 +892,7 @@ export default function MenuPage() {
                             <div class="logo">🍽️</div>
                             <h1 class="title">${restName}</h1>
                             <div class="subtitle">Digital Menu & Ordering</div>
-                            
+
                             <div class="qr-box">
                               <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}" width="180" height="180" alt="QR Code" />
                             </div>
@@ -964,5 +952,22 @@ export default function MenuPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function CategoryChip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`shrink-0 whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-bold transition-colors cursor-pointer ${
+        active
+          ? 'bg-brand-500 text-white'
+          : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+      }`}
+    >
+      {label}
+    </button>
   );
 }
