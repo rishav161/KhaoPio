@@ -60,13 +60,24 @@ jobs:
         working-directory: .
         run: |
           BASE_SHA="${{ github.event.pull_request.base.sha || github.event.before }}"
-          FILES=$(git diff --name-only --diff-filter=ACMR "$BASE_SHA" "${{ github.sha }}" -- frontend | grep -E '\.(ts|tsx)$' | sed 's#^frontend/##' | tr '\n' ' ')
-          echo "files=$FILES" >> "$GITHUB_OUTPUT"
-          echo "Changed frontend files: $FILES"
+          FILES=$(git diff --name-only --diff-filter=ACMR "$BASE_SHA" "${{ github.sha }}" -- frontend | grep -E '\.(ts|tsx)$' | sed 's#^frontend/##')
+          {
+            echo "files<<CHANGED_FILES_EOF"
+            echo "$FILES"
+            echo "CHANGED_FILES_EOF"
+          } >> "$GITHUB_OUTPUT"
+          echo "Changed frontend files:"
+          echo "$FILES"
 
       - name: Lint changed files only
         if: steps.changed.outputs.files != ''
-        run: npx eslint ${{ steps.changed.outputs.files }}
+        run: |
+          mapfile -t FILES <<< "${{ steps.changed.outputs.files }}"
+          ARGS=()
+          for f in "${FILES[@]}"; do
+            [[ -n "$f" ]] && ARGS+=("$f")
+          done
+          npx eslint "${ARGS[@]}"
 
       - name: Build
         run: npm run build
