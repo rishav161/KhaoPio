@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, ChevronRight, Loader2, AlertCircle, HelpCircle } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { apiFetch } from '@/utils/api';
 
 interface HelpCategory {
@@ -26,7 +27,7 @@ interface HelpArticle {
 }
 
 const DynamicIcon = ({ name, className }: { name: string; className?: string }) => {
-  const Icon = (LucideIcons as any)[name] || HelpCircle;
+  const Icon = (LucideIcons as unknown as Record<string, LucideIcon>)[name] || HelpCircle;
   return <Icon className={className} />;
 };
 
@@ -49,8 +50,8 @@ export default function HelpCenterPage() {
         ]);
         setCategories(cats);
         setArticles(arts);
-      } catch (e: any) {
-        setError(e.message || 'Failed to load help content');
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Failed to load help content');
       } finally {
         setLoading(false);
       }

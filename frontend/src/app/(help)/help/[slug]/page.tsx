@@ -6,6 +6,7 @@ import {
   ArrowLeft, ThumbsUp, ThumbsDown, Loader2, AlertCircle, Clock,
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { apiFetch } from '@/utils/api';
 
 interface HelpArticle {
@@ -34,7 +35,7 @@ interface RelatedArticle {
 }
 
 const DynamicIcon = ({ name, className }: { name: string; className?: string }) => {
-  const Icon = (LucideIcons as any)[name] || LucideIcons.HelpCircle;
+  const Icon = (LucideIcons as unknown as Record<string, LucideIcon>)[name] || LucideIcons.HelpCircle;
   return <Icon className={className} />;
 };
 
@@ -63,8 +64,8 @@ export default function ArticlePage() {
         setLocalNotHelpful(art.notHelpful);
         const all = await apiFetch<HelpArticle[]>(`/help/articles?category=${art.category.slug}`);
         setRelated(all.filter((a) => a.slug !== slug).slice(0, 4));
-      } catch (e: any) {
-        setError(e.message || 'Article not found');
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Article not found');
       } finally {
         setLoading(false);
       }
