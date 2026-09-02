@@ -83,3 +83,12 @@ jobs:
         run: npm run build
         env:
           NEXT_PUBLIC_API_URL: https://placeholder.example.com/api
+
+  deploy-backend:
+    name: Deploy backend to Render
+    needs: backend-checks
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy hook
+        run: curl -fsS -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
