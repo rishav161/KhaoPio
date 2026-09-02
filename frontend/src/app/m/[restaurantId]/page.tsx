@@ -193,12 +193,12 @@ function PublicRestaurantMenuContent() {
     <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans pb-28">
       
       {/* RESTAURANT HEADER BANNER */}
-      <header className="relative overflow-hidden border-b border-zinc-850 bg-gradient-to-b from-orange-950/40 via-zinc-900 to-zinc-950 p-5 shadow-lg">
+      <header className="relative overflow-hidden border-b border-zinc-800 bg-gradient-to-b from-brand-950/40 via-zinc-900 to-zinc-950 p-5 shadow-lg">
         <div className="mx-auto max-w-2xl flex flex-col gap-3">
           
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-orange-500 text-white font-black text-xl shadow-md border border-orange-400/40 select-none overflow-hidden">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-500 text-white font-black text-xl shadow-md border border-brand-400/40 select-none overflow-hidden">
                 {restaurant.logo && (restaurant.logo.startsWith('http') || restaurant.logo.startsWith('/')) ? (
                   <img src={restaurant.logo} alt={restaurant.name} className="h-full w-full object-cover" />
                 ) : (
@@ -209,13 +209,13 @@ function PublicRestaurantMenuContent() {
                 <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
                   <span>{restaurant.name}</span>
                 </h1>
-                <p className="text-[11px] font-bold text-orange-400 uppercase tracking-widest">Digital Menu</p>
+                <p className="text-[11px] font-bold text-brand-400 uppercase tracking-widest">Digital Menu</p>
               </div>
             </div>
 
             {/* Table Badge */}
             {tableQuery && (
-              <div className="flex items-center gap-1.5 rounded-full border border-orange-500/40 bg-orange-500/10 px-3 py-1.5 text-xs font-black text-orange-400 shadow-xs">
+              <div className="flex items-center gap-1.5 rounded-full border border-brand-500/40 bg-brand-500/10 px-3 py-1.5 text-xs font-black text-brand-400 shadow-xs">
                 <MapPin className="h-3.5 w-3.5" />
                 <span>{tableQuery.startsWith('Table') ? tableQuery : `Table ${tableQuery}`}</span>
               </div>
@@ -243,7 +243,7 @@ function PublicRestaurantMenuContent() {
       </header>
 
       {/* STICKY SEARCH & CATEGORY FILTER TABS */}
-      <div className="sticky top-0 z-30 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-850 p-3 shadow-md">
+      <div className="sticky top-0 z-30 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800 p-3 shadow-md">
         <div className="mx-auto max-w-2xl space-y-2.5">
           
           {/* Search Input */}
@@ -254,7 +254,7 @@ function PublicRestaurantMenuContent() {
               placeholder="Search dishes or codes (e.g. Burger, B01)..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-xl border border-zinc-800 bg-zinc-900/80 py-2 pl-9 pr-3 text-xs text-zinc-100 placeholder-zinc-500 outline-none focus:border-orange-500 transition-all"
+              className="w-full rounded-xl border border-zinc-800 bg-zinc-900/80 py-2 pl-9 pr-3 text-xs text-zinc-100 placeholder-zinc-500 outline-none focus:border-brand-500 transition-all"
             />
             {searchQuery && (
               <button
@@ -272,8 +272,8 @@ function PublicRestaurantMenuContent() {
               onClick={() => setActiveTab('ALL')}
               className={`rounded-xl px-3.5 py-1.5 text-[11px] font-black uppercase tracking-wider shrink-0 transition-all cursor-pointer ${
                 activeTab === 'ALL'
-                  ? 'bg-orange-500 text-white shadow-md'
-                  : 'bg-zinc-900 border border-zinc-800 text-zinc-400 hover:bg-zinc-850'
+                  ? 'bg-brand-500 text-white shadow-md'
+                  : 'bg-zinc-900 border border-zinc-800 text-zinc-400 hover:bg-zinc-800'
               }`}
             >
               All ({allItems.length})
@@ -285,8 +285,8 @@ function PublicRestaurantMenuContent() {
                 onClick={() => setActiveTab(cat.id)}
                 className={`rounded-xl px-3.5 py-1.5 text-[11px] font-black uppercase tracking-wider shrink-0 transition-all cursor-pointer ${
                   activeTab === cat.id
-                    ? 'bg-orange-500 text-white shadow-md'
-                    : 'bg-zinc-900 border border-zinc-800 text-zinc-400 hover:bg-zinc-850'
+                    ? 'bg-brand-500 text-white shadow-md'
+                    : 'bg-zinc-900 border border-zinc-800 text-zinc-400 hover:bg-zinc-800'
                 }`}
               >
                 {cat.name} ({cat.menuItems.length})
@@ -309,7 +309,7 @@ function PublicRestaurantMenuContent() {
               return (
                 <div
                   key={item.id}
-                  className="flex items-start gap-3 rounded-2xl border border-zinc-850 bg-zinc-900/60 p-3.5 shadow-sm transition-all hover:border-zinc-750"
+                  className="flex items-start gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3.5 shadow-sm transition-all hover:border-zinc-700"
                 >
                   {/* Dish Icon / Emoji */}
                   <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-zinc-950 text-2xl border border-zinc-800 select-none shadow-xs">
@@ -332,7 +332,7 @@ function PublicRestaurantMenuContent() {
                     </p>
 
                     <div className="mt-2.5 flex items-center justify-between">
-                      <span className="text-xs font-black text-orange-400 font-mono">
+                      <span className="text-xs font-black text-brand-400 font-mono">
                         {currencySymbol}{item.price.toFixed(2)}
                       </span>
 
@@ -353,21 +353,21 @@ function PublicRestaurantMenuContent() {
         <div className="fixed bottom-4 left-4 right-4 z-40 mx-auto max-w-md">
           <button
             onClick={() => setIsCartOpen(true)}
-            className="w-full flex items-center justify-between rounded-2xl bg-orange-500 hover:bg-orange-600 text-white p-3.5 shadow-2xl transition-all active:scale-98 cursor-pointer border border-orange-400/40"
+            className="w-full flex items-center justify-between rounded-2xl bg-brand-500 hover:bg-brand-600 text-white p-3.5 shadow-2xl transition-all active:scale-98 cursor-pointer border border-brand-400/40"
           >
             <div className="flex items-center gap-2.5">
               <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/20 text-xs font-black">
                 {totalCartItems}
               </div>
               <div className="text-left">
-                <p className="text-[10px] font-bold text-orange-100 uppercase tracking-wider">Your Order</p>
+                <p className="text-[10px] font-bold text-brand-100 uppercase tracking-wider">Your Order</p>
                 <p className="text-xs font-black">{totalCartItems} {totalCartItems === 1 ? 'item' : 'items'}</p>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
               <span className="text-sm font-black font-mono">{currencySymbol}{cartGrandTotal.toFixed(2)}</span>
-              <ChevronRight className="h-4 w-4 text-orange-100" />
+              <ChevronRight className="h-4 w-4 text-brand-100" />
             </div>
           </button>
         </div>
@@ -380,7 +380,7 @@ function PublicRestaurantMenuContent() {
             
             <div className="flex items-center justify-between border-b border-zinc-800 pb-3 mb-4">
               <div className="flex items-center gap-2">
-                <ShoppingBag className="h-5 w-5 text-orange-500" />
+                <ShoppingBag className="h-5 w-5 text-brand-500" />
                 <h2 className="text-sm font-black uppercase tracking-wider text-white">My Selected Dishes</h2>
               </div>
               <button
@@ -392,15 +392,15 @@ function PublicRestaurantMenuContent() {
             </div>
 
             {/* Table Number Selector */}
-            <div className="mb-3 rounded-xl bg-orange-500/10 border border-orange-500/30 p-2.5 text-xs text-orange-400 font-bold flex items-center justify-between">
+            <div className="mb-3 rounded-xl bg-brand-500/10 border border-brand-500/30 p-2.5 text-xs text-brand-400 font-bold flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 shrink-0 text-orange-500" />
+                <MapPin className="h-4 w-4 shrink-0 text-brand-500" />
                 <span>Your Table / Order:</span>
               </div>
               <select
                 value={selectedTableNum}
                 onChange={(e) => setSelectedTableNum(e.target.value)}
-                className="rounded-lg bg-zinc-950 border border-orange-500/40 text-orange-400 py-1 px-2 text-xs font-bold outline-none cursor-pointer"
+                className="rounded-lg bg-zinc-950 border border-brand-500/40 text-brand-400 py-1 px-2 text-xs font-bold outline-none cursor-pointer"
               >
                 <option value="Table 1">Table 1</option>
                 <option value="Table 2">Table 2</option>
@@ -417,7 +417,7 @@ function PublicRestaurantMenuContent() {
             {/* Cart Items List */}
             <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
               {cart.map(({ item, quantity }) => (
-                <div key={item.id} className="flex items-center justify-between p-2.5 rounded-xl bg-zinc-950 border border-zinc-850">
+                <div key={item.id} className="flex items-center justify-between p-2.5 rounded-xl bg-zinc-950 border border-zinc-800">
                   <div className="flex items-center gap-2.5">
                     <span className="text-lg select-none">{item.image || '🍽️'}</span>
                     <div>
@@ -436,7 +436,7 @@ function PublicRestaurantMenuContent() {
                     <span className="text-xs font-black w-4 text-center">{quantity}</span>
                     <button
                       onClick={() => addToCart(item)}
-                      className="h-6 w-6 rounded bg-orange-500 text-white flex items-center justify-center"
+                      className="h-6 w-6 rounded bg-brand-500 text-white flex items-center justify-center"
                     >
                       <Plus className="h-3 w-3" />
                     </button>
@@ -461,7 +461,7 @@ function PublicRestaurantMenuContent() {
               </div>
               <div className="flex justify-between font-black text-white pt-2 border-t border-zinc-800 text-sm">
                 <span>Total</span>
-                <span className="text-orange-400 font-mono">{currencySymbol}{cartGrandTotal.toFixed(2)}</span>
+                <span className="text-brand-400 font-mono">{currencySymbol}{cartGrandTotal.toFixed(2)}</span>
               </div>
             </div>
 
@@ -476,7 +476,7 @@ function PublicRestaurantMenuContent() {
                     setCart([]);
                   }, 3000);
                 }}
-                className="w-full rounded-xl bg-orange-500 hover:bg-orange-600 text-white py-3 text-xs font-black uppercase tracking-wider shadow-lg transition-all cursor-pointer"
+                className="w-full rounded-xl bg-brand-500 hover:bg-brand-600 text-white py-3 text-xs font-black uppercase tracking-wider shadow-lg transition-all cursor-pointer"
               >
                 {orderPlaced ? '✓ Shown to Waiter!' : 'Show Selection to Waiter'}
               </button>

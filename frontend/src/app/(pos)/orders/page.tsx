@@ -52,9 +52,10 @@ function OrderCard({ order, currencySymbol, onCheckout }: {
   const activeItems = order.items.filter(i => i.status !== 'CANCELLED');
   const itemSummary = activeItems.slice(0, 3).map(i => `${i.menuItem.name} ×${i.quantity}`).join(', ');
   const extraCount = activeItems.length - 3;
+  const isCompleted = COMPLETED_STATUSES.has(order.status);
 
   return (
-    <div className="flex flex-col rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm hover:shadow-md hover:border-orange-300 dark:hover:border-orange-700 transition-all duration-150">
+    <div className="flex flex-col rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm hover:shadow-md hover:border-brand-300 dark:hover:border-brand-700 transition-all duration-150">
       {/* Card header */}
       <div className="flex items-center justify-between px-4 pt-3.5 pb-2.5 border-b border-zinc-100 dark:border-zinc-800">
         <div className="flex items-center gap-2.5">
@@ -89,14 +90,16 @@ function OrderCard({ order, currencySymbol, onCheckout }: {
 
       {/* Card footer */}
       <div className="flex items-center justify-between gap-2 px-4 pb-3.5 pt-2 border-t border-zinc-100 dark:border-zinc-800">
-        <span className="text-base font-black text-orange-500">{currencySymbol}{order.totals.total}</span>
-        <button
-          onClick={() => onCheckout(order.id)}
-          className="flex items-center gap-1.5 rounded-xl bg-zinc-900 dark:bg-zinc-700 hover:bg-orange-500 px-4 py-2 text-[11px] font-black text-white transition-colors cursor-pointer"
-        >
-          <Receipt className="h-3.5 w-3.5" />
-          CHECKOUT
-        </button>
+        <span className="text-base font-black text-brand-500">{currencySymbol}{order.totals.total}</span>
+        {!isCompleted && (
+          <button
+            onClick={() => onCheckout(order.id)}
+            className="flex items-center gap-1.5 rounded-xl bg-zinc-900 dark:bg-zinc-700 hover:bg-brand-500 px-4 py-2 text-[11px] font-black text-white transition-colors cursor-pointer"
+          >
+            <Receipt className="h-3.5 w-3.5" />
+            CHECKOUT
+          </button>
+        )}
       </div>
     </div>
   );
@@ -165,12 +168,13 @@ function PipelineCard({ order, currencySymbol, onCheckout, onCancel, isNew }: {
   const itemSummary = activeItems.slice(0, 2).map(i => `${i.menuItem.name} ×${i.quantity}`).join(', ');
   const extraCount = activeItems.length - 2;
   const canCancel = CANCELLABLE_STATUSES.has(order.status);
+  const isCompleted = COMPLETED_STATUSES.has(order.status);
 
   return (
     <div className={`flex flex-col rounded-xl border bg-white dark:bg-zinc-900 shadow-sm transition-all duration-150 ${
       isNew
-        ? 'border-orange-400 ring-2 ring-orange-400 ring-offset-1 shadow-orange-100 animate-pulse'
-        : 'border-zinc-200 dark:border-zinc-800 hover:shadow-md hover:border-orange-300 dark:hover:border-orange-700'
+        ? 'border-brand-400 ring-2 ring-brand-400 ring-offset-1 shadow-brand-100 animate-pulse'
+        : 'border-zinc-200 dark:border-zinc-800 hover:shadow-md hover:border-brand-300 dark:hover:border-brand-700'
     }`}>
       <div className="flex items-center justify-between px-3 pt-3 pb-2 border-b border-zinc-100 dark:border-zinc-800">
         <span className="text-sm font-black text-zinc-900 dark:text-zinc-100">{order.orderNumber}</span>
@@ -198,25 +202,27 @@ function PipelineCard({ order, currencySymbol, onCheckout, onCancel, isNew }: {
       </div>
 
       <div className="flex flex-col gap-2 px-3 pb-3 pt-1.5 border-t border-zinc-100 dark:border-zinc-800">
-        <span className="text-sm font-black text-orange-500">{currencySymbol}{order.totals.total}</span>
-        <div className={`grid gap-1.5 ${canCancel ? 'grid-cols-2' : 'grid-cols-1'}`}>
-          {canCancel && (
+        <span className="text-sm font-black text-brand-500">{currencySymbol}{order.totals.total}</span>
+        {!isCompleted && (
+          <div className={`grid gap-1.5 ${canCancel ? 'grid-cols-2' : 'grid-cols-1'}`}>
+            {canCancel && (
+              <button
+                onClick={() => onCancel(order.id)}
+                className="flex items-center justify-center gap-1 rounded-lg border border-red-200 dark:border-red-800 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 py-2 text-[10px] font-black transition-colors cursor-pointer"
+              >
+                <Ban className="h-3 w-3" />
+                CANCEL
+              </button>
+            )}
             <button
-              onClick={() => onCancel(order.id)}
-              className="flex items-center justify-center gap-1 rounded-lg border border-red-200 dark:border-red-800 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 py-2 text-[10px] font-black transition-colors cursor-pointer"
+              onClick={() => onCheckout(order.id)}
+              className="flex items-center justify-center gap-1 rounded-lg bg-zinc-900 dark:bg-zinc-700 hover:bg-brand-500 py-2 text-[10px] font-black text-white transition-colors cursor-pointer"
             >
-              <Ban className="h-3 w-3" />
-              CANCEL
+              <Receipt className="h-3 w-3" />
+              CHECKOUT
             </button>
-          )}
-          <button
-            onClick={() => onCheckout(order.id)}
-            className="flex items-center justify-center gap-1 rounded-lg bg-zinc-900 dark:bg-zinc-700 hover:bg-orange-500 py-2 text-[10px] font-black text-white transition-colors cursor-pointer"
-          >
-            <Receipt className="h-3 w-3" />
-            CHECKOUT
-          </button>
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -235,7 +241,7 @@ function PipelineView({ orders, currencySymbol, onCheckout, onCancel, newOrderId
         const colOrders = orders.filter(o => (col.statuses as readonly string[]).includes(o.status));
         const Icon = col.icon;
         return (
-          <div key={col.id} className={`flex shrink-0 w-[260px] flex-col rounded-xl border-t-2 ${col.accent} border-x border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-950/40 overflow-hidden`}>
+          <div key={col.id} className={`flex flex-1 min-w-[260px] flex-col rounded-xl border-t-2 ${col.accent} border-x border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-950/40 overflow-hidden`}>
             <div className={`flex items-center gap-2 px-3 py-2.5 ${col.headerBg}`}>
               <Icon className={`h-3.5 w-3.5 shrink-0 ${col.headerText}`} />
               <span className={`text-xs font-black ${col.headerText}`}>{col.title}</span>
@@ -473,7 +479,7 @@ export default function OrdersPage() {
         <select
           value={selectedTableId || ''}
           onChange={(e) => setSelectedTableId(e.target.value || null)}
-          className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2.5 text-sm font-bold outline-none focus:border-orange-400 dark:text-zinc-100 cursor-pointer"
+          className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2.5 text-sm font-bold outline-none focus:border-brand-400 dark:text-zinc-100 cursor-pointer"
         >
           <option value="">Takeaway / No Table</option>
           {tables.map(t => (
@@ -519,7 +525,7 @@ export default function OrdersPage() {
                     <span className="w-6 text-center text-sm font-black text-zinc-900 dark:text-zinc-100">{item.quantity}</span>
                     <button
                       onClick={() => updateCartQuantity(item.menuItem.id, 1)}
-                      className="flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 hover:border-orange-300 hover:text-orange-500 active:scale-95 transition-all cursor-pointer"
+                      className="flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 hover:border-brand-300 hover:text-brand-500 active:scale-95 transition-all cursor-pointer"
                     >
                       <Plus className="h-3.5 w-3.5" />
                     </button>
@@ -561,7 +567,7 @@ export default function OrdersPage() {
           <div className="flex justify-between"><span>GST <span className="text-xs text-zinc-400">({cartTotals.taxRate}%)</span></span><span className="text-zinc-800 dark:text-zinc-200">{currencySymbol}{cartTotals.tax}</span></div>
           <div className="flex justify-between items-center border-t border-zinc-200 dark:border-zinc-800 pt-2">
             <span className="text-base font-black text-zinc-900 dark:text-zinc-100">Total</span>
-            <span className="text-lg font-black text-orange-500">{currencySymbol}{cartTotals.total}</span>
+            <span className="text-lg font-black text-brand-500">{currencySymbol}{cartTotals.total}</span>
           </div>
         </div>
 
@@ -572,8 +578,8 @@ export default function OrdersPage() {
             cartItems.length === 0 || isSendingToKitchen
               ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400 cursor-not-allowed shadow-none'
               : kitchenFlash
-              ? 'animate-success-flash cursor-pointer shadow-orange-200'
-              : 'bg-orange-500 hover:bg-orange-600 shadow-orange-200 active:scale-[0.98] cursor-pointer'
+              ? 'animate-success-flash cursor-pointer shadow-brand-200'
+              : 'bg-brand-500 hover:bg-brand-600 shadow-brand-200 active:scale-[0.98] cursor-pointer'
           }`}
         >
           {isSendingToKitchen
@@ -583,7 +589,7 @@ export default function OrdersPage() {
 
         <button
           onClick={() => { setCartSheetOpen(false); router.push('/checkout'); }}
-          className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 py-3 text-sm font-black text-zinc-600 dark:text-zinc-400 hover:border-orange-300 hover:text-orange-500 transition-all cursor-pointer"
+          className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 py-3 text-sm font-black text-zinc-600 dark:text-zinc-400 hover:border-brand-300 hover:text-brand-500 transition-all cursor-pointer"
         >
           <span>Go to Checkout</span>
           <ChevronRight className="h-4 w-4" />
@@ -606,7 +612,7 @@ export default function OrdersPage() {
       <div className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm">
 
         {/* Page header */}
-        <div className="flex items-center justify-between border-b border-orange-600 bg-gradient-to-r from-orange-500 to-orange-400 px-4 py-3">
+        <div className="flex items-center justify-between border-b border-brand-600 bg-gradient-to-r from-brand-500 to-brand-400 px-4 py-3">
           <div className="flex items-center gap-2">
             <Receipt className="h-4 w-4 text-white" />
             <h2 className="text-xs font-black uppercase tracking-wider text-white">Orders</h2>
@@ -624,7 +630,7 @@ export default function OrdersPage() {
             </button>
             <button
               onClick={openNewOrder}
-              className="flex items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-[11px] font-black text-orange-600 hover:bg-orange-50 shadow-sm transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-[11px] font-black text-brand-600 hover:bg-brand-50 shadow-sm transition-colors cursor-pointer"
             >
               <Plus className="h-3.5 w-3.5" />
               NEW ORDER
@@ -641,8 +647,8 @@ export default function OrdersPage() {
               title="Pipeline view"
               className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[10px] font-black transition-all cursor-pointer ${
                 listView === 'pipeline'
-                  ? 'bg-orange-500 text-white shadow-sm'
-                  : 'text-zinc-500 dark:text-zinc-400 hover:text-orange-500'
+                  ? 'bg-brand-500 text-white shadow-sm'
+                  : 'text-zinc-500 dark:text-zinc-400 hover:text-brand-500'
               }`}
             >
               <Columns3 className="h-3.5 w-3.5" />
@@ -653,8 +659,8 @@ export default function OrdersPage() {
               title="List view"
               className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[10px] font-black transition-all cursor-pointer ${
                 listView === 'list'
-                  ? 'bg-orange-500 text-white shadow-sm'
-                  : 'text-zinc-500 dark:text-zinc-400 hover:text-orange-500'
+                  ? 'bg-brand-500 text-white shadow-sm'
+                  : 'text-zinc-500 dark:text-zinc-400 hover:text-brand-500'
               }`}
             >
               <LayoutList className="h-3.5 w-3.5" />
@@ -669,28 +675,28 @@ export default function OrdersPage() {
                 onClick={() => setOrderFilter('ongoing')}
                 className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black transition-all cursor-pointer ${
                   orderFilter === 'ongoing'
-                    ? 'bg-orange-500 text-white shadow-sm'
-                    : 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-orange-300 hover:text-orange-500'
+                    ? 'bg-brand-500 text-white shadow-sm'
+                    : 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-brand-300 hover:text-brand-500'
                 }`}
               >
                 <UtensilsCrossed className="h-3.5 w-3.5" />
                 Ongoing
                 <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black leading-none ${
-                  orderFilter === 'ongoing' ? 'bg-orange-600 text-white' : 'bg-zinc-100 dark:bg-zinc-700 text-zinc-500'
+                  orderFilter === 'ongoing' ? 'bg-brand-600 text-white' : 'bg-zinc-100 dark:bg-zinc-700 text-zinc-500'
                 }`}>{ongoingOrders.length}</span>
               </button>
               <button
                 onClick={() => setOrderFilter('completed')}
                 className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black transition-all cursor-pointer ${
                   orderFilter === 'completed'
-                    ? 'bg-orange-500 text-white shadow-sm'
-                    : 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-orange-300 hover:text-orange-500'
+                    ? 'bg-brand-500 text-white shadow-sm'
+                    : 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-brand-300 hover:text-brand-500'
                 }`}
               >
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 Completed
                 <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black leading-none ${
-                  orderFilter === 'completed' ? 'bg-orange-600 text-white' : 'bg-zinc-100 dark:bg-zinc-700 text-zinc-500'
+                  orderFilter === 'completed' ? 'bg-brand-600 text-white' : 'bg-zinc-100 dark:bg-zinc-700 text-zinc-500'
                 }`}>{completedOrders.length}</span>
               </button>
             </div>
@@ -722,7 +728,7 @@ export default function OrdersPage() {
                 {orderFilter === 'ongoing' && (
                   <button
                     onClick={openNewOrder}
-                    className="mt-1 flex items-center gap-1.5 rounded-xl bg-orange-500 hover:bg-orange-600 px-5 py-2.5 text-sm font-black text-white shadow-sm transition-colors cursor-pointer"
+                    className="mt-1 flex items-center gap-1.5 rounded-xl bg-brand-500 hover:bg-brand-600 px-5 py-2.5 text-sm font-black text-white shadow-sm transition-colors cursor-pointer"
                   >
                     <Plus className="h-4 w-4" />
                     Create New Order
@@ -752,7 +758,7 @@ export default function OrdersPage() {
     <div className="flex h-full w-full gap-3 overflow-hidden">
 
       {/* Toasts */}
-      <div id="kitchen-alert" className="pointer-events-none fixed right-4 top-16 z-50 flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-3 text-sm font-bold text-white shadow-xl shadow-orange-200 opacity-0 transition-opacity duration-300">
+      <div id="kitchen-alert" className="pointer-events-none fixed right-4 top-16 z-50 flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-3 text-sm font-bold text-white shadow-xl shadow-brand-200 opacity-0 transition-opacity duration-300">
         <Send className="h-4 w-4" /><span>Order sent to kitchen!</span>
       </div>
       {sendError && (
@@ -765,7 +771,7 @@ export default function OrdersPage() {
       <div className="flex flex-1 flex-col overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm min-w-0">
 
         {/* Header with back button */}
-        <div className="flex items-center gap-2 border-b border-orange-600 bg-gradient-to-r from-orange-500 to-orange-400 px-3 py-2.5">
+        <div className="flex items-center gap-2 border-b border-brand-600 bg-gradient-to-r from-brand-500 to-brand-400 px-3 py-2.5">
           <button
             onClick={backToList}
             className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors cursor-pointer shrink-0"
@@ -788,7 +794,7 @@ export default function OrdersPage() {
               placeholder="Search items..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 py-2.5 pl-9 pr-9 text-sm font-medium placeholder-zinc-400 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 text-zinc-900 dark:text-zinc-100"
+              className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 py-2.5 pl-9 pr-9 text-sm font-medium placeholder-zinc-400 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-400/20 text-zinc-900 dark:text-zinc-100"
             />
             {searchQuery && (
               <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-zinc-400 hover:text-zinc-600 cursor-pointer">
@@ -805,10 +811,10 @@ export default function OrdersPage() {
             return (
               <button key={cat} onClick={() => setSelectedCategory(cat)}
                 className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-xs font-black transition-all cursor-pointer ${
-                  isActive ? 'bg-orange-500 text-white shadow-sm shadow-orange-200' : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-orange-300 hover:text-orange-500'
+                  isActive ? 'bg-brand-500 text-white shadow-sm shadow-brand-200' : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-brand-300 hover:text-brand-500'
                 }`}>
                 <span>{cat}</span>
-                <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black leading-none ${isActive ? 'bg-orange-600 text-white' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'}`}>
+                <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black leading-none ${isActive ? 'bg-brand-600 text-white' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'}`}>
                   {categoryCounts[cat] || 0}
                 </span>
               </button>
@@ -831,10 +837,10 @@ export default function OrdersPage() {
                 return (
                   <div key={item.id} onClick={() => handleAddToCart(item)}
                     className={`group relative flex flex-col rounded-xl border cursor-pointer transition-all duration-150 select-none overflow-hidden active:scale-[0.97] ${poppedId === item.id ? 'animate-card-pop' : ''} ${
-                      inCart ? 'border-orange-400 bg-orange-50/60 dark:bg-orange-950/20 ring-1 ring-orange-400/60 shadow-sm shadow-orange-100' : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-orange-300 hover:shadow-sm'
+                      inCart ? 'border-brand-400 bg-brand-50/60 dark:bg-brand-950/20 ring-1 ring-brand-400/60 shadow-sm shadow-brand-100' : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-brand-300 hover:shadow-sm'
                     }`}>
                     {inCart && (
-                      <div className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-orange-500 text-xs font-black text-white shadow-sm z-10">{qty}</div>
+                      <div className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-brand-500 text-xs font-black text-white shadow-sm z-10">{qty}</div>
                     )}
                     <div className="absolute top-2 left-2">
                       <span className="rounded bg-zinc-100/90 dark:bg-zinc-800/90 px-1.5 py-0.5 text-[8px] font-black uppercase text-zinc-500 dark:text-zinc-400">{item.code}</span>
@@ -846,24 +852,24 @@ export default function OrdersPage() {
                       <h3 className="text-xs font-black text-zinc-900 dark:text-zinc-100 leading-tight line-clamp-2">{item.name}</h3>
                       {item.description && <p className="mt-0.5 text-[9px] text-zinc-400 line-clamp-1">{item.description}</p>}
                     </div>
-                    <div className={`flex items-center justify-between px-2.5 py-2.5 border-t transition-colors ${inCart ? 'border-orange-200 dark:border-orange-900/40 bg-orange-500/10' : 'border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/20'}`}>
+                    <div className={`flex items-center justify-between px-2.5 py-2.5 border-t transition-colors ${inCart ? 'border-brand-200 dark:border-brand-900/40 bg-brand-500/10' : 'border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/20'}`}>
                       <span className="text-sm font-black text-zinc-900 dark:text-zinc-100">{currencySymbol}{item.price.toFixed(2)}</span>
                       {inCart ? (
                         <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
                           <button
                             onClick={() => qty === 1 ? removeFromCart(item.id) : updateCartQuantity(item.id, -1)}
-                            className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-500 hover:bg-orange-600 active:scale-[0.92] text-white transition-all cursor-pointer">
+                            className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-500 hover:bg-brand-600 active:scale-[0.92] text-white transition-all cursor-pointer">
                             <Minus className="h-3 w-3" />
                           </button>
                           <span className="w-5 text-center text-xs font-black text-zinc-900 dark:text-zinc-100">{qty}</span>
                           <button
                             onClick={() => handleAddToCart(item)}
-                            className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-500 hover:bg-orange-600 active:scale-[0.92] text-white transition-all cursor-pointer">
+                            className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-500 hover:bg-brand-600 active:scale-[0.92] text-white transition-all cursor-pointer">
                             <Plus className="h-3 w-3" />
                           </button>
                         </div>
                       ) : (
-                        <span className="flex items-center gap-0.5 rounded-lg px-2.5 py-1.5 text-[10px] font-black transition-colors bg-zinc-900 dark:bg-zinc-700 text-white group-hover:bg-orange-500">
+                        <span className="flex items-center gap-0.5 rounded-lg px-2.5 py-1.5 text-[10px] font-black transition-colors bg-zinc-900 dark:bg-zinc-700 text-white group-hover:bg-brand-500">
                           <Plus className="h-3 w-3" />ADD
                         </span>
                       )}
@@ -880,9 +886,9 @@ export default function OrdersPage() {
       <div className="hidden lg:flex w-[300px] xl:w-[320px] shrink-0 flex-col rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm overflow-hidden">
         <div className="flex items-center justify-between border-b border-zinc-800 bg-gradient-to-r from-zinc-900 to-zinc-700 px-3 py-2.5">
           <div className="flex items-center gap-2">
-            <ShoppingCart className="h-4 w-4 text-orange-400" />
+            <ShoppingCart className="h-4 w-4 text-brand-400" />
             <span className="text-xs font-black uppercase tracking-wider text-white">Order</span>
-            {cartItemCount > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-black text-white">{cartItemCount}</span>}
+            {cartItemCount > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-500 px-1 text-[10px] font-black text-white">{cartItemCount}</span>}
           </div>
           {cartItems.length > 0 && (
             <button onClick={clearCart} className="flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-black text-red-300 hover:bg-white/10 transition-colors cursor-pointer">
@@ -901,7 +907,7 @@ export default function OrdersPage() {
         <div className="relative">
           <ShoppingCart className="h-5 w-5 text-white" />
           {cartItemCount > 0 && (
-            <span key={badgeBounceKey} className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-[9px] font-black text-white animate-badge-bounce">{cartItemCount}</span>
+            <span key={badgeBounceKey} className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-brand-500 text-[9px] font-black text-white animate-badge-bounce">{cartItemCount}</span>
           )}
         </div>
         <span className="text-sm font-black text-white">
@@ -910,7 +916,7 @@ export default function OrdersPage() {
         {cartItemCount > 0 && (
           <>
             <span className="text-zinc-500 dark:text-zinc-600">·</span>
-            <span className="text-sm font-black text-orange-400">{currencySymbol}{cartTotals.total}</span>
+            <span className="text-sm font-black text-brand-400">{currencySymbol}{cartTotals.total}</span>
           </>
         )}
       </button>
@@ -924,9 +930,9 @@ export default function OrdersPage() {
               <div className="w-10 h-1 rounded-full bg-zinc-300 dark:bg-zinc-600 mb-3" />
               <div className="flex w-full items-center justify-between px-4 pb-3">
                 <div className="flex items-center gap-2">
-                  <ShoppingCart className="h-5 w-5 text-orange-500" />
+                  <ShoppingCart className="h-5 w-5 text-brand-500" />
                   <span className="text-sm font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Order</span>
-                  {cartItemCount > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-black text-white">{cartItemCount}</span>}
+                  {cartItemCount > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-500 px-1 text-[10px] font-black text-white">{cartItemCount}</span>}
                 </div>
                 <div className="flex items-center gap-2">
                   {cartItems.length > 0 && (

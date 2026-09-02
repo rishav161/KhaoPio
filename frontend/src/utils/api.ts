@@ -36,11 +36,12 @@ export async function apiFetch<T = any>(path: string, options: FetchOptions = {}
 
   if (!response.ok) {
     let errorMessage = 'Network response error';
+    const rawBody = await response.text();
     try {
-      const errorJson = await response.json();
+      const errorJson = JSON.parse(rawBody);
       errorMessage = errorJson.error || errorMessage;
     } catch {
-      errorMessage = await response.text() || errorMessage;
+      errorMessage = rawBody || errorMessage;
     }
     
     // Auto logout if session has expired or is unauthorized

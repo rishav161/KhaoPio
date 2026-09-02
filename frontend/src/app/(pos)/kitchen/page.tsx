@@ -134,9 +134,9 @@ export default function KitchenPage() {
   }, [pendingCount]);
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden bg-zinc-100 dark:bg-zinc-955 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+    <div className="flex h-full w-full flex-col overflow-hidden bg-zinc-100 dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
       {/* KDS Header & Filter bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-orange-600 bg-gradient-to-r from-orange-500 to-orange-400 p-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-brand-600 bg-gradient-to-r from-brand-500 to-brand-400 p-3">
         <div className="flex items-center gap-2 flex-wrap">
           <ChefHat className="h-5 w-5 text-white" />
           <h1 className="text-xs sm:text-sm font-black uppercase tracking-wider text-white">
@@ -155,7 +155,7 @@ export default function KitchenPage() {
               onClick={() => setFilter(tab)}
               className={`rounded-md px-3 py-1 text-[10px] font-black tracking-wide transition-all cursor-pointer ${
                 filter === tab
-                  ? 'bg-white text-orange-600 shadow-sm'
+                  ? 'bg-white text-brand-600 shadow-sm'
                   : 'text-white/75 hover:text-white hover:bg-white/10'
               }`}
             >
@@ -170,7 +170,7 @@ export default function KitchenPage() {
         {kitchenOrders.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-zinc-400 bg-white dark:bg-zinc-900 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-800">
             <Flame className="h-12 w-12 stroke-[1.2] text-zinc-300 mb-2 animate-pulse" />
-            <p className="text-xs font-black text-zinc-505 dark:text-zinc-450">No active kitchen orders</p>
+            <p className="text-xs font-black text-zinc-500 dark:text-zinc-400">No active kitchen orders</p>
             <p className="text-[10px] text-zinc-400 mt-1">
               New orders sent from the Billing counter will automatically appear here.
             </p>
@@ -184,24 +184,24 @@ export default function KitchenPage() {
                   key={kot.id}
                   className={`flex w-72 flex-col rounded-xl border-2 bg-white dark:bg-zinc-900 shadow-md transition-all duration-200 shrink-0 ${
                     isPending
-                      ? 'border-orange-500 ring-2 ring-orange-500/20'
+                      ? 'border-brand-500 ring-2 ring-brand-500/20'
                       : 'border-blue-500 ring-2 ring-blue-500/20'
                   }`}
                 >
                   {/* Order Ticket Header */}
                   <div
-                    className={`flex items-center justify-between border-b dark:border-zinc-805 px-3 py-2 rounded-t-lg ${
-                      isPending ? 'bg-orange-50/80 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800' : 'bg-blue-50/80 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800'
+                    className={`flex items-center justify-between border-b dark:border-zinc-800 px-3 py-2 rounded-t-lg ${
+                      isPending ? 'bg-brand-50/80 dark:bg-brand-950/20 border-brand-200 dark:border-brand-800' : 'bg-blue-50/80 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800'
                     }`}
                   >
                     <div>
-                      <span className="text-sm font-black text-zinc-905 dark:text-zinc-50 leading-none">
+                      <span className="text-sm font-black text-zinc-900 dark:text-zinc-50 leading-none">
                         KOT #{kot.kotNumber} {kot.table ? `(${kot.table.name})` : '(Takeaway)'}
                       </span>
                       <div className="text-[9px] font-extrabold text-zinc-500 dark:text-zinc-400 mt-0.5">
                         Items: {kot.items.reduce((acc, ci) => acc + ci.quantity, 0)}
                       </div>
-                      <div className="text-[8px] font-black text-zinc-450 dark:text-zinc-550 leading-tight uppercase mt-0.5">
+                      <div className="text-[8px] font-black text-zinc-400 dark:text-zinc-500 leading-tight uppercase mt-0.5">
                         By: {kot.waiterName} ({kot.waiterRole?.replace('_', ' ')})
                       </div>
                     </div>
@@ -210,7 +210,7 @@ export default function KitchenPage() {
                   </div>
 
                   {/* Order Items (Readable, large-text list for screen mounting) */}
-                  <div className="flex-1 overflow-y-auto px-3 py-2.5 max-h-[300px] min-h-[160px] divide-y divide-zinc-105 dark:divide-zinc-800">
+                  <div className="flex-1 overflow-y-auto px-3 py-2.5 max-h-[300px] min-h-[160px] divide-y divide-zinc-100 dark:divide-zinc-800">
                     {kot.items.map((item) => (
                       <div key={item.id} className="py-2 space-y-1">
                         <div className="flex items-start justify-between">
@@ -238,12 +238,12 @@ export default function KitchenPage() {
                     ))}
                   </div>
 
-                  <div className="border-t border-zinc-200 dark:border-zinc-800 p-2 bg-zinc-55 dark:bg-zinc-950 rounded-b-xl">
+                  <div className="border-t border-zinc-200 dark:border-zinc-800 p-2 bg-zinc-50 dark:bg-zinc-950 rounded-b-xl">
                     {isPending ? (
                       <button
                         onClick={() => handleUpdateStatus(kot.id, 'PREPARING')}
                         disabled={submittingKotIds[kot.id]}
-                        className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 py-2.5 text-xs font-black text-white transition-all shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 py-2.5 text-xs font-black text-white transition-all shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {submittingKotIds[kot.id] ? (
                           <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>

@@ -4,11 +4,13 @@
   "description": "Backend for Restaurant POS System",
   "main": "dist/index.js",
   "scripts": {
-    "build": "npm i && prisma generate && prisma db push && npm run prisma:seed && tsc",
+    "build": "tsc",
+    "build:render": "npm i && prisma generate && prisma db push && npm run prisma:seed && tsc",
     "start": "node dist/index.js",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
     "prisma:seed": "prisma db seed"
   },
   "dependencies": {

@@ -151,11 +151,11 @@ export default function Reports() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'PAID':
-        return <span className="inline-flex items-center rounded-md bg-emerald-50 dark:bg-emerald-950/20 px-2 py-1 text-[10px] font-black text-emerald-700 dark:text-emerald-450">PAID</span>;
+        return <span className="inline-flex items-center rounded-md bg-emerald-50 dark:bg-emerald-950/20 px-2 py-1 text-[10px] font-black text-emerald-700 dark:text-emerald-400">PAID</span>;
       case 'CANCELLED':
-        return <span className="inline-flex items-center rounded-md bg-red-50 dark:bg-red-950/20 px-2 py-1 text-[10px] font-black text-red-750 dark:text-red-400">CANCELLED</span>;
+        return <span className="inline-flex items-center rounded-md bg-red-50 dark:bg-red-950/20 px-2 py-1 text-[10px] font-black text-red-700 dark:text-red-400">CANCELLED</span>;
       default:
-        return <span className="inline-flex items-center rounded-md bg-amber-50 dark:bg-amber-950/20 px-2 py-1 text-[10px] font-black text-amber-700 dark:text-amber-450">{status}</span>;
+        return <span className="inline-flex items-center rounded-md bg-amber-50 dark:bg-amber-950/20 px-2 py-1 text-[10px] font-black text-amber-700 dark:text-amber-400">{status}</span>;
     }
   };
 
@@ -173,21 +173,21 @@ export default function Reports() {
     <div className="flex h-full flex-col overflow-y-auto bg-zinc-50 dark:bg-zinc-950 p-4 transition-colors duration-250">
       
       {/* Title Header */}
-      <div className="mb-6 rounded-xl bg-gradient-to-r from-orange-500 to-orange-400 p-4 shadow-md">
+      <div className="mb-6 rounded-xl bg-gradient-to-r from-brand-500 to-brand-400 p-4 shadow-md">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
               <BarChart3 className="h-6 w-6 text-white" />
               <span>Sales & Activity Reports</span>
             </h1>
-            <p className="text-xs font-semibold text-orange-100">
+            <p className="text-xs font-semibold text-brand-100">
               Generate detailed transaction logs, analyze tax components, and filter sales records.
             </p>
           </div>
 
           <button
             onClick={() => fetchReport()}
-            className="flex items-center gap-1.5 self-start rounded-lg bg-white text-orange-600 px-3.5 py-2 text-xs font-black uppercase tracking-wider hover:bg-orange-50 active:scale-95 transition-all cursor-pointer shadow-sm"
+            className="flex items-center gap-1.5 self-start rounded-lg bg-white text-brand-600 px-3.5 py-2 text-xs font-black uppercase tracking-wider hover:bg-brand-50 active:scale-95 transition-all cursor-pointer shadow-sm"
           >
             <RefreshCw className="h-3.5 w-3.5" />
             <span>Refresh Data</span>
@@ -210,7 +210,7 @@ export default function Reports() {
                     key={preset}
                     type="button"
                     onClick={() => applyPreset(preset as any)}
-                    className="rounded-lg bg-zinc-100 hover:bg-zinc-200/70 dark:bg-zinc-955 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 px-3 py-1.5 text-xs font-bold text-zinc-750 dark:text-zinc-300 transition-all cursor-pointer"
+                    className="rounded-lg bg-zinc-100 hover:bg-zinc-200/70 dark:bg-zinc-950 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 px-3 py-1.5 text-xs font-bold text-zinc-700 dark:text-zinc-300 transition-all cursor-pointer"
                   >
                     {label}
                   </button>
@@ -221,40 +221,40 @@ export default function Reports() {
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div>
-              <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 mb-1.5 flex items-center gap-1">
-                <Calendar className="h-3.5 w-3.5 text-orange-500" />
+              <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 mb-1.5 flex items-center gap-1">
+                <Calendar className="h-3.5 w-3.5 text-brand-500" />
                 <span>Start Date</span>
               </label>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full rounded-lg border border-zinc-250 dark:border-zinc-850 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-orange-400 font-semibold"
+                className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-brand-400 font-semibold"
               />
             </div>
 
             <div>
-              <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 mb-1.5 flex items-center gap-1">
-                <Calendar className="h-3.5 w-3.5 text-orange-500" />
+              <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 mb-1.5 flex items-center gap-1">
+                <Calendar className="h-3.5 w-3.5 text-brand-500" />
                 <span>End Date</span>
               </label>
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full rounded-lg border border-zinc-250 dark:border-zinc-850 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-orange-400 font-semibold"
+                className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-brand-400 font-semibold"
               />
             </div>
 
             <div>
-              <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-450 mb-1.5 flex items-center gap-1">
-                <CreditCard className="h-3.5 w-3.5 text-orange-500" />
+              <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 mb-1.5 flex items-center gap-1">
+                <CreditCard className="h-3.5 w-3.5 text-brand-500" />
                 <span>Payment Method</span>
               </label>
               <select
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
-                className="w-full rounded-lg border border-zinc-250 dark:border-zinc-850 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-3 text-xs outline-none focus:border-orange-400 font-semibold"
+                className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-3 text-xs outline-none focus:border-brand-400 font-semibold"
               >
                 <option value="ALL">All Transactions</option>
                 <option value="CASH">Cash Payments</option>
@@ -266,7 +266,7 @@ export default function Reports() {
             <div>
               <button
                 type="submit"
-                className="w-full rounded-lg bg-orange-500 hover:bg-orange-600 text-white py-2.5 text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-orange-100 dark:shadow-none"
+                className="w-full rounded-lg bg-brand-500 hover:bg-brand-600 text-white py-2.5 text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-brand-100 dark:shadow-none"
               >
                 Apply Filters
               </button>
@@ -277,7 +277,7 @@ export default function Reports() {
 
       {/* error state */}
       {error && (
-        <div className="mb-6 flex items-start gap-3 rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 p-4 text-xs font-bold text-red-650 dark:text-red-400">
+        <div className="mb-6 flex items-start gap-3 rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 p-4 text-xs font-bold text-red-600 dark:text-red-400">
           <ShieldAlert className="h-4.5 w-4.5 shrink-0" />
           <span>{error}</span>
         </div>
@@ -288,7 +288,7 @@ export default function Reports() {
           {/* Summary Mini-Widgets */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-sm flex items-center gap-4">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-500 shadow-md shadow-orange-200 dark:shadow-none">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-500 shadow-md shadow-brand-200 dark:shadow-none">
                 <Coins className="h-5 w-5 text-white" />
               </div>
               <div>
@@ -347,7 +347,7 @@ export default function Reports() {
                   <td className="px-5 py-3 font-bold">{order.waiterName}</td>
                   <td className="px-5 py-3 font-semibold">{order.cashierName}</td>
                   <td className="px-5 py-3">
-                    <span className="font-bold text-[10px] tracking-wider bg-zinc-100 dark:bg-zinc-955 border border-zinc-200 dark:border-zinc-800 px-2 py-0.5 rounded-full">
+                    <span className="font-bold text-[10px] tracking-wider bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 px-2 py-0.5 rounded-full">
                       {order.paymentMethod}
                     </span>
                   </td>

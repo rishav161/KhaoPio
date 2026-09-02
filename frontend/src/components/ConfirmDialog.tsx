@@ -32,8 +32,8 @@ export function ConfirmDialog() {
   };
 
   // Color schemes based on dialog type
-  let iconColor = 'text-orange-500 bg-orange-50 dark:bg-orange-950/20';
-  let confirmBtnColor = 'bg-orange-500 hover:bg-orange-600 shadow-orange-100';
+  let iconColor = 'text-brand-500 bg-brand-50 dark:bg-brand-950/20';
+  let confirmBtnColor = 'bg-brand-500 hover:bg-brand-600 shadow-brand-100';
   let Icon = HelpCircle;
 
   if (options.type === 'danger') {
@@ -73,18 +73,18 @@ export function ConfirmDialog() {
             <h3 className="text-sm font-black uppercase tracking-wider text-zinc-900 dark:text-zinc-50">
               {options.title}
             </h3>
-            <p className="mt-1.5 text-xs text-zinc-550 dark:text-zinc-400 font-semibold leading-relaxed">
+            <p className="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400 font-semibold leading-relaxed">
               {options.message}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2.5 mt-6 pt-3 border-t border-zinc-100 dark:border-zinc-850">
+        <div className="flex items-center justify-end gap-2.5 mt-6 pt-3 border-t border-zinc-100 dark:border-zinc-800">
           {!isAlertOnly && (
             <button
               onClick={handleCancel}
               disabled={loading}
-              className="rounded-lg border border-zinc-250 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2.5 text-[10px] font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-350 hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer disabled:opacity-50 transition-all"
+              className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2.5 text-[10px] font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer disabled:opacity-50 transition-all"
             >
               {options.cancelText || 'Cancel'}
             </button>
