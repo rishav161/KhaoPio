@@ -8,6 +8,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { apiFetch } from '@/utils/api';
 import { Loader } from '@/components/Loader';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { GlobalSearchModal } from '@/components/GlobalSearchModal';
 
 // Dynamic Icon Renderer for database-seeded navigation menus
 const DynamicIcon = ({ name, className }: { name: string; className?: string }) => {
@@ -15,10 +16,30 @@ const DynamicIcon = ({ name, className }: { name: string; className?: string }) 
   return <IconComponent className={className} />;
 };
 
+// Isolated Real-time Clock to prevent whole layout re-rendering every 1 second
+const HeaderClock = () => {
+  const [time, setTime] = useState('');
+  useEffect(() => {
+    setTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+    const timer = setInterval(() => {
+      setTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="hidden sm:flex items-center gap-1 border-r border-zinc-200 dark:border-zinc-800 pr-4">
+      <LucideIcons.Clock className="h-3.5 w-3.5 text-zinc-400" />
+      <span className="font-mono">{time}</span>
+    </div>
+  );
+};
+
 export default function POSLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   
   // Zustand Store States
   const activeOrders = usePOSStore((state) => state.activeOrders);
@@ -34,6 +55,18 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setIsMounted(true);
+  }, []);
+
+  // Listen for global shortcut (Ctrl+K / Cmd+K) to toggle search modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsSearchOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   // Restaurant logo
@@ -104,16 +137,6 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
     const interval = setInterval(() => usePOSStore.getState().fetchActiveKots(), 10000);
     return () => clearInterval(interval);
   }, [isMounted, token]);
-
-  // Real-time clock for POS header
-  const [time, setTime] = useState('');
-  useEffect(() => {
-    setTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
-    const timer = setInterval(() => {
-      setTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   // Compute order counts for sidebar badges
   const kdsCount = kots.filter(
@@ -239,8 +262,8 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
       {/* Main View Area */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Dynamic Header */}
-        <header className="flex h-12 w-full items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2 shadow-sm transition-colors duration-200">
-          <div className="flex items-center gap-2">
+        <header className="relative flex h-12 w-full items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2 shadow-sm transition-colors duration-200">
+          <div className="flex items-center gap-2 z-10">
             <button
               onClick={() => setIsSidebarOpen(true)}
               className="md:hidden flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 active:scale-95 transition-all cursor-pointer"
@@ -264,17 +287,40 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
               {user?.restaurantName || 'KhaoPio'}
             </span>
             <span className="hidden sm:inline text-zinc-300 dark:text-zinc-850 font-normal">|</span>
-            <span className="hidden sm:inline text-xs font-semibold text-zinc-500 dark:text-zinc-450">
+            <span className="hidden lg:inline text-xs font-semibold text-zinc-500 dark:text-zinc-450">
               Staff: {user ? `${user.name} (${user.role.replace('_', ' ')})` : 'Terminal #01'}
             </span>
           </div>
+
+          {/* Centered Global Search Quick Trigger (Desktop & Tablet) */}
+          <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center justify-center z-10">
+            <button
+              onClick={() => setIsSearchOpen(true)}
+              className="flex items-center justify-between w-48 sm:w-60 md:w-64 lg:w-80 rounded-full border border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-900/80 hover:bg-white dark:hover:bg-zinc-900 px-3.5 py-1 text-xs text-zinc-400 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700 active:scale-98 transition-all cursor-pointer shadow-2xs"
+              title="Global Search (Ctrl+K)"
+            >
+              <div className="flex items-center gap-2">
+                <LucideIcons.Search className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
+                <span className="font-normal text-zinc-400 text-xs truncate">Search...</span>
+              </div>
+              <kbd className="inline-flex items-center rounded-md border border-zinc-200 dark:border-zinc-750 bg-white dark:bg-zinc-800 px-1.5 py-0.5 text-[10px] font-sans font-medium text-zinc-400 shrink-0">
+                ⌘K
+              </kbd>
+            </button>
+          </div>
           
-          <div className="flex items-center gap-2.5 sm:gap-4 text-xs font-bold text-zinc-700 dark:text-zinc-300">
+          <div className="flex items-center gap-1.5 sm:gap-4 text-xs font-bold text-zinc-700 dark:text-zinc-300 z-10">
+            {/* Mobile Search Icon Trigger */}
+            <button
+              onClick={() => setIsSearchOpen(true)}
+              className="md:hidden flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-orange-500 active:scale-95 transition-all cursor-pointer"
+              title="Search"
+            >
+              <LucideIcons.Search className="h-4 w-4" />
+            </button>
+
             {/* Clock */}
-            <div className="hidden sm:flex items-center gap-1 border-r border-zinc-200 dark:border-zinc-800 pr-4">
-              <LucideIcons.Clock className="h-3.5 w-3.5 text-zinc-400" />
-              <span className="font-mono">{time}</span>
-            </div>
+            <HeaderClock />
             
             {/* Orders Badge */}
             <div className="border-r border-zinc-200 dark:border-zinc-800 pr-2.5 sm:pr-4 flex items-center">
@@ -374,6 +420,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
         </main>
       </div>
       <ConfirmDialog />
+      <GlobalSearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
 
       {/* Floating Help Button */}
       <button
