@@ -1,39 +1,44 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useSyncExternalStore } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import * as LucideIcons from 'lucide-react';
+import { ArrowLeft, CircleHelp, Clock, LogOut, Menu, Moon, MoreHorizontal, Search, Sun, Ticket, User, UtensilsCrossed, X } from 'lucide-react';
+import { DynamicIcon } from '@/components/DynamicIcon';
 import { usePOSStore } from '@/store/usePOSStore';
-import { useAuthStore } from '@/store/useAuthStore';
+import { useAuthStore, type SidebarItem } from '@/store/useAuthStore';
 import { apiFetch } from '@/utils/api';
 import { Loader } from '@/components/Loader';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { GlobalSearchModal } from '@/components/GlobalSearchModal';
-
-// Dynamic Icon Renderer for database-seeded navigation menus
-const DynamicIcon = ({ name, className }: { name: string; className?: string }) => {
-  const IconComponent = (LucideIcons as any)[name] || LucideIcons.HelpCircle;
-  return <IconComponent className={className} />;
-};
+import { usePolling } from '@/utils/usePolling';
 
 // Isolated Real-time Clock to prevent whole layout re-rendering every 1 second
 const HeaderClock = () => {
   const [time, setTime] = useState('');
   useEffect(() => {
-    setTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
-    const timer = setInterval(() => {
+    // The first paint happens on the next frame rather than synchronously in
+    // the effect body: the clock still fills in immediately to the eye, but
+    // the render pass that mounts the layout is not restarted by a setState.
+    const tick = () =>
       setTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
-    }, 1000);
-    return () => clearInterval(timer);
+    const frame = requestAnimationFrame(tick);
+    const timer = setInterval(tick, 1000);
+    return () => {
+      cancelAnimationFrame(frame);
+      clearInterval(timer);
+    };
   }, []);
 
   return (
     <div className="flex items-center gap-1 border-r border-zinc-200 dark:border-zinc-800 pr-3 sm:pr-4">
-      <LucideIcons.Clock className="h-3.5 w-3.5 text-zinc-400" />
+      <Clock className="h-3.5 w-3.5 text-zinc-400" />
       <span className="font-mono">{time}</span>
     </div>
   );
 };
+
+// useSyncExternalStore requires a stable subscribe; this store never changes.
+const subscribeNoop = () => () => {};
 
 // Nav items that belong in the pinned bottom group (Reports, Help), everything
 // else scrolls in the primary list above it.
@@ -55,11 +60,10 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
 
   // Theme state
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  // Server renders false, client renders true from the first commit onwards.
+  // Same hydration guard as the old setIsMounted-in-an-effect, without the
+  // extra render pass that caused.
+  const isMounted = useSyncExternalStore(subscribeNoop, () => true, () => false);
 
   // Listen for global shortcut (Ctrl+K / Cmd+K) to toggle search modal
   useEffect(() => {
@@ -77,7 +81,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
   const [restaurantLogo, setRestaurantLogo] = useState<string | null>(null);
   useEffect(() => {
     if (isMounted && token) {
-      apiFetch<any>('/auth/restaurant').then(d => setRestaurantLogo(d.logo || null)).catch(() => {});
+      apiFetch<{ logo: string | null }>('/auth/restaurant').then(d => setRestaurantLogo(d.logo || null)).catch(() => {});
     }
   }, [isMounted, token]);
 
@@ -95,29 +99,27 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
   // Always re-fetch navigation on mount so sidebar labels stay in sync with DB
   useEffect(() => {
     if (isMounted && token) {
-      apiFetch<any[]>('/navigation')
+      apiFetch<SidebarItem[]>('/navigation')
         .then((items) => setSidebarItems(items))
         .catch(() => {});
     }
   }, [isMounted, token]);
 
-  // Load and apply theme on mount
+  // Load and apply theme on mount.
+  //
+  // The `dark` class is what actually themes the page and is still applied
+  // synchronously, so there is no flash. Only the React state that drives the
+  // sun/moon icon is deferred to the next frame, which keeps this effect from
+  // setting state during the mount render.
   useEffect(() => {
     const savedTheme = localStorage.getItem('pos-theme') as 'light' | 'dark' | null;
-    if (savedTheme) {
-      setTheme(savedTheme);
-      if (savedTheme === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    } else {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if (prefersDark) {
-        setTheme('dark');
-        document.documentElement.classList.add('dark');
-      }
-    }
+    const nextTheme: 'light' | 'dark' =
+      savedTheme ?? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+
+    document.documentElement.classList.toggle('dark', nextTheme === 'dark');
+
+    const frame = requestAnimationFrame(() => setTheme(nextTheme));
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   // Toggle light/dark mode
@@ -132,13 +134,17 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Poll KOTs every 10s so the kitchen sidebar badge stays accurate on any page
+  // Poll KOTs every 10s so the kitchen sidebar badge stays accurate on any page.
+  // The kitchen screen polls the very same call every 5s into the same store,
+  // so this one stands down while that page is mounted instead of doubling up.
+  const pollKots = isMounted && !!token && pathname !== '/kitchen';
+
   useEffect(() => {
     if (!isMounted || !token) return;
     usePOSStore.getState().fetchActiveKots();
-    const interval = setInterval(() => usePOSStore.getState().fetchActiveKots(), 10000);
-    return () => clearInterval(interval);
   }, [isMounted, token]);
+
+  usePolling(() => usePOSStore.getState().fetchActiveKots(), 10000, pollKots);
 
   // Compute order counts for sidebar badges
   const kdsCount = kots.filter(
@@ -231,7 +237,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
             onClick={() => setIsSidebarOpen(false)}
             className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
           >
-            <LucideIcons.X className="h-4 w-4" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
@@ -243,7 +249,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
             ) : restaurantLogo ? (
               <span className="text-xl">{restaurantLogo}</span>
             ) : (
-              <LucideIcons.UtensilsCrossed className="h-5 w-5 text-white" />
+              <UtensilsCrossed className="h-5 w-5 text-white" />
             )}
           </div>
           <div className="min-w-0">
@@ -289,7 +295,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
               <p className="truncate text-sm font-bold text-zinc-900 dark:text-zinc-100">{user?.name}</p>
               <p className="truncate text-xs text-zinc-400">{roleLabel}</p>
             </div>
-            <LucideIcons.MoreHorizontal className="h-4 w-4 shrink-0 text-zinc-400" />
+            <MoreHorizontal className="h-4 w-4 shrink-0 text-zinc-400" />
           </button>
 
           {isProfileOpen && (
@@ -300,28 +306,28 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
                   onClick={() => { router.push('/settings'); setIsProfileOpen(false); }}
                   className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-brand-600 transition-colors cursor-pointer"
                 >
-                  <LucideIcons.User className="h-4 w-4" /> Profile Settings
+                  <User className="h-4 w-4" /> Profile Settings
                 </button>
                 {user?.role === 'SUPER_ADMIN' && (
                   <button
                     onClick={() => { router.push('/coupons'); setIsProfileOpen(false); }}
                     className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm font-semibold text-zinc-700 dark:text-zinc-350 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-brand-600 transition-colors cursor-pointer border-t border-zinc-100 dark:border-zinc-800"
                   >
-                    <LucideIcons.Ticket className="h-4 w-4" /> Coupons & Promo
+                    <Ticket className="h-4 w-4" /> Coupons & Promo
                   </button>
                 )}
                 <button
                   onClick={toggleTheme}
                   className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-brand-600 transition-colors cursor-pointer border-t border-zinc-100 dark:border-zinc-800"
                 >
-                  {theme === 'dark' ? <LucideIcons.Sun className="h-4 w-4" /> : <LucideIcons.Moon className="h-4 w-4" />}
+                  {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                   {theme === 'dark' ? 'Light mode' : 'Dark mode'}
                 </button>
                 <button
                   onClick={() => { logout(); router.push('/login'); }}
                   className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer border-t border-zinc-100 dark:border-zinc-800"
                 >
-                  <LucideIcons.LogOut className="h-4 w-4" /> Exit Session
+                  <LogOut className="h-4 w-4" /> Exit Session
                 </button>
               </div>
             </>
@@ -338,7 +344,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
               onClick={() => setIsSidebarOpen(true)}
               className="md:hidden flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 active:scale-95 transition-all cursor-pointer"
             >
-              <LucideIcons.Menu className="h-4.5 w-4.5" />
+              <Menu className="h-4.5 w-4.5" />
             </button>
 
             {/* Back button — shown only on sub-pages (path not in sidebar) */}
@@ -348,7 +354,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
                 className="flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-500 dark:text-zinc-400 hover:bg-brand-50 dark:hover:bg-brand-950/20 hover:text-brand-500 hover:border-brand-200 dark:hover:border-brand-800 active:scale-95 transition-all cursor-pointer"
                 title="Go back"
               >
-                <LucideIcons.ArrowLeft className="h-4 w-4" />
+                <ArrowLeft className="h-4 w-4" />
               </button>
             )}
 
@@ -370,7 +376,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
               title="Global Search (Ctrl+K)"
             >
               <div className="flex items-center gap-2">
-                <LucideIcons.Search className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
+                <Search className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
                 <span className="font-normal text-zinc-400 text-xs truncate">Search...</span>
               </div>
               <kbd className="inline-flex items-center rounded-md border border-zinc-200 dark:border-zinc-750 bg-white dark:bg-zinc-800 px-1.5 py-0.5 text-[10px] font-sans font-medium text-zinc-400 shrink-0">
@@ -386,7 +392,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
               className="md:hidden flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-orange-500 active:scale-95 transition-all cursor-pointer"
               title="Search"
             >
-              <LucideIcons.Search className="h-4 w-4" />
+              <Search className="h-4 w-4" />
             </button>
 
             {/* Clock */}
@@ -409,7 +415,9 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
       </div>
 
       <ConfirmDialog />
-      <GlobalSearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+      {/* Mounted only while open, so each open starts from clean state
+          instead of an effect resetting the previous session's query. */}
+      {isSearchOpen && <GlobalSearchModal isOpen onClose={() => setIsSearchOpen(false)} />}
 
       {/* Floating Help Button */}
       <button
@@ -424,7 +432,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
             : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:border-orange-300 dark:hover:border-orange-700 hover:text-orange-500 hover:shadow-orange-100 dark:hover:shadow-orange-950/30'
         }`}
       >
-        <LucideIcons.CircleHelp className="h-5 w-5" />
+        <CircleHelp className="h-5 w-5" />
       </button>
     </div>
   );

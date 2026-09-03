@@ -14,6 +14,7 @@ import confettiExplosion from 'canvas-confetti';
 import { Loader } from '@/components/Loader';
 import { apiFetch } from '@/utils/api';
 import { useCurrencySymbol } from '@/utils/currency';
+import { usePolling } from '@/utils/usePolling';
 
 const METHOD_OPTIONS: { key: 'CASH' | 'CARD' | 'UPI'; label: string; icon: React.ReactNode }[] = [
   { key: 'CASH', label: 'Cash', icon: <Banknote className="h-4 w-4" /> },
@@ -31,15 +32,12 @@ function CheckoutContent() {
   const currencySymbol = useCurrencySymbol();
   const [cancellingItemId, setCancellingItemId] = useState<string | null>(null);
   const [selectedOrderForBill, setSelectedOrderForBill] = useState<Order | null>(null);
-  const [completedFilter, setCompletedFilter] = useState<'today' | 'yesterday' | '7days' | 'all'>('today');
+  const [completedFilter, setCompletedFilter] = useState<CompletedFilter>('today');
+  const [showMobileReceipt, setShowMobileReceipt] = useState(false);
   const [loadingCompleted, setLoadingCompleted] = useState(false);
   const [loadingActive, setLoadingActive] = useState(false);
 
-  const [restaurantSettings, setRestaurantSettings] = useState<{
-    name: string; defaultTaxRate: number; defaultServiceCharge: number;
-    address: string | null; phone: string | null; gstin: string | null;
-    logo: string | null; thankYouMessage: string | null;
-  } | null>(null);
+  const [restaurantSettings, setRestaurantSettings] = useState<RestaurantSettings | null>(null);
 
   const [localPayments, setLocalPayments] = useState<{ paymentMethod: 'CASH' | 'CARD' | 'UPI'; amount: number; transactionReference?: string }[]>([]);
   const [paymentAmountInput, setPaymentAmountInput] = useState('');
@@ -52,22 +50,61 @@ function CheckoutContent() {
   const [payingOrderId, setPayingOrderId] = useState<string | null>(null);
   const [loadingDiscounts, setLoadingDiscounts] = useState(false);
 
-  React.useEffect(() => {
-    apiFetch<any>('/auth/restaurant').then(setRestaurantSettings).catch(() => {});
+  // Choosing (or clearing) the order to bill is a user event, so the bill form
+  // is reset right here instead of in an effect that watched the selection.
+  // Poll-driven refreshes of the same order deliberately do NOT come through
+  // this path, so they never wipe what the cashier has typed.
+  const selectOrderForBill = React.useCallback((order: Order | null) => {
+    setSelectedOrderForBill(order);
+    setLocalPayments([]);
+    setCouponError('');
+    setCouponSuccess('');
+
+    if (order) {
+      setCouponCodeInput(order.couponCode || '');
+      setManualDiscountInput(parseFloat(order.totals.discount) > 0 ? order.totals.discount : '');
+      setShowMobileReceipt(false);
+      const alreadyPaid = order.payments?.reduce((sum, p) => sum + p.amount, 0) || 0;
+      const rem = Math.max(0, parseFloat(order.totals.total) - alreadyPaid);
+      setPaymentAmountInput(rem > 0 ? rem.toFixed(2) : '');
+    } else {
+      setCouponCodeInput('');
+      setManualDiscountInput('');
+      setPaymentAmountInput('');
+    }
   }, []);
 
   React.useEffect(() => {
-    setLoadingActive(true);
-    setLoadingCompleted(true);
+    apiFetch<RestaurantSettings>('/auth/restaurant').then(setRestaurantSettings).catch(() => {});
+  }, []);
+
+  React.useEffect(() => {
+    // Raising the spinners is deferred off the mount/update render. The frame
+    // is cancelled if the fetch finishes first, so a fast (cached) response can
+    // never leave a spinner stuck on.
+    let settled = false;
+    const frame = requestAnimationFrame(() => {
+      if (settled) return;
+      setLoadingActive(true);
+      setLoadingCompleted(true);
+    });
+
     fetchMenuItems().then(() => {
       fetchActiveOrders(true, completedFilter).finally(() => {
+        settled = true;
+        cancelAnimationFrame(frame);
         setLoadingActive(false);
         setLoadingCompleted(false);
       });
     });
-    const interval = setInterval(() => fetchActiveOrders(true, completedFilter), 5000);
-    return () => clearInterval(interval);
+
+    return () => {
+      settled = true;
+      cancelAnimationFrame(frame);
+    };
   }, [fetchActiveOrders, fetchMenuItems, completedFilter]);
+
+  usePolling(() => fetchActiveOrders(true, completedFilter), 5000);
 
   React.useEffect(() => {
     if (!selectedOrderForBill) return;
@@ -79,7 +116,9 @@ function CheckoutContent() {
       updated.totals.total !== selectedOrderForBill.totals.total ||
       updated.items.length !== selectedOrderForBill.items.length ||
       updated.payments?.length !== selectedOrderForBill.payments?.length;
-    if (changed) setSelectedOrderForBill(updated);
+    if (!changed) return;
+    const frame = requestAnimationFrame(() => setSelectedOrderForBill(updated));
+    return () => cancelAnimationFrame(frame);
   }, [activeOrders, selectedOrderForBill?.id]);
 
   // Auto-select order when navigated from the orders list with ?orderId=
@@ -87,25 +126,12 @@ function CheckoutContent() {
   React.useEffect(() => {
     if (!preselectedOrderId || activeOrders.length === 0) return;
     const target = activeOrders.find(o => o.id === preselectedOrderId && o.status !== 'PAID');
-    if (target && !selectedOrderForBill) setSelectedOrderForBill(target);
-  }, [preselectedOrderId, activeOrders]);
-
-  React.useEffect(() => {
-    if (selectedOrderForBill) {
-      setCouponCodeInput(selectedOrderForBill.couponCode || '');
-      setManualDiscountInput(parseFloat(selectedOrderForBill.totals.discount) > 0 ? selectedOrderForBill.totals.discount : '');
-      setLocalPayments([]);
-      setCouponError('');
-      setCouponSuccess('');
-      setShowMobileReceipt(false);
-      const alreadyPaid = selectedOrderForBill.payments?.reduce((s, p) => s + p.amount, 0) || 0;
-      const rem = Math.max(0, parseFloat(selectedOrderForBill.totals.total) - alreadyPaid);
-      setPaymentAmountInput(rem > 0 ? rem.toFixed(2) : '');
-    } else {
-      setCouponCodeInput(''); setManualDiscountInput(''); setLocalPayments([]);
-      setCouponError(''); setCouponSuccess(''); setPaymentAmountInput('');
-    }
-  }, [selectedOrderForBill?.id]);
+    if (!target || selectedOrderForBill) return;
+    // Routed through selectOrderForBill so an auto-selected order arrives with
+    // its coupon/discount/amount fields filled in, exactly like a click would.
+    const frame = requestAnimationFrame(() => selectOrderForBill(target));
+    return () => cancelAnimationFrame(frame);
+  }, [preselectedOrderId, activeOrders, selectOrderForBill]);
 
   const readyOrders = useMemo(() =>
     activeOrders.filter(o => o.status === 'READY' || o.status === 'BILL_REQUESTED' || o.status === 'PARTIALLY_PAID'),
@@ -128,7 +154,10 @@ function CheckoutContent() {
   }, [selectedOrderForBill?.totals?.total, totalPaid]);
 
   React.useEffect(() => {
-    if (selectedOrderForBill) setPaymentAmountInput(remainingBalance > 0 ? remainingBalance.toFixed(2) : '');
+    if (!selectedOrderForBill) return;
+    const frame = requestAnimationFrame(() =>
+      setPaymentAmountInput(remainingBalance > 0 ? remainingBalance.toFixed(2) : ''));
+    return () => cancelAnimationFrame(frame);
   }, [remainingBalance, selectedOrderForBill?.id]);
 
   const handleAddPayment = () => {
@@ -152,7 +181,7 @@ function CheckoutContent() {
     try {
       await completePayment(selectedOrderForBill.id, { couponCode: couponCodeInput || undefined, manualDiscount: manualDiscountInput ? discountVal : undefined, payments: [] });
       setCouponSuccess('Discount applied!');
-    } catch (err: any) { setCouponError(err.message || 'Failed to apply discount.'); }
+    } catch (err) { setCouponError(err instanceof Error ? err.message : 'Failed to apply discount.'); }
     finally { setLoadingDiscounts(false); }
   };
 
@@ -180,7 +209,7 @@ function CheckoutContent() {
         setCouponSuccess('Partial payment recorded!');
       }
       setLocalPayments([]);
-    } catch (err: any) { setCouponError(err.message || 'Failed to finalize checkout.'); }
+    } catch (err) { setCouponError(err instanceof Error ? err.message : 'Failed to finalize checkout.'); }
     finally { setPayingOrderId(null); }
   };
 
@@ -197,8 +226,6 @@ function CheckoutContent() {
     setTimeout(cleanup, 3000);
   };
 
-  const [showMobileReceipt, setShowMobileReceipt] = useState(false);
-
   const checkoutButtonText = useMemo(() => {
     if (payingOrderId !== null) return 'SAVING...';
     if (localPayments.length === 0) return remainingBalance > 0 ? `CHARGE ${currencySymbol}${remainingBalance.toFixed(2)} (${paymentMethodInput})` : 'SAVE CHANGES';
@@ -213,7 +240,7 @@ function CheckoutContent() {
       confirmText: 'Cancel Order',
       onConfirm: async () => {
         await cancelOrder(order.id);
-        if (selectedOrderForBill?.id === order.id) setSelectedOrderForBill(null);
+        if (selectedOrderForBill?.id === order.id) selectOrderForBill(null);
       },
     });
   };
@@ -345,7 +372,7 @@ function CheckoutContent() {
                     </button>
                   </div>
                   <button
-                    onClick={() => setSelectedOrderForBill(order)}
+                    onClick={() => selectOrderForBill(order)}
                     className="flex items-center gap-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 active:scale-[0.98] px-4 py-2 text-[11px] font-black text-white transition-all shadow-sm shadow-brand-200 cursor-pointer"
                   >
                     <Receipt className="h-3.5 w-3.5" />
@@ -368,7 +395,7 @@ function CheckoutContent() {
           </div>
           <select
             value={completedFilter}
-            onChange={(e) => setCompletedFilter(e.target.value as any)}
+            onChange={(e) => setCompletedFilter(e.target.value as CompletedFilter)}
             className="rounded-lg border border-zinc-600 bg-zinc-800 px-2 py-1 text-[10px] font-black outline-none focus:border-brand-400 cursor-pointer text-zinc-100"
           >
             <option value="today">Today</option>
@@ -405,7 +432,7 @@ function CheckoutContent() {
                   </div>
                 </div>
                 <button
-                  onClick={() => setSelectedOrderForBill(order)}
+                  onClick={() => selectOrderForBill(order)}
                   className="flex items-center gap-1 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 hover:border-brand-300 hover:text-brand-500 px-2.5 py-1.5 text-[10px] font-black text-zinc-600 dark:text-zinc-400 transition-colors cursor-pointer"
                 >
                   <Printer className="h-3.5 w-3.5" />REPRINT
@@ -429,7 +456,7 @@ function CheckoutContent() {
                   {selectedOrderForBill.status === 'PAID' ? 'Invoice Preview' : `Order #${selectedOrderForBill.orderNumber} · ${selectedOrderForBill.table?.name || 'Takeaway'}`}
                 </span>
               </div>
-              <button onClick={() => setSelectedOrderForBill(null)}
+              <button onClick={() => selectOrderForBill(null)}
                 className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-zinc-700 dark:hover:text-zinc-100 transition-all cursor-pointer">
                 <X className="h-4 w-4" />
               </button>
@@ -699,7 +726,7 @@ function CheckoutContent() {
 
             {/* Modal footer */}
             <div className="flex gap-2 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-4 py-3">
-              <button onClick={() => setSelectedOrderForBill(null)}
+              <button onClick={() => selectOrderForBill(null)}
                 className="flex-1 rounded-xl border border-zinc-200 dark:border-zinc-800 py-2.5 text-xs font-black text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
                 CLOSE
               </button>
@@ -713,6 +740,19 @@ function CheckoutContent() {
       )}
     </div>
   );
+}
+
+type CompletedFilter = 'today' | 'yesterday' | '7days' | 'all';
+
+interface RestaurantSettings {
+  name: string;
+  defaultTaxRate: number;
+  defaultServiceCharge: number;
+  address: string | null;
+  phone: string | null;
+  gstin: string | null;
+  logo: string | null;
+  thankYouMessage: string | null;
 }
 
 export default function CheckoutPage() {

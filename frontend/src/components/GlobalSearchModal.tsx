@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import * as LucideIcons from 'lucide-react';
+import { Compass, Grid, Loader2, Receipt, Search, SearchX, Users, UtensilsCrossed, X } from 'lucide-react';
 import { apiFetch } from '@/utils/api';
 import { useAuthStore } from '@/store/useAuthStore';
 import { usePOSStore } from '@/store/usePOSStore';
@@ -45,6 +45,8 @@ interface SearchResults {
   }>;
 }
 
+const EMPTY_RESULTS: SearchResults = { menuItems: [], orders: [], tables: [], staff: [] };
+
 export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, onClose }) => {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -61,27 +63,23 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
   });
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  // Focus input when modal opens & reset query
+  // The modal is mounted only while open (see the POS layout), so state starts
+  // clean on every open and no reset effect is needed here — just focus.
   useEffect(() => {
-    if (isOpen) {
-      setQuery('');
-      setResults({ menuItems: [], orders: [], tables: [], staff: [] });
-      setSelectedIndex(0);
-      setTimeout(() => inputRef.current?.focus(), 50);
-    }
-  }, [isOpen]);
+    const focusTimer = setTimeout(() => inputRef.current?.focus(), 50);
+    return () => clearTimeout(focusTimer);
+  }, []);
 
-  // Debounced API search
+  const trimmedQuery = query.trim();
+
+  // Debounced API search. An empty query is handled by deriving empty results
+  // below rather than by resetting state from inside this effect.
   useEffect(() => {
-    if (!query.trim()) {
-      setResults({ menuItems: [], orders: [], tables: [], staff: [] });
-      setLoading(false);
-      return;
-    }
+    if (!trimmedQuery) return;
 
-    setLoading(true);
     const timer = setTimeout(() => {
-      apiFetch<SearchResults>(`/search?q=${encodeURIComponent(query.trim())}`)
+      setLoading(true);
+      apiFetch<SearchResults>(`/search?q=${encodeURIComponent(trimmedQuery)}`)
         .then((data) => {
           setResults(data);
           setSelectedIndex(0);
@@ -95,7 +93,12 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
     }, 200);
 
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [trimmedQuery]);
+
+  // With no query there is nothing to show, regardless of what the last search
+  // left in state.
+  const shownResults = trimmedQuery ? results : EMPTY_RESULTS;
+  const isSearching = Boolean(trimmedQuery) && loading;
 
   // Quick nav actions filtered from available sidebar items
   const quickActions = sidebarItems
@@ -117,7 +120,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
     subtitle: string;
     badge?: string;
     badgeColor?: string;
-    data?: any;
+    data?: unknown;
     onSelect: () => void;
   }> = [];
 
@@ -136,7 +139,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
   });
 
   // Add Menu Items
-  results.menuItems.forEach((item) => {
+  shownResults.menuItems.forEach((item) => {
     flatList.push({
       type: 'menu',
       id: item.id,
@@ -167,7 +170,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
   });
 
   // Add Orders
-  results.orders.forEach((ord) => {
+  shownResults.orders.forEach((ord) => {
     flatList.push({
       type: 'order',
       id: ord.id,
@@ -184,7 +187,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
   });
 
   // Add Tables
-  results.tables.forEach((tbl) => {
+  shownResults.tables.forEach((tbl) => {
     flatList.push({
       type: 'table',
       id: tbl.id,
@@ -201,7 +204,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
   });
 
   // Add Staff
-  results.staff.forEach((stf) => {
+  shownResults.staff.forEach((stf) => {
     flatList.push({
       type: 'staff',
       id: stf.id,
@@ -251,7 +254,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
       >
         {/* Input Bar */}
         <div className="flex items-center gap-3.5 border-b border-indigo-100/80 dark:border-zinc-800 px-4 py-3.5 bg-white dark:bg-zinc-900 shadow-xs">
-          <LucideIcons.Search className="h-5 w-5 text-indigo-500/90 dark:text-indigo-400 shrink-0" />
+          <Search className="h-5 w-5 text-indigo-500/90 dark:text-indigo-400 shrink-0" />
           <input
             ref={inputRef}
             type="text"
@@ -260,8 +263,8 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
             placeholder="Search menu, orders, tables, staff..."
             className="flex-1 bg-transparent text-sm font-medium text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 caret-indigo-600 focus:outline-none"
           />
-          {loading ? (
-            <LucideIcons.Loader2 className="h-4 w-4 animate-spin text-indigo-500 shrink-0" />
+          {isSearching ? (
+            <Loader2 className="h-4 w-4 animate-spin text-indigo-500 shrink-0" />
           ) : (
             <button
               onClick={() => {
@@ -271,7 +274,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
               className="p-1 rounded-md text-indigo-400/80 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-zinc-800 transition-all cursor-pointer"
               title="Close search"
             >
-              <LucideIcons.X className="h-4 w-4" />
+              <X className="h-4 w-4" />
             </button>
           )}
         </div>
@@ -280,12 +283,12 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
         <div className="flex-1 overflow-y-auto p-2 divide-y divide-zinc-100 dark:divide-zinc-800/50">
           {flatList.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <LucideIcons.SearchX className="h-10 w-10 text-zinc-300 dark:text-zinc-700 mb-2" />
+              <SearchX className="h-10 w-10 text-zinc-300 dark:text-zinc-700 mb-2" />
               <p className="text-sm font-bold text-zinc-500 dark:text-zinc-400">
                 {query ? `No search results found for "${query}"` : 'Type something to search...'}
               </p>
               <p className="text-xs text-zinc-400 dark:text-zinc-600 mt-1">
-                Try searching for "Pizza", "Table 1", "Order #101", or "Staff"
+                Try searching for &quot;Pizza&quot;, &quot;Table 1&quot;, &quot;Order #101&quot;, or &quot;Staff&quot;
               </p>
             </div>
           ) : (
@@ -299,12 +302,12 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
 
               {flatList.map((item, index) => {
                 const isSelected = index === selectedIndex;
-                let IconComp = LucideIcons.Compass;
+                let IconComp = Compass;
 
-                if (item.type === 'menu') IconComp = LucideIcons.UtensilsCrossed;
-                else if (item.type === 'order') IconComp = LucideIcons.Receipt;
-                else if (item.type === 'table') IconComp = LucideIcons.Grid;
-                else if (item.type === 'staff') IconComp = LucideIcons.Users;
+                if (item.type === 'menu') IconComp = UtensilsCrossed;
+                else if (item.type === 'order') IconComp = Receipt;
+                else if (item.type === 'table') IconComp = Grid;
+                else if (item.type === 'staff') IconComp = Users;
 
                 return (
                   <button

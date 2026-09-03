@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation';
 import { usePOSStore } from '@/store/usePOSStore';
 import { useConfirmStore } from '@/store/useConfirmStore';
-import { CartItem, Order } from '@/types/pos';
+import { CartItem, MenuItem, Order } from '@/types/pos';
 import {
   Search, Plus, Minus, Trash2, Soup, ShoppingCart, Send, X, ChevronRight,
   ArrowLeft, Clock, UtensilsCrossed, Receipt, CheckCircle2, Ban,
@@ -14,6 +14,7 @@ import { Loader } from '@/components/Loader';
 import { apiFetch } from '@/utils/api';
 import { useCurrencySymbol } from '@/utils/currency';
 import Big from 'big.js';
+import { usePolling } from '@/utils/usePolling';
 
 // ── Status helpers ────────────────────────────────────────────────────────────
 
@@ -323,16 +324,12 @@ export default function OrdersPage() {
       fetchActiveOrders(true, 'today'),
       fetchMenuItems(),
       fetchTables(),
-      apiFetch<any>('/auth/restaurant').then(setRestaurantSettings).catch(() => {}),
+      apiFetch<{ defaultTaxRate: number; defaultServiceCharge: number }>('/auth/restaurant').then(setRestaurantSettings).catch(() => {}),
     ]).finally(() => setListLoading(false));
   }, [fetchMenuItems, fetchTables, fetchActiveOrders]);
 
   // Auto-refresh in list mode
-  useEffect(() => {
-    if (mode !== 'list') return;
-    const id = setInterval(() => fetchActiveOrders(true, 'today'), 30000);
-    return () => clearInterval(id);
-  }, [mode, fetchActiveOrders]);
+  usePolling(() => fetchActiveOrders(true, 'today'), 30000, mode === 'list');
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -377,7 +374,10 @@ export default function OrdersPage() {
     prevCartCount.current = cartCount;
   }, [cartCount]);
 
-  const handleAddToCart = useCallback((item: any) => {
+  const handleAddToCart = useCallback((item: MenuItem) => {
+    // The store also refuses unavailable items; bail out here too so an
+    // out-of-stock card never plays the "added" animation.
+    if (!item.isAvailable) return;
     addToCart(item);
     setPoppedId(item.id);
     setTimeout(() => setPoppedId(null), 300);
@@ -394,28 +394,6 @@ export default function OrdersPage() {
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
-
-  useEffect(() => {
-    if (mode !== 'new-order') return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const inInput = document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA';
-      if ((e.key === '/' || e.key === 'F2') && !inInput) { e.preventDefault(); searchInputRef.current?.focus(); }
-      if (e.key === 'Escape' && !inInput) backToList();
-      if (e.key === 'F9') { e.preventDefault(); router.push('/checkout'); }
-      if (e.key === 'F8') { e.preventDefault(); if (cartItems.length > 0) handleSendToKitchen(); }
-      if ((e.key === '+' || e.key === '=') && !inInput && cartItems.length > 0) {
-        e.preventDefault(); updateCartQuantity(cartItems[cartItems.length - 1].menuItem.id, 1);
-      }
-      if ((e.key === '-' || e.key === '_') && !inInput && cartItems.length > 0) {
-        e.preventDefault();
-        const last = cartItems[cartItems.length - 1];
-        if (last.quantity > 1) updateCartQuantity(last.menuItem.id, -1);
-        else removeFromCart(last.menuItem.id);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [mode, cartItems, router, updateCartQuantity, removeFromCart]);
 
   const categories = useMemo(() => ['All', ...Array.from(new Set(menuItems.map(i => i.category)))], [menuItems]);
   const categoryCounts = useMemo(() => {
@@ -466,13 +444,40 @@ export default function OrdersPage() {
     } finally { setIsSendingToKitchen(false); }
   };
 
+  // Registered after handleSendToKitchen so the shortcut handler never
+  // references it before it is declared.
+  useEffect(() => {
+    if (mode !== 'new-order') return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const inInput = document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA';
+      if ((e.key === '/' || e.key === 'F2') && !inInput) { e.preventDefault(); searchInputRef.current?.focus(); }
+      if (e.key === 'Escape' && !inInput) backToList();
+      if (e.key === 'F9') { e.preventDefault(); router.push('/checkout'); }
+      if (e.key === 'F8') { e.preventDefault(); if (cartItems.length > 0) handleSendToKitchen(); }
+      if ((e.key === '+' || e.key === '=') && !inInput && cartItems.length > 0) {
+        e.preventDefault(); updateCartQuantity(cartItems[cartItems.length - 1].menuItem.id, 1);
+      }
+      if ((e.key === '-' || e.key === '_') && !inInput && cartItems.length > 0) {
+        e.preventDefault();
+        const last = cartItems[cartItems.length - 1];
+        if (last.quantity > 1) updateCartQuantity(last.menuItem.id, -1);
+        else removeFromCart(last.menuItem.id);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [mode, cartItems, router, updateCartQuantity, removeFromCart]);
+
   // Filtered orders for list mode
   const ongoingOrders = useMemo(() => activeOrders.filter(o => ONGOING_STATUSES.has(o.status)), [activeOrders]);
   const completedOrders = useMemo(() => activeOrders.filter(o => COMPLETED_STATUSES.has(o.status)), [activeOrders]);
   const displayedOrders = orderFilter === 'ongoing' ? ongoingOrders : completedOrders;
 
   // ── Cart content (shared between sidebar and bottom sheet) ───────────────
-  const CartContent = () => (
+  // A plain JSX value, not a component declared during render: it takes no
+  // props and calls no hooks, so rendering it in both places behaves
+  // identically without redefining a component type on every render.
+  const cartContent = (
     <>
       <div className="border-b border-zinc-200 dark:border-zinc-800 px-4 py-3">
         <label className="block text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-1.5">Table / Dining Option</label>
@@ -512,7 +517,7 @@ export default function OrdersPage() {
                       {currencySymbol}{item.menuItem.price.toFixed(2)} × {item.quantity} = <span className="font-extrabold text-zinc-600 dark:text-zinc-300">{currencySymbol}{(item.menuItem.price * item.quantity).toFixed(2)}</span>
                     </p>
                     {item.notes && expandedNoteId !== item.menuItem.id && (
-                      <p className="mt-0.5 text-[10px] italic text-amber-600 dark:text-amber-400 truncate">"{item.notes}"</p>
+                      <p className="mt-0.5 text-[10px] italic text-amber-600 dark:text-amber-400 truncate">&quot;{item.notes}&quot;</p>
                     )}
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
@@ -834,10 +839,16 @@ export default function OrdersPage() {
               {filteredMenuItems.map(item => {
                 const qty = cartItems.find(ci => ci.menuItem.id === item.id)?.quantity || 0;
                 const inCart = qty > 0;
+                const isOut = !item.isAvailable;
                 return (
                   <div key={item.id} onClick={() => handleAddToCart(item)}
-                    className={`group relative flex flex-col rounded-xl border cursor-pointer transition-all duration-150 select-none overflow-hidden active:scale-[0.97] ${poppedId === item.id ? 'animate-card-pop' : ''} ${
-                      inCart ? 'border-brand-400 bg-brand-50/60 dark:bg-brand-950/20 ring-1 ring-brand-400/60 shadow-sm shadow-brand-100' : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-brand-300 hover:shadow-sm'
+                    aria-disabled={isOut}
+                    className={`group relative flex flex-col rounded-xl border transition-all duration-150 select-none overflow-hidden ${
+                      isOut
+                        ? 'cursor-not-allowed opacity-60 border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50'
+                        : `cursor-pointer active:scale-[0.97] ${poppedId === item.id ? 'animate-card-pop' : ''} ${
+                            inCart ? 'border-brand-400 bg-brand-50/60 dark:bg-brand-950/20 ring-1 ring-brand-400/60 shadow-sm shadow-brand-100' : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-brand-300 hover:shadow-sm'
+                          }`
                     }`}>
                     {inCart && (
                       <div className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-brand-500 text-xs font-black text-white shadow-sm z-10">{qty}</div>
@@ -845,7 +856,7 @@ export default function OrdersPage() {
                     <div className="absolute top-2 left-2">
                       <span className="rounded bg-zinc-100/90 dark:bg-zinc-800/90 px-1.5 py-0.5 text-[8px] font-black uppercase text-zinc-500 dark:text-zinc-400">{item.code}</span>
                     </div>
-                    <div className={`flex items-center justify-center pt-8 pb-2 text-4xl transition-transform duration-150 ${!inCart ? 'group-hover:scale-110' : ''}`}>
+                    <div className={`flex items-center justify-center pt-8 pb-2 text-4xl transition-transform duration-150 ${isOut ? 'grayscale' : !inCart ? 'group-hover:scale-110' : ''}`}>
                       {item.image}
                     </div>
                     <div className="flex-1 px-2.5 pb-2 text-center">
@@ -864,10 +875,20 @@ export default function OrdersPage() {
                           <span className="w-5 text-center text-xs font-black text-zinc-900 dark:text-zinc-100">{qty}</span>
                           <button
                             onClick={() => handleAddToCart(item)}
-                            className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-500 hover:bg-brand-600 active:scale-[0.92] text-white transition-all cursor-pointer">
+                            disabled={isOut}
+                            title={isOut ? 'Item is out of stock' : undefined}
+                            className={`flex h-7 w-7 items-center justify-center rounded-lg text-white transition-all ${
+                              isOut
+                                ? 'bg-zinc-300 dark:bg-zinc-700 cursor-not-allowed'
+                                : 'bg-brand-500 hover:bg-brand-600 active:scale-[0.92] cursor-pointer'
+                            }`}>
                             <Plus className="h-3 w-3" />
                           </button>
                         </div>
+                      ) : isOut ? (
+                        <span className="rounded-lg px-2.5 py-1.5 text-[10px] font-black uppercase tracking-wide bg-zinc-200 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">
+                          Out
+                        </span>
                       ) : (
                         <span className="flex items-center gap-0.5 rounded-lg px-2.5 py-1.5 text-[10px] font-black transition-colors bg-zinc-900 dark:bg-zinc-700 text-white group-hover:bg-brand-500">
                           <Plus className="h-3 w-3" />ADD
@@ -896,7 +917,7 @@ export default function OrdersPage() {
             </button>
           )}
         </div>
-        <CartContent />
+        {cartContent}
       </div>
 
       {/* Mobile FAB */}
@@ -947,7 +968,7 @@ export default function OrdersPage() {
               </div>
             </div>
             <div className="flex flex-col flex-1 overflow-hidden">
-              <CartContent />
+              {cartContent}
             </div>
           </div>
         </div>
