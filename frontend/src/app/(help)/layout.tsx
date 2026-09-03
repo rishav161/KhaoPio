@@ -1,19 +1,27 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Loader } from '@/components/Loader';
 
+const emptySubscribe = () => () => {};
+
+// Returns false during SSR and the initial client render, true once
+// hydration is complete — avoids the hydration mismatch below without
+// needing a setState call inside an effect.
+function useIsClient() {
+  return useSyncExternalStore(emptySubscribe, () => true, () => false);
+}
+
 export default function HelpLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { token } = useAuthStore();
-  const [isMounted, setIsMounted] = useState(false);
+  const isMounted = useIsClient();
   const returnPath = React.useRef<string>('/orders');
 
   useEffect(() => {
-    setIsMounted(true);
     const saved = sessionStorage.getItem('help_return_path');
     if (saved) returnPath.current = saved;
   }, []);
