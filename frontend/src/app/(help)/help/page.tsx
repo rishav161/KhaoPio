@@ -2,9 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, ChevronRight, Loader2, AlertCircle, HelpCircle } from 'lucide-react';
-import * as LucideIcons from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import { Search, ChevronRight, Loader2, AlertCircle, X } from 'lucide-react';
+import { DynamicIcon } from '@/components/DynamicIcon';
 import { apiFetch } from '@/utils/api';
 
 interface HelpCategory {
@@ -25,11 +24,6 @@ interface HelpArticle {
   category: { title: string; slug: string; icon: string };
   createdAt: string;
 }
-
-const DynamicIcon = ({ name, className }: { name: string; className?: string }) => {
-  const Icon = (LucideIcons as unknown as Record<string, LucideIcon>)[name] || HelpCircle;
-  return <Icon className={className} />;
-};
 
 export default function HelpCenterPage() {
   const router = useRouter();
@@ -124,7 +118,7 @@ export default function HelpCenterPage() {
                 onClick={() => setQuery('')}
                 className="absolute right-3.5 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-full bg-[#E7E5E4] dark:bg-zinc-700 text-[#78716C] hover:bg-[#3b5a73] hover:text-white transition-colors cursor-pointer"
               >
-                <LucideIcons.X className="h-3 w-3" />
+                <X className="h-3 w-3" />
               </button>
             )}
           </div>

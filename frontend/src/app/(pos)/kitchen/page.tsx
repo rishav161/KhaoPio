@@ -4,6 +4,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { usePOSStore } from '@/store/usePOSStore';
 import { Order } from '@/types/pos';
 import { Play, Check, Flame, AlertCircle, Clock, ChefHat } from 'lucide-react';
+import { usePolling } from '@/utils/usePolling';
 
 // Live timer component for each ticket to show elapsed time since order creation
 function ElapsedTimer({ createdAt }: { createdAt: string }) {
@@ -67,9 +68,9 @@ export default function KitchenPage() {
     fetchMenuItems().then(() => {
       fetchActiveKots();
     });
-    const interval = setInterval(fetchActiveKots, 5000);
-    return () => clearInterval(interval);
   }, [fetchActiveKots, fetchMenuItems]);
+
+  usePolling(fetchActiveKots, 5000);
 
   // Filter kitchen tickets
   const kitchenOrders = useMemo(() => {
@@ -93,7 +94,8 @@ export default function KitchenPage() {
   // Web Audio API chime synthesizer for zero-dependency KDS alert
   const playChime = () => {
     try {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      const AudioContextClass = window.AudioContext
+        || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
       if (!AudioContextClass) return;
       const ctx = new AudioContextClass();
       
@@ -231,7 +233,7 @@ export default function KitchenPage() {
                         </div>
                         {item.notes && (
                           <div className="ml-8 flex items-center gap-1 rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 px-2 py-1">
-                            <span className="text-[10px] font-black text-amber-700 dark:text-amber-400 italic">"{item.notes}"</span>
+                            <span className="text-[10px] font-black text-amber-700 dark:text-amber-400 italic">&quot;{item.notes}&quot;</span>
                           </div>
                         )}
                       </div>

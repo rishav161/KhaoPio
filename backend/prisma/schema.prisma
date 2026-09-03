@@ -168,6 +168,11 @@ model Order {
   updatedAt           DateTime    @updatedAt
   items               OrderItem[]
   kots                Kot[]
+
+  @@index([restaurantId, status])
+  @@index([restaurantId, createdAt])
+  @@index([waiterId])
+  @@index([tableId])
 }
 
 model OrderItem {
@@ -180,6 +185,9 @@ model OrderItem {
   status     OrderItemStatus @default(ACTIVE)
   orderId    String
   order      Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([menuItemId])
 }
 
 enum OrderItemStatus {
@@ -232,6 +240,8 @@ model Coupon {
   updatedAt      DateTime     @updatedAt
 
   @@unique([code, restaurantId])
+
+  @@index([restaurantId, isActive])
 }
 
 model Payment {
@@ -247,6 +257,9 @@ model Payment {
   cashier              User          @relation(fields: [cashierId], references: [id])
   
   createdAt            DateTime      @default(now())
+
+  @@index([orderId])
+  @@index([cashierId])
 }
 
 model MenuCategory {
@@ -277,6 +290,8 @@ model MenuItem {
   updatedAt    DateTime     @updatedAt
   
   @@unique([code, restaurantId])
+
+  @@index([restaurantId, categoryId, isAvailable])
 }
 
 model OtpVerification {
@@ -302,6 +317,8 @@ model DiningTable {
   updatedAt    DateTime    @updatedAt
 
   @@unique([name, restaurantId])
+
+  @@index([restaurantId, status])
 }
 
 model Booking {
@@ -317,6 +334,8 @@ model Booking {
   restaurant   Restaurant    @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+
+  @@index([restaurantId, status])
 }
 
 model HelpCategory {
@@ -361,6 +380,8 @@ model Kot {
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
   items        KotItem[]
+
+  @@index([orderId, status])
 }
 
 model KotItem {
@@ -372,5 +393,7 @@ model KotItem {
   quantity   Int
   price      Float
   notes      String?
+
+  @@index([kotId])
 }
 

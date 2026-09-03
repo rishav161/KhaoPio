@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { Loader } from '@/components/Loader';
 import { Plus, Trash2, CalendarDays, Users, Check, X, Armchair, PlusCircle, Clock, Sparkles, Unlock, QrCode, Printer } from 'lucide-react';
 import { useConfirmStore } from '@/store/useConfirmStore';
+import { usePolling } from '@/utils/usePolling';
 import { DiningTable } from '@/types/pos';
 
 export default function TablesPage() {
@@ -44,17 +45,15 @@ export default function TablesPage() {
   const [addBookingError, setAddBookingError] = useState('');
   const [isBookingSubmitting, setIsBookingSubmitting] = useState(false);
 
-  // Fetch tables and bookings on mount and set polling interval
+  // Fetch tables and bookings on mount, then refresh while the tab is visible
   useEffect(() => {
     Promise.all([fetchTables(), fetchBookings()]).finally(() => setLoading(false));
-
-    const interval = setInterval(() => {
-      fetchTables();
-      fetchBookings();
-    }, 5000);
-
-    return () => clearInterval(interval);
   }, [fetchTables, fetchBookings]);
+
+  usePolling(() => {
+    fetchTables();
+    fetchBookings();
+  }, 5000);
 
   // Statistics calculation
   const stats = useMemo(() => {
@@ -97,8 +96,8 @@ export default function TablesPage() {
       setNewTableName('');
       setNewTableCapacity('4');
       setIsAddTableOpen(false);
-    } catch (err: any) {
-      setAddTableError(err.message || 'Failed to create table.');
+    } catch (err) {
+      setAddTableError((err instanceof Error ? err.message : '') || 'Failed to create table.');
     }
   };
 
@@ -140,8 +139,8 @@ export default function TablesPage() {
       setGuestsCount('2');
       setSelectedTableId('');
       setIsAddBookingOpen(false);
-    } catch (err: any) {
-      setAddBookingError(err.message || 'Failed to create reservation.');
+    } catch (err) {
+      setAddBookingError((err instanceof Error ? err.message : '') || 'Failed to create reservation.');
     } finally {
       setIsBookingSubmitting(false);
     }
@@ -151,8 +150,8 @@ export default function TablesPage() {
   const handleCheckIn = async (bookingId: string) => {
     try {
       await checkInBooking(bookingId);
-    } catch (err: any) {
-      showAlert('Check-In Error', err.message || 'Failed to check-in reservation.', 'danger');
+    } catch (err) {
+      showAlert('Check-In Error', (err instanceof Error ? err.message : '') || 'Failed to check-in reservation.', 'danger');
     }
   };
 
@@ -165,8 +164,8 @@ export default function TablesPage() {
       onConfirm: async () => {
         try {
           await cancelBooking(bookingId);
-        } catch (err: any) {
-          showAlert('Cancellation Error', err.message || 'Failed to cancel reservation.', 'danger');
+        } catch (err) {
+          showAlert('Cancellation Error', (err instanceof Error ? err.message : '') || 'Failed to cancel reservation.', 'danger');
         }
       }
     });
@@ -181,8 +180,8 @@ export default function TablesPage() {
       onConfirm: async () => {
         try {
           await deleteTable(tableId);
-        } catch (err: any) {
-          showAlert('Deletion Error', err.message || 'Failed to delete table.', 'danger');
+        } catch (err) {
+          showAlert('Deletion Error', (err instanceof Error ? err.message : '') || 'Failed to delete table.', 'danger');
         }
       }
     });
@@ -197,8 +196,8 @@ export default function TablesPage() {
       onConfirm: async () => {
         try {
           await freeTable(tableId);
-        } catch (err: any) {
-          showAlert('Error', err.message || 'Failed to free table.', 'danger');
+        } catch (err) {
+          showAlert('Error', (err instanceof Error ? err.message : '') || 'Failed to free table.', 'danger');
         }
       }
     });
@@ -266,7 +265,7 @@ export default function TablesPage() {
               <Armchair className="h-12 w-12 stroke-[1.2] text-zinc-300 mb-2 animate-bounce" />
               <p className="text-xs font-black text-zinc-500 dark:text-zinc-400">No dining tables configured</p>
               <p className="text-[10px] text-zinc-400 mt-1 max-w-[220px]">
-                Create dining tables using the 'Add Table' button above to begin serving guests.
+                Create dining tables using the &apos;Add Table&apos; button above to begin serving guests.
               </p>
             </div>
           ) : (

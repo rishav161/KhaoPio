@@ -3,10 +3,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
-  ArrowLeft, ThumbsUp, ThumbsDown, Loader2, AlertCircle, Clock,
+  ArrowLeft, ThumbsUp, ThumbsDown, Loader2, AlertCircle, Clock, ChevronRight,
 } from 'lucide-react';
-import * as LucideIcons from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import { DynamicIcon } from '@/components/DynamicIcon';
 import { apiFetch } from '@/utils/api';
 
 interface HelpArticle {
@@ -33,11 +32,6 @@ interface RelatedArticle {
   slug: string;
   excerpt: string | null;
 }
-
-const DynamicIcon = ({ name, className }: { name: string; className?: string }) => {
-  const Icon = (LucideIcons as unknown as Record<string, LucideIcon>)[name] || LucideIcons.HelpCircle;
-  return <Icon className={className} />;
-};
 
 export default function ArticlePage() {
   const params = useParams();
@@ -224,7 +218,7 @@ export default function ArticlePage() {
                 <p className="text-xs font-bold text-[#1C1917] dark:text-zinc-200 group-hover:text-[#3b5a73] transition-colors">
                   {rel.title}
                 </p>
-                <LucideIcons.ChevronRight className="h-3.5 w-3.5 text-[#D6D3D1] dark:text-zinc-600 group-hover:text-[#3b5a73] group-hover:translate-x-0.5 transition-all shrink-0" />
+                <ChevronRight className="h-3.5 w-3.5 text-[#D6D3D1] dark:text-zinc-600 group-hover:text-[#3b5a73] group-hover:translate-x-0.5 transition-all shrink-0" />
               </button>
             ))}
           </div>
