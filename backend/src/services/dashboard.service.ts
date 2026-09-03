@@ -1,5 +1,5 @@
 import prisma from '../prisma';
-import { OrderStatus } from '@prisma/client';
+import { OrderStatus, Prisma } from '@prisma/client';
 
 export class DashboardService {
   /**
@@ -41,20 +41,19 @@ export class DashboardService {
       }
     }
 
-    // Paid orders stats matching filters
-    const paidOrders = await prisma.order.findMany({
+    // Paid order totals, summed by PostgreSQL rather than by streaming every
+    // matching row into Node and reducing it here.
+    const paidAggregate = await prisma.order.aggregate({
       where: {
         ...filterClause,
         status: OrderStatus.PAID,
       },
-      select: {
-        grandTotal: true,
-        createdAt: true,
-      },
+      _sum: { grandTotal: true },
+      _count: { _all: true },
     });
 
-    const totalSales = paidOrders.reduce((sum, order) => sum + order.grandTotal, 0);
-    const ordersCount = paidOrders.length;
+    const totalSales = paidAggregate._sum.grandTotal ?? 0;
+    const ordersCount = paidAggregate._count._all;
     const aov = ordersCount > 0 ? parseFloat((totalSales / ordersCount).toFixed(2)) : 0;
 
     // Active orders count matching filters
@@ -122,9 +121,23 @@ export class DashboardService {
       salesTrend.push({ date: dateStr, amount: 0, count: 0 });
     }
 
-    paidOrders.forEach(o => {
-      const dateStr = o.createdAt.toISOString().split('T')[0];
-      const entry = salesTrend.find(s => s.date === dateStr);
+    // Only rows inside the rendered window can land in a bucket, so scope the
+    // read to that window instead of reading every paid order ever recorded.
+    const trendFrom = new Date(`${salesTrend[0].date}T00:00:00.000Z`);
+    const trendTo = new Date(`${salesTrend[salesTrend.length - 1].date}T23:59:59.999Z`);
+
+    const trendOrders = await prisma.order.findMany({
+      where: {
+        ...filterClause,
+        status: OrderStatus.PAID,
+        createdAt: { gte: trendFrom, lte: trendTo },
+      },
+      select: { grandTotal: true, createdAt: true },
+    });
+
+    const trendByDate = new Map(salesTrend.map(entry => [entry.date, entry]));
+    trendOrders.forEach(o => {
+      const entry = trendByDate.get(o.createdAt.toISOString().split('T')[0]);
       if (entry) {
         entry.amount = parseFloat((entry.amount + o.grandTotal).toFixed(2));
         entry.count += 1;
@@ -175,23 +188,28 @@ export class DashboardService {
       count: p._count.id,
     }));
 
-    // Hourly order distribution (all paid orders, grouped by hour 0–23)
-    const hourlyMap: Record<number, number> = {};
-    for (let h = 0; h < 24; h++) hourlyMap[h] = 0;
+    // Hourly order distribution (paid orders, bucketed 0–23).
+    //
+    // Grouped by PostgreSQL so the whole result is 24 rows, rather than the
+    // second full read of every paid order this used to perform. Buckets are
+    // UTC, which matches the UTC dates used by salesTrend above; the previous
+    // implementation used the API server's local timezone here, so this chart
+    // silently disagreed with the trend chart on any non-UTC host.
+    const hourlyRaw = await prisma.$queryRaw<{ hour: number; count: number }[]>(Prisma.sql`
+      SELECT EXTRACT(HOUR FROM "createdAt" AT TIME ZONE 'UTC')::int AS hour,
+             COUNT(*)::int AS count
+      FROM "Order"
+      WHERE "restaurantId" = ${restaurantId}
+        AND "status" = ${OrderStatus.PAID}::"OrderStatus"
+        ${startDate ? Prisma.sql`AND "createdAt" >= ${filterClause.createdAt.gte}` : Prisma.empty}
+        ${endDate ? Prisma.sql`AND "createdAt" <= ${filterClause.createdAt.lte}` : Prisma.empty}
+      GROUP BY 1
+    `);
 
-    const paidOrdersWithTime = await prisma.order.findMany({
-      where: { ...filterClause, status: OrderStatus.PAID },
-      select: { createdAt: true },
-    });
-
-    paidOrdersWithTime.forEach(o => {
-      const hour = new Date(o.createdAt).getHours();
-      hourlyMap[hour] = (hourlyMap[hour] || 0) + 1;
-    });
-
-    const hourlyOrders = Object.entries(hourlyMap).map(([hour, count]) => ({
-      hour: parseInt(hour),
-      count,
+    const hourlyCounts = new Map(hourlyRaw.map(r => [Number(r.hour), Number(r.count)]));
+    const hourlyOrders = Array.from({ length: 24 }, (_, hour) => ({
+      hour,
+      count: hourlyCounts.get(hour) ?? 0,
     }));
 
     return {
