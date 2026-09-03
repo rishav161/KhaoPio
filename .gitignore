@@ -28,3 +28,6 @@ frontend/.env.production.local
 *.njsproj
 *.sln
 *.sw?
+
+# Local Claude Code project notes (not shared with the repo)
+CLAUDE.md
