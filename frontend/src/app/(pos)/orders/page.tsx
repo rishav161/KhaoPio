@@ -834,13 +834,19 @@ export default function OrdersPage() {
           </div>
         </div>
 
-        {/* Quick-add rail — most-ordered items, one tap each */}
+        {/* Quick-add rail — most-ordered items, one tap each.
+            Carries deliberately more visual weight than the grid below it: an
+            amber band and raised chips, so it reads as a shortcut strip rather
+            than another row of the menu. */}
         {showQuickAdd && (
-          <div className="shrink-0 border-b border-zinc-200 dark:border-zinc-800 bg-amber-50/40 dark:bg-amber-950/10 px-3 py-2">
-            <div className="mb-1.5 flex items-center gap-1.5">
-              <Star className="h-3 w-3 text-amber-500" />
-              <span className="text-[9px] font-black uppercase tracking-widest text-amber-700/80 dark:text-amber-500/80">
+          <div className="shrink-0 border-b-2 border-amber-400/40 bg-amber-50 dark:bg-amber-400/[0.07] px-3 py-2.5">
+            <div className="mb-2 flex items-center gap-1.5">
+              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+              <span className="text-[10px] font-black uppercase tracking-[0.15em] text-amber-700 dark:text-amber-400">
                 Frequently Ordered
+              </span>
+              <span className="text-[9px] font-bold lowercase tracking-normal text-amber-700/60 dark:text-amber-500/50">
+                · one tap to add
               </span>
             </div>
             <div className="flex gap-2 overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none' }}>
@@ -851,24 +857,28 @@ export default function OrdersPage() {
                     key={`fav-${item.id}`}
                     onClick={() => handleAddToCart(item)}
                     title={`Add ${item.name}`}
-                    className={`group relative flex shrink-0 items-center gap-2 rounded-xl border px-2.5 py-1.5 text-left transition-all cursor-pointer active:scale-[0.96] ${
+                    className={`group relative flex shrink-0 items-center gap-2.5 rounded-xl border px-3 py-2 text-left shadow-sm transition-all cursor-pointer active:scale-[0.96] ${
                       qty > 0
-                        ? 'border-brand-400 bg-brand-50 dark:bg-brand-950/30 ring-1 ring-brand-400/50'
-                        : 'border-amber-200/80 dark:border-amber-900/40 bg-white dark:bg-zinc-900 hover:border-brand-300'
+                        ? 'border-brand-400 bg-brand-50 dark:bg-brand-500/20 ring-1 ring-brand-400/60'
+                        : 'border-amber-400/50 bg-white dark:bg-zinc-800 hover:border-amber-400 hover:bg-amber-50 dark:hover:bg-zinc-700/70'
                     }`}
                   >
-                    <span className="text-lg leading-none">{item.image}</span>
+                    <span className="text-xl leading-none">{item.image}</span>
                     <span className="flex flex-col leading-tight">
-                      <span className="max-w-[110px] truncate text-[11px] font-black text-zinc-900 dark:text-zinc-100">
+                      <span className="max-w-[120px] truncate text-xs font-black text-zinc-900 dark:text-zinc-50">
                         {item.name}
                       </span>
-                      <span className="text-[10px] font-bold text-zinc-500">
+                      <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400">
                         {currencySymbol}{item.price.toFixed(2)}
                       </span>
                     </span>
-                    {qty > 0 && (
-                      <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-500 px-1 text-[9px] font-black text-white">
+                    {qty > 0 ? (
+                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-500 px-1 text-[10px] font-black text-white">
                         {qty}
+                      </span>
+                    ) : (
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-400/20 text-amber-600 transition-colors group-hover:bg-brand-500 group-hover:text-white dark:text-amber-400">
+                        <Plus className="h-3 w-3" strokeWidth={3} />
                       </span>
                     )}
                   </button>
