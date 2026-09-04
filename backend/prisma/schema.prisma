@@ -207,6 +207,7 @@ model Restaurant {
   coupons              Coupon[]
   tables               DiningTable[]
   bookings             Booking[]
+  favouriteItems       FavouriteMenuItem[]
   defaultTaxRate       Float          @default(5.0)
   defaultServiceCharge Float          @default(5.0)
   address              String?
@@ -288,7 +289,8 @@ model MenuItem {
   restaurant   Restaurant   @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
-  
+  favouritedBy FavouriteMenuItem[]
+
   @@unique([code, restaurantId])
 
   @@index([restaurantId, categoryId, isAvailable])
@@ -397,3 +399,18 @@ model KotItem {
   @@index([kotId])
 }
 
+/// A menu item deliberately pinned to the quick-add rail on the new-order
+/// screen. Only pins live here — the rest of the rail is ranked from order
+/// history at read time, so there is nothing to keep in sync.
+model FavouriteMenuItem {
+  id           String     @id @default(uuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  menuItemId   String
+  menuItem     MenuItem   @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  sortOrder    Int        @default(0)
+  createdAt    DateTime   @default(now())
+
+  @@unique([restaurantId, menuItemId])
+  @@index([restaurantId, sortOrder])
+}
