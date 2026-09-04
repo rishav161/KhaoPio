@@ -5,15 +5,24 @@ import dynamic from 'next/dynamic';
 import { QRCodeSVG } from 'qrcode.react';
 import {
   Edit3, Trash2, Plus, AlertCircle, Check,
-  X, Search, Package, Smile, QrCode, Printer, RefreshCw
+  X, Search, Package, Smile, QrCode, Printer, RefreshCw, Star
 } from 'lucide-react';
 import { apiFetch } from '@/utils/api';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Loader } from '@/components/Loader';
 import { useConfirmStore } from '@/store/useConfirmStore';
 import { useCurrencySymbol } from '@/utils/currency';
+import { usePOSStore } from '@/store/usePOSStore';
 
-const EmojiPicker: any = dynamic(() => import('emoji-picker-react'), { ssr: false });
+const EmojiPicker = dynamic(() => import('emoji-picker-react'), { ssr: false }) as React.ComponentType<{
+  onEmojiClick: (emojiData: { emoji: string }) => void;
+  width?: number | string;
+  height?: number | string;
+  searchDisabled?: boolean;
+  lazyLoadEmojis?: boolean;
+  searchPlaceHolder?: string;
+  previewConfig?: { showPreview: boolean };
+}>;
 
 const PRESET_FOOD_EMOJIS = [
   '🍔', '🍕', '🍟', '🌭', '🥪', '🌮', '🌯', '🫔',
@@ -50,6 +59,10 @@ export default function MenuPage() {
 
   // States
   const [categories, setCategories] = useState<MenuCategory[]>([]);
+  const pinnedIds = usePOSStore((state) => state.pinnedIds);
+  const fetchFavourites = usePOSStore((state) => state.fetchFavourites);
+  const pinFavourite = usePOSStore((state) => state.pinFavourite);
+  const unpinFavourite = usePOSStore((state) => state.unpinFavourite);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -85,25 +98,37 @@ export default function MenuPage() {
   const [activeTab, setActiveTab] = useState<string>('ALL');
 
   // Fetch Menu from API
-  const fetchMenu = async () => {
-    setLoading(true);
-    setErrorMsg('');
+  // `showSpinner` is skipped for the initial load: `loading` already starts
+  // true and there is no error to clear, so writing that state again would
+  // only add a render pass on mount.
+  const fetchMenu = async (showSpinner = true) => {
+    if (showSpinner) {
+      setLoading(true);
+      setErrorMsg('');
+    }
     try {
       const data = await apiFetch<MenuCategory[]>('/menu');
       setCategories(data);
       if (data.length > 0 && !itemForm.categoryId) {
         setItemForm(prev => ({ ...prev, categoryId: data[0].id }));
       }
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to synchronize menu items.');
+    } catch (err) {
+      setErrorMsg((err instanceof Error ? err.message : '') || 'Failed to synchronize menu items.');
     } finally {
       setLoading(false);
     }
   };
 
+  // Kicked off on the next frame so the mount render is not restarted by the
+  // loading state these set. `loading` already starts true, so the spinner is
+  // on screen for that frame regardless.
   useEffect(() => {
-    fetchMenu();
-  }, []);
+    const frame = requestAnimationFrame(() => {
+      fetchMenu(false);
+      fetchFavourites();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [fetchFavourites]);
 
   // Category Actions
   const handleCreateCategory = async (e: React.FormEvent) => {
@@ -121,8 +146,8 @@ export default function MenuPage() {
       setNewCatName('');
       setShowAddCategory(false);
       fetchMenu();
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Error creating category.');
+    } catch (err) {
+      setErrorMsg((err instanceof Error ? err.message : '') || 'Error creating category.');
     }
   };
 
@@ -140,8 +165,8 @@ export default function MenuPage() {
       setCatEditingId(null);
       setCatEditingName('');
       fetchMenu();
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Error renaming category.');
+    } catch (err) {
+      setErrorMsg((err instanceof Error ? err.message : '') || 'Error renaming category.');
     }
   };
 
@@ -161,8 +186,8 @@ export default function MenuPage() {
           setSuccessMsg(`Deleted category "${name}" and its items.`);
           if (activeTab === id) setActiveTab('ALL');
           fetchMenu();
-        } catch (err: any) {
-          setErrorMsg(err.message || 'Error deleting category.');
+        } catch (err) {
+          setErrorMsg((err instanceof Error ? err.message : '') || 'Error deleting category.');
         }
       }
     });
@@ -249,8 +274,8 @@ export default function MenuPage() {
       }
       setIsItemModalOpen(false);
       fetchMenu();
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Error saving menu item.');
+    } catch (err) {
+      setErrorMsg((err instanceof Error ? err.message : '') || 'Error saving menu item.');
     } finally {
       setItemLoading(false);
     }
@@ -271,11 +296,30 @@ export default function MenuPage() {
           });
           setSuccessMsg(`Successfully deleted item "${name}".`);
           fetchMenu();
-        } catch (err: any) {
-          setErrorMsg(err.message || 'Error deleting item.');
+        } catch (err) {
+          setErrorMsg((err instanceof Error ? err.message : '') || 'Error deleting item.');
         }
       }
     });
+  };
+
+  // Pinning only guarantees a slot on the quick-add rail. An unpinned item can
+  // still appear there on its own if it is ordered often enough.
+  const toggleItemPinned = async (item: MenuItem) => {
+    setErrorMsg('');
+    setSuccessMsg('');
+    const wasPinned = pinnedIds.includes(item.id);
+    try {
+      if (wasPinned) {
+        await unpinFavourite(item.id);
+        setSuccessMsg(`Unpinned "${item.name}" from quick add.`);
+      } else {
+        await pinFavourite(item.id);
+        setSuccessMsg(`Pinned "${item.name}" to quick add.`);
+      }
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to update quick add.');
+    }
   };
 
   const toggleItemAvailability = async (item: MenuItem) => {
@@ -289,8 +333,8 @@ export default function MenuPage() {
       });
       setSuccessMsg(`Marked "${item.name}" as ${updatedStatus ? 'Available' : 'Unavailable'}.`);
       fetchMenu();
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to update item status.');
+    } catch (err) {
+      setErrorMsg((err instanceof Error ? err.message : '') || 'Failed to update item status.');
     }
   };
 
@@ -528,6 +572,20 @@ export default function MenuPage() {
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
+                      <button
+                        type="button"
+                        aria-pressed={pinnedIds.includes(item.id)}
+                        aria-label={`${pinnedIds.includes(item.id) ? 'Unpin' : 'Pin'} ${item.name} for quick add`}
+                        title={pinnedIds.includes(item.id) ? 'Pinned to quick add' : 'Pin to quick add'}
+                        onClick={() => toggleItemPinned(item)}
+                        className={`rounded-md p-1.5 transition-colors cursor-pointer ${
+                          pinnedIds.includes(item.id)
+                            ? 'text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/20'
+                            : 'text-zinc-400 hover:bg-amber-50 dark:hover:bg-amber-950/20 hover:text-amber-500'
+                        }`}
+                      >
+                        <Star className={`h-4 w-4 ${pinnedIds.includes(item.id) ? 'fill-current' : ''}`} />
+                      </button>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span className={`text-[10px] font-semibold uppercase tracking-wide ${item.isAvailable ? 'text-zinc-400' : 'text-red-500'}`}>
@@ -717,7 +775,7 @@ export default function MenuPage() {
               {showEmojiPicker && (
                 <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-lg animate-in fade-in zoom-in-95 duration-150">
                   <EmojiPicker
-                    onEmojiClick={(emojiData: any) => {
+                    onEmojiClick={(emojiData) => {
                       setItemForm({ ...itemForm, image: emojiData.emoji });
                       setShowEmojiPicker(false);
                     }}
@@ -935,8 +993,8 @@ export default function MenuPage() {
                           });
                           setActiveQrSlug(res.qrSlug);
                           setSuccessMsg('QR Code successfully regenerated! Old printed QR codes are now revoked.');
-                        } catch (err: any) {
-                          setErrorMsg(err.message || 'Error regenerating QR code.');
+                        } catch (err) {
+                          setErrorMsg((err instanceof Error ? err.message : '') || 'Error regenerating QR code.');
                         }
                       },
                     });

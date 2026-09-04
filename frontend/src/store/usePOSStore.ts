@@ -3,6 +3,67 @@ import Big from 'big.js';
 import { MenuItem, CartItem, Order, OrderTotals, DiningTable, Booking, Kot } from '@/types/pos';
 import { apiFetch } from '@/utils/api';
 
+/** Shapes returned by the API, narrow enough to map from without `any`. */
+interface ApiMenuItem {
+  id: string;
+  name: string;
+  price: number;
+  image?: string | null;
+  description?: string | null;
+  code: string;
+  isAvailable: boolean;
+}
+interface ApiMenuCategory {
+  name: string;
+  menuItems?: ApiMenuItem[];
+}
+interface ApiOrderLine {
+  id: string;
+  menuItemId: string;
+  name: string;
+  price: number;
+  quantity: number;
+  notes?: string | null;
+  status?: CartItem['status'];
+}
+/** KOT lines always carry the ticket they belong to; order lines do not. */
+interface ApiKotLine extends ApiOrderLine {
+  kotId: string;
+}
+interface ApiWaiter {
+  name?: string;
+  role?: { name?: string } | null;
+}
+interface ApiOrder {
+  id: string;
+  orderNumber: number;
+  items: ApiOrderLine[];
+  subtotal: number;
+  taxRate?: number;
+  taxTotal: number;
+  serviceChargeRate?: number;
+  serviceChargeTotal: number;
+  discountTotal?: number;
+  grandTotal: number;
+  status: Order['status'];
+  createdAt: string;
+  couponCode: Order['couponCode'];
+  payments: Order['payments'];
+  tableId: Order['tableId'];
+  table: Order['table'];
+  waiter?: ApiWaiter | null;
+}
+interface ApiKot {
+  id: string;
+  kotNumber: number;
+  orderId: string;
+  status: Kot['status'];
+  createdAt: string;
+  updatedAt: string;
+  items: ApiKotLine[];
+  order?: { waiter?: ApiWaiter | null; table?: Kot['table'] | null } | null;
+}
+
 interface POSState {
   menuItems: MenuItem[];
   cartItems: CartItem[];
@@ -45,6 +106,14 @@ interface POSState {
   setSelectedTableId: (tableId: string | null) => void;
   fetchActiveKots: () => Promise<void>;
   updateKotStatus: (kotId: string, status: Kot['status']) => Promise<void>;
+
+  // Quick-add rail. Only ids are kept: the items themselves are derived from
+  // menuItems, so price and availability never go stale in two places.
+  favouriteIds: string[];
+  pinnedIds: string[];
+  fetchFavourites: () => Promise<void>;
+  pinFavourite: (menuItemId: string) => Promise<void>;
+  unpinFavourite: (menuItemId: string) => Promise<void>;
 }
 
 export const usePOSStore = create<POSState>((set, get) => ({
@@ -55,11 +124,13 @@ export const usePOSStore = create<POSState>((set, get) => ({
   bookings: [],
   kots: [],
   selectedTableId: null,
+  favouriteIds: [],
+  pinnedIds: [],
 
   // 1. Fetch menu categories and items from backend
   fetchMenuItems: async () => {
     try {
-      const categories = await apiFetch<any[]>('/menu');
+      const categories = await apiFetch<ApiMenuCategory[]>('/menu');
       if (!categories || categories.length === 0) {
         set({ menuItems: [] });
         return;
@@ -68,7 +139,7 @@ export const usePOSStore = create<POSState>((set, get) => ({
       const flatMenuItems: MenuItem[] = [];
       categories.forEach((cat) => {
         if (cat.menuItems && Array.isArray(cat.menuItems)) {
-          cat.menuItems.forEach((dbItem: any) => {
+          cat.menuItems.forEach((dbItem) => {
             flatMenuItems.push({
               id: dbItem.id,
               name: dbItem.name,
@@ -151,9 +222,9 @@ export const usePOSStore = create<POSState>((set, get) => ({
       const url = includePaid 
         ? `/orders/active?includePaid=true&paidDays=${paidDays}` 
         : '/orders/active';
-      const orders = await apiFetch<any[]>(url);
+      const orders = await apiFetch<ApiOrder[]>(url);
       const mappedOrders: Order[] = orders.map((order) => {
-        const items: CartItem[] = order.items.map((dbItem: any) => {
+        const items: CartItem[] = order.items.map((dbItem) => {
           const localMenuItem = get().menuItems.find((mi) => mi.id === dbItem.menuItemId) || {
             id: dbItem.menuItemId,
             name: dbItem.name,
@@ -394,11 +465,34 @@ export const usePOSStore = create<POSState>((set, get) => ({
     set({ selectedTableId });
   },
 
+  fetchFavourites: async () => {
+    try {
+      const data = await apiFetch<{ items: { id: string }[]; pinnedIds: string[] }>('/menu/favourites');
+      set({
+        favouriteIds: (data?.items ?? []).map((item) => item.id),
+        pinnedIds: data?.pinnedIds ?? [],
+      });
+    } catch (error) {
+      console.error('Error fetching favourites:', error);
+      set({ favouriteIds: [], pinnedIds: [] });
+    }
+  },
+
+  pinFavourite: async (menuItemId: string) => {
+    await apiFetch('/menu/favourites', { method: 'POST', body: { menuItemId } });
+    await get().fetchFavourites();
+  },
+
+  unpinFavourite: async (menuItemId: string) => {
+    await apiFetch(`/menu/favourites/${menuItemId}`, { method: 'DELETE' });
+    await get().fetchFavourites();
+  },
+
   fetchActiveKots: async () => {
     try {
-      const kots = await apiFetch<any[]>('/kots/active');
+      const kots = await apiFetch<ApiKot[]>('/kots/active');
       const mappedKots: Kot[] = kots.map((kot) => {
-        const items = kot.items.map((dbItem: any) => {
+        const items = kot.items.map((dbItem) => {
           const localMenuItem = get().menuItems.find((mi) => mi.id === dbItem.menuItemId) || {
             id: dbItem.menuItemId,
             name: dbItem.name,
@@ -430,7 +524,7 @@ export const usePOSStore = create<POSState>((set, get) => ({
           items,
           waiterName: kot.order?.waiter?.name || 'N/A',
           waiterRole: kot.order?.waiter?.role?.name || 'N/A',
-          table: kot.order?.table || null,
+          table: kot.order?.table ?? undefined,
         };
       });
       set({ kots: mappedKots });

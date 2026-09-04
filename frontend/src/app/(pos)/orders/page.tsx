@@ -8,7 +8,7 @@ import { CartItem, MenuItem, Order } from '@/types/pos';
 import {
   Search, Plus, Minus, Trash2, Soup, ShoppingCart, Send, X, ChevronRight,
   ArrowLeft, Clock, UtensilsCrossed, Receipt, CheckCircle2, Ban,
-  RefreshCw, Table2, LayoutList, Columns3, ClipboardList, FlameKindling, CreditCard,
+  RefreshCw, Table2, LayoutList, Columns3, ClipboardList, FlameKindling, CreditCard, Star,
 } from 'lucide-react';
 import { Loader } from '@/components/Loader';
 import { apiFetch } from '@/utils/api';
@@ -28,6 +28,11 @@ const STATUS_META: Record<string, { label: string; color: string; dot: string }>
   PAID:            { label: 'Paid',            color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400', dot: 'bg-emerald-500' },
   CANCELLED:       { label: 'Cancelled',       color: 'bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400',            dot: 'bg-red-500' },
 };
+
+// The rail only earns its space once there is a meaningful shortcut to offer:
+// enough favourites to be worth a row, on a menu too big to scan at a glance.
+const MIN_QUICK_ADD_ITEMS = 3;
+const MIN_MENU_FOR_QUICK_ADD = 12;
 
 const ONGOING_STATUSES = new Set(['DRAFT', 'KITCHEN_PENDING', 'PREPARING', 'READY', 'BILL_REQUESTED', 'PARTIALLY_PAID']);
 const COMPLETED_STATUSES = new Set(['PAID', 'CANCELLED']);
@@ -283,7 +288,7 @@ export default function OrdersPage() {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const {
-    menuItems, cartItems, activeOrders,
+    menuItems, cartItems, activeOrders, favouriteIds, fetchFavourites,
     addToCart, updateCartQuantity, updateCartNotes, removeFromCart, clearCart,
     sendOrderToKitchen, fetchMenuItems, fetchActiveOrders, cancelOrder,
     tables, selectedTableId, setSelectedTableId, fetchTables,
@@ -324,9 +329,10 @@ export default function OrdersPage() {
       fetchActiveOrders(true, 'today'),
       fetchMenuItems(),
       fetchTables(),
+      fetchFavourites(),
       apiFetch<{ defaultTaxRate: number; defaultServiceCharge: number }>('/auth/restaurant').then(setRestaurantSettings).catch(() => {}),
     ]).finally(() => setListLoading(false));
-  }, [fetchMenuItems, fetchTables, fetchActiveOrders]);
+  }, [fetchMenuItems, fetchTables, fetchActiveOrders, fetchFavourites]);
 
   // Auto-refresh in list mode
   usePolling(() => fetchActiveOrders(true, 'today'), 30000, mode === 'list');
@@ -401,6 +407,25 @@ export default function OrdersPage() {
     menuItems.forEach(i => { counts[i.category] = (counts[i.category] || 0) + 1; });
     return counts;
   }, [menuItems]);
+
+  // Quick-add rail: the handful of items that carry most orders, one tap away.
+  //
+  // Shown only on the unfiltered grid — once someone picks a category or types
+  // a search they know what they want, and a shortcut row would just compete
+  // with them. Also hidden on menus small enough that the full grid already
+  // fits, where the rail would simply repeat most of it.
+  const favouriteItems = useMemo(() => {
+    const byId = new Map(menuItems.map(item => [item.id, item]));
+    return favouriteIds
+      .map(id => byId.get(id))
+      .filter((item): item is NonNullable<typeof item> => !!item && item.isAvailable);
+  }, [favouriteIds, menuItems]);
+
+  const showQuickAdd =
+    favouriteItems.length >= MIN_QUICK_ADD_ITEMS &&
+    menuItems.length >= MIN_MENU_FOR_QUICK_ADD &&
+    selectedCategory === 'All' &&
+    !searchQuery.trim();
 
   const filteredMenuItems = useMemo(() => menuItems.filter(item => {
     const matchCat = selectedCategory === 'All' || item.category === selectedCategory;
@@ -808,6 +833,50 @@ export default function OrdersPage() {
             )}
           </div>
         </div>
+
+        {/* Quick-add rail — most-ordered items, one tap each */}
+        {showQuickAdd && (
+          <div className="shrink-0 border-b border-zinc-200 dark:border-zinc-800 bg-amber-50/40 dark:bg-amber-950/10 px-3 py-2">
+            <div className="mb-1.5 flex items-center gap-1.5">
+              <Star className="h-3 w-3 text-amber-500" />
+              <span className="text-[9px] font-black uppercase tracking-widest text-amber-700/80 dark:text-amber-500/80">
+                Frequently Ordered
+              </span>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none' }}>
+              {favouriteItems.map(item => {
+                const qty = cartItems.find(ci => ci.menuItem.id === item.id)?.quantity || 0;
+                return (
+                  <button
+                    key={`fav-${item.id}`}
+                    onClick={() => handleAddToCart(item)}
+                    title={`Add ${item.name}`}
+                    className={`group relative flex shrink-0 items-center gap-2 rounded-xl border px-2.5 py-1.5 text-left transition-all cursor-pointer active:scale-[0.96] ${
+                      qty > 0
+                        ? 'border-brand-400 bg-brand-50 dark:bg-brand-950/30 ring-1 ring-brand-400/50'
+                        : 'border-amber-200/80 dark:border-amber-900/40 bg-white dark:bg-zinc-900 hover:border-brand-300'
+                    }`}
+                  >
+                    <span className="text-lg leading-none">{item.image}</span>
+                    <span className="flex flex-col leading-tight">
+                      <span className="max-w-[110px] truncate text-[11px] font-black text-zinc-900 dark:text-zinc-100">
+                        {item.name}
+                      </span>
+                      <span className="text-[10px] font-bold text-zinc-500">
+                        {currencySymbol}{item.price.toFixed(2)}
+                      </span>
+                    </span>
+                    {qty > 0 && (
+                      <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-500 px-1 text-[9px] font-black text-white">
+                        {qty}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Category tabs */}
         <div className="flex gap-2 overflow-x-auto border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-950/40 px-3 py-2 shrink-0" style={{ scrollbarWidth: 'none' }}>
