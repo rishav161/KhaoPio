@@ -10,6 +10,11 @@ import {
   updateMenuItem,
   deleteMenuItem,
 } from '../controllers/menu.controller';
+import {
+  getFavourites,
+  addFavourite,
+  removeFavourite,
+} from '../controllers/favourites.controller';
 import { authenticateJWT, requirePermission } from '../middlewares/auth.middleware';
 
 const router = Router();
@@ -23,6 +28,12 @@ router.post('/regenerate-qr', authenticateJWT, requirePermission('view:staff'), 
 
 // Read Menu (accessible to all authenticated staff: Waiters, Cashiers, Chefs, Admins)
 router.get('/', authenticateJWT, getMenu as any);
+
+// Quick-add favourites. Reading is open to any staff member taking orders;
+// pinning is administrative, gated the same way the rest of menu management is.
+router.get('/favourites', authenticateJWT, getFavourites as any);
+router.post('/favourites', authenticateJWT, requirePermission('view:staff'), addFavourite as any);
+router.delete('/favourites/:menuItemId', authenticateJWT, requirePermission('view:staff'), removeFavourite as any);
 
 // Category Management (restricted to administrative roles)
 router.post('/categories', authenticateJWT, requirePermission('view:staff'), createCategory as any);

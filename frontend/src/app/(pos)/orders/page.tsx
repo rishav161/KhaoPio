@@ -8,7 +8,7 @@ import { CartItem, MenuItem, Order } from '@/types/pos';
 import {
   Search, Plus, Minus, Trash2, Soup, ShoppingCart, Send, X, ChevronRight,
   ArrowLeft, Clock, UtensilsCrossed, Receipt, CheckCircle2, Ban,
-  RefreshCw, Table2, LayoutList, Columns3, ClipboardList, FlameKindling, CreditCard,
+  RefreshCw, Table2, LayoutList, Columns3, ClipboardList, FlameKindling, CreditCard, Star,
 } from 'lucide-react';
 import { Loader } from '@/components/Loader';
 import { apiFetch } from '@/utils/api';
@@ -28,6 +28,11 @@ const STATUS_META: Record<string, { label: string; color: string; dot: string }>
   PAID:            { label: 'Paid',            color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400', dot: 'bg-emerald-500' },
   CANCELLED:       { label: 'Cancelled',       color: 'bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400',            dot: 'bg-red-500' },
 };
+
+// The rail only earns its space once there is a meaningful shortcut to offer:
+// enough favourites to be worth a row, on a menu too big to scan at a glance.
+const MIN_QUICK_ADD_ITEMS = 3;
+const MIN_MENU_FOR_QUICK_ADD = 12;
 
 const ONGOING_STATUSES = new Set(['DRAFT', 'KITCHEN_PENDING', 'PREPARING', 'READY', 'BILL_REQUESTED', 'PARTIALLY_PAID']);
 const COMPLETED_STATUSES = new Set(['PAID', 'CANCELLED']);
@@ -283,7 +288,7 @@ export default function OrdersPage() {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const {
-    menuItems, cartItems, activeOrders,
+    menuItems, cartItems, activeOrders, favouriteIds, fetchFavourites,
     addToCart, updateCartQuantity, updateCartNotes, removeFromCart, clearCart,
     sendOrderToKitchen, fetchMenuItems, fetchActiveOrders, cancelOrder,
     tables, selectedTableId, setSelectedTableId, fetchTables,
@@ -324,9 +329,10 @@ export default function OrdersPage() {
       fetchActiveOrders(true, 'today'),
       fetchMenuItems(),
       fetchTables(),
+      fetchFavourites(),
       apiFetch<{ defaultTaxRate: number; defaultServiceCharge: number }>('/auth/restaurant').then(setRestaurantSettings).catch(() => {}),
     ]).finally(() => setListLoading(false));
-  }, [fetchMenuItems, fetchTables, fetchActiveOrders]);
+  }, [fetchMenuItems, fetchTables, fetchActiveOrders, fetchFavourites]);
 
   // Auto-refresh in list mode
   usePolling(() => fetchActiveOrders(true, 'today'), 30000, mode === 'list');
@@ -401,6 +407,25 @@ export default function OrdersPage() {
     menuItems.forEach(i => { counts[i.category] = (counts[i.category] || 0) + 1; });
     return counts;
   }, [menuItems]);
+
+  // Quick-add rail: the handful of items that carry most orders, one tap away.
+  //
+  // Shown only on the unfiltered grid — once someone picks a category or types
+  // a search they know what they want, and a shortcut row would just compete
+  // with them. Also hidden on menus small enough that the full grid already
+  // fits, where the rail would simply repeat most of it.
+  const favouriteItems = useMemo(() => {
+    const byId = new Map(menuItems.map(item => [item.id, item]));
+    return favouriteIds
+      .map(id => byId.get(id))
+      .filter((item): item is NonNullable<typeof item> => !!item && item.isAvailable);
+  }, [favouriteIds, menuItems]);
+
+  const showQuickAdd =
+    favouriteItems.length >= MIN_QUICK_ADD_ITEMS &&
+    menuItems.length >= MIN_MENU_FOR_QUICK_ADD &&
+    selectedCategory === 'All' &&
+    !searchQuery.trim();
 
   const filteredMenuItems = useMemo(() => menuItems.filter(item => {
     const matchCat = selectedCategory === 'All' || item.category === selectedCategory;
@@ -808,6 +833,60 @@ export default function OrdersPage() {
             )}
           </div>
         </div>
+
+        {/* Quick-add rail — most-ordered items, one tap each.
+            Carries deliberately more visual weight than the grid below it: an
+            amber band and raised chips, so it reads as a shortcut strip rather
+            than another row of the menu. */}
+        {showQuickAdd && (
+          <div className="shrink-0 border-b-2 border-amber-400/40 bg-amber-50 dark:bg-amber-400/[0.07] px-3 py-2.5">
+            <div className="mb-2 flex items-center gap-1.5">
+              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+              <span className="text-[10px] font-black uppercase tracking-[0.15em] text-amber-700 dark:text-amber-400">
+                Frequently Ordered
+              </span>
+              <span className="text-[9px] font-bold lowercase tracking-normal text-amber-700/60 dark:text-amber-500/50">
+                · one tap to add
+              </span>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none' }}>
+              {favouriteItems.map(item => {
+                const qty = cartItems.find(ci => ci.menuItem.id === item.id)?.quantity || 0;
+                return (
+                  <button
+                    key={`fav-${item.id}`}
+                    onClick={() => handleAddToCart(item)}
+                    title={`Add ${item.name}`}
+                    className={`group relative flex shrink-0 items-center gap-2.5 rounded-xl border px-3 py-2 text-left shadow-sm transition-all cursor-pointer active:scale-[0.96] ${
+                      qty > 0
+                        ? 'border-brand-400 bg-brand-50 dark:bg-brand-500/20 ring-1 ring-brand-400/60'
+                        : 'border-amber-400/50 bg-white dark:bg-zinc-800 hover:border-amber-400 hover:bg-amber-50 dark:hover:bg-zinc-700/70'
+                    }`}
+                  >
+                    <span className="text-xl leading-none">{item.image}</span>
+                    <span className="flex flex-col leading-tight">
+                      <span className="max-w-[120px] truncate text-xs font-black text-zinc-900 dark:text-zinc-50">
+                        {item.name}
+                      </span>
+                      <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400">
+                        {currencySymbol}{item.price.toFixed(2)}
+                      </span>
+                    </span>
+                    {qty > 0 ? (
+                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-500 px-1 text-[10px] font-black text-white">
+                        {qty}
+                      </span>
+                    ) : (
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-400/20 text-amber-600 transition-colors group-hover:bg-brand-500 group-hover:text-white dark:text-amber-400">
+                        <Plus className="h-3 w-3" strokeWidth={3} />
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Category tabs */}
         <div className="flex gap-2 overflow-x-auto border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-950/40 px-3 py-2 shrink-0" style={{ scrollbarWidth: 'none' }}>
