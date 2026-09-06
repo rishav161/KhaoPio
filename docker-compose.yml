@@ -1,16 +1,13 @@
 services:
   backend:
-    build: ./backend
+    image: jyotiprakashb23/khaopio-backend:latest
     ports:
       - "5000:5000"
     env_file: ./backend/.env
     restart: unless-stopped
 
   frontend:
-    build:
-      context: ./frontend
-      args:
-        NEXT_PUBLIC_API_URL: http://137.23.40.97:5000/api
+    image: jyotiprakashb23/khaopio-frontend:latest
     ports:
       - "3000:3000"
     restart: unless-stopped

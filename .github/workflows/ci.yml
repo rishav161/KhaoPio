@@ -84,11 +84,51 @@ jobs:
         env:
           NEXT_PUBLIC_API_URL: https://placeholder.example.com/api
 
-  deploy-backend:
-    name: Deploy backend to Render
-    needs: backend-checks
+  build-and-push:
+    name: Build and push images to Docker Hub
+    needs: [backend-checks, frontend-checks]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Render deploy hook
-        run: curl -fsS -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: jyotiprakashb23
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          tags: jyotiprakashb23/khaopio-backend:latest
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: true
+          tags: jyotiprakashb23/khaopio-frontend:latest
+          build-args: |
+            NEXT_PUBLIC_API_URL=http://157.245.105.61:5000/api
+
+  deploy-droplet:
+    name: Deploy to DigitalOcean Droplet
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: 157.245.105.61
+          username: root
+          key: ${{ secrets.DO_VM_SSH_KEY }}
+          script: |
+            cd ~/KhaoPio
+            git pull
+            docker compose pull
+            docker compose up -d
