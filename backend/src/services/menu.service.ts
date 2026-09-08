@@ -167,11 +167,41 @@ export class MenuService {
   }
 
   /**
+   * Derives a short code for a new menu item: an uppercase prefix taken from the
+   * category name (extended a letter at a time if it collides with a prefix
+   * already used by a *different* category), followed by the next 2-digit
+   * sequence number within that category. E.g. "Burgers" -> B01, B02, ...
+   */
+  private async generateItemCode(restaurantId: string, categoryId: string, categoryName: string): Promise<string> {
+    const letters = categoryName.toUpperCase().replace(/[^A-Z]/g, '') || 'X';
+
+    let prefix = letters.slice(0, 1);
+    for (let len = 1; len <= letters.length; len++) {
+      const candidate = letters.slice(0, len);
+      const usedByOtherCategory = await prisma.menuItem.findFirst({
+        where: { restaurantId, categoryId: { not: categoryId }, code: { startsWith: candidate } },
+      });
+      prefix = candidate;
+      if (!usedByOtherCategory) break;
+    }
+
+    const itemsInCategory = await prisma.menuItem.count({ where: { restaurantId, categoryId } });
+    let sequence = itemsInCategory + 1;
+    let code = `${prefix}${String(sequence).padStart(2, '0')}`;
+    while (await prisma.menuItem.findFirst({ where: { restaurantId, code } })) {
+      sequence += 1;
+      code = `${prefix}${String(sequence).padStart(2, '0')}`;
+    }
+
+    return code;
+  }
+
+  /**
    * Creates a new menu item.
    */
   async createMenuItem(
     restaurantId: string,
-    data: { name: string; description?: string; price: number; image?: string; code: string; categoryId: string }
+    data: { name: string; description?: string; price: number; image?: string; code?: string; categoryId: string }
   ) {
     const category = await prisma.menuCategory.findFirst({
       where: { id: data.categoryId, restaurantId },
@@ -181,7 +211,10 @@ export class MenuService {
       throw new Error('Selected category is invalid.');
     }
 
-    const trimmedCode = data.code.trim().toUpperCase();
+    const trimmedCode = data.code?.trim()
+      ? data.code.trim().toUpperCase()
+      : await this.generateItemCode(restaurantId, data.categoryId, category.name);
+
     const codeExists = await prisma.menuItem.findFirst({
       where: {
         code: trimmedCode,

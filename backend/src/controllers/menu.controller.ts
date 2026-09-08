@@ -105,8 +105,8 @@ export const createMenuItem = async (req: AuthenticatedRequest, res: Response): 
       res.status(401).json({ error: 'Unauthorized. Restaurant context missing.' });
       return;
     }
-    if (!name || price === undefined || !code || !categoryId) {
-      res.status(400).json({ error: 'Fields "name", "price", "code", and "categoryId" are required.' });
+    if (!name || price === undefined || !categoryId) {
+      res.status(400).json({ error: 'Fields "name", "price", and "categoryId" are required.' });
       return;
     }
     const newItem = await menuService.createMenuItem(restaurantId, {

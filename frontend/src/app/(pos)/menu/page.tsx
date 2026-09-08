@@ -679,10 +679,11 @@ export default function MenuPage() {
                   <input
                     type="text"
                     value={itemForm.code}
-                    onChange={(e) => setItemForm({ ...itemForm, code: e.target.value })}
-                    placeholder="e.g. G02"
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2 px-3 text-xs outline-none focus:border-brand-400 font-mono tracking-widest text-center"
-                    required
+                    readOnly
+                    disabled
+                    placeholder="Auto"
+                    title="Assigned automatically from the category (e.g. Burgers -> B01, B02, ...)"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 py-2 px-3 text-xs outline-none font-mono tracking-widest text-center text-zinc-400 dark:text-zinc-500 cursor-not-allowed"
                   />
                 </div>
               </div>
