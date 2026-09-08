@@ -127,6 +127,10 @@ export const useAuthStore = create<AuthState>()(
           window.localStorage.removeItem('pos-auth-storage');
           window.sessionStorage.removeItem('pos-auth-storage');
           window.sessionStorage.removeItem(REMEMBER_KEY);
+          // The (pos) layout applies `dark` to <html> directly and only clears it
+          // on a full reload, so a client-side redirect to /login would otherwise
+          // leave the login page (which has no dark: styles) themed dark.
+          document.documentElement.classList.remove('dark');
         }
       },
     }),
