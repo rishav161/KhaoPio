@@ -311,7 +311,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
                 {user?.role === 'SUPER_ADMIN' && (
                   <button
                     onClick={() => { router.push('/coupons'); setIsProfileOpen(false); }}
-                    className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm font-semibold text-zinc-700 dark:text-zinc-350 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-brand-600 transition-colors cursor-pointer border-t border-zinc-100 dark:border-zinc-800"
+                    className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-brand-600 transition-colors cursor-pointer border-t border-zinc-100 dark:border-zinc-800"
                   >
                     <Ticket className="h-4 w-4" /> Coupons & Promo
                   </button>
