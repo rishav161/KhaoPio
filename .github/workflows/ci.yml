@@ -115,9 +115,36 @@ jobs:
           build-args: |
             NEXT_PUBLIC_API_URL=http://157.245.105.61:5000/api
 
+  migrate:
+    name: Apply database migrations
+    needs: backend-checks
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply pending migrations
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
   deploy-droplet:
     name: Deploy to DigitalOcean Droplet
-    needs: build-and-push
+    needs: [build-and-push, migrate]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
