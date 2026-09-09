@@ -192,18 +192,19 @@ export class OrderService {
       include: {
         items: true,
         payments: {
-          include: {
-            cashier: {
-              include: {
-                role: true
-              }
-            }
+          select: {
+            id: true,
+            amount: true,
+            paymentMethod: true,
+            transactionReference: true,
+            createdAt: true,
           }
         },
         table: true,
         waiter: {
-          include: {
-            role: true
+          select: {
+            name: true,
+            role: { select: { name: true } },
           }
         },
         kots: {
@@ -273,18 +274,19 @@ export class OrderService {
       include: {
         items: true,
         payments: {
-          include: {
-            cashier: {
-              include: {
-                role: true
-              }
-            }
+          select: {
+            id: true,
+            amount: true,
+            paymentMethod: true,
+            transactionReference: true,
+            createdAt: true,
           }
         },
         table: true,
         waiter: {
-          include: {
-            role: true
+          select: {
+            name: true,
+            role: { select: { name: true } },
           }
         },
         kots: {

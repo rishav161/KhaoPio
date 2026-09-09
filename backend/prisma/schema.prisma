@@ -385,6 +385,7 @@ model Kot {
   items        KotItem[]
 
   @@index([orderId, status])
+  @@index([status])
 }
 
 model KotItem {

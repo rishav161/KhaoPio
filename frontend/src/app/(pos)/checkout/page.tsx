@@ -104,7 +104,7 @@ function CheckoutContent() {
     };
   }, [fetchActiveOrders, fetchMenuItems, completedFilter]);
 
-  usePolling(() => fetchActiveOrders(true, completedFilter), 5000);
+  usePolling(() => fetchActiveOrders(true, completedFilter), 10000);
 
   React.useEffect(() => {
     if (!selectedOrderForBill) return;
