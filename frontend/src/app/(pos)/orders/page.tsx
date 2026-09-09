@@ -317,21 +317,23 @@ export default function OrdersPage() {
     defaultTaxRate: number; defaultServiceCharge: number;
   } | null>(null);
 
-  // List mode state
-  const [listLoading, setListLoading] = useState(true);
+  // List mode state — skip spinner if orders are already in the store (e.g. navigated from another page)
+  const [listLoading, setListLoading] = useState(activeOrders.length === 0);
   const [menuLoading, setMenuLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [newOrderId, setNewOrderId] = useState<string | null>(null);
 
-  // Initial load for list mode
+  // Initial load for list mode — only block the spinner on orders; load
+  // menu/tables/favourites/settings in the background (needed for new-order mode only)
   useEffect(() => {
-    Promise.all([
-      fetchActiveOrders(true, 'today'),
-      fetchMenuItems(),
-      fetchTables(),
-      fetchFavourites(),
-      apiFetch<{ defaultTaxRate: number; defaultServiceCharge: number }>('/auth/restaurant').then(setRestaurantSettings).catch(() => {}),
-    ]).finally(() => setListLoading(false));
+    fetchActiveOrders(true, 'today').finally(() => setListLoading(false));
+    // Fire in background — do not await
+    fetchMenuItems();
+    fetchTables();
+    fetchFavourites();
+    apiFetch<{ defaultTaxRate: number; defaultServiceCharge: number }>('/auth/restaurant')
+      .then(setRestaurantSettings)
+      .catch(() => {});
   }, [fetchMenuItems, fetchTables, fetchActiveOrders, fetchFavourites]);
 
   // Auto-refresh in list mode
