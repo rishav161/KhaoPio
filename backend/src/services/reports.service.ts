@@ -1,6 +1,5 @@
 import prisma from '../prisma';
 import { OrderStatus } from '@prisma/client';
-import dashboardService from './dashboard.service';
 
 interface SalesReportQuery {
   restaurantId: string;
@@ -17,9 +16,6 @@ export class ReportsService {
    */
   async getSalesReport(query: SalesReportQuery) {
     const { restaurantId, startDate, endDate, paymentMethod, page = 1, limit = 10 } = query;
-
-    // Make sure mock orders are present if database is empty
-    await dashboardService.seedMockOrdersIfEmpty(restaurantId);
 
     // Build query filters
     const whereClause: any = {
