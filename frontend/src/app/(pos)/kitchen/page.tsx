@@ -65,9 +65,12 @@ export default function KitchenPage() {
   };
 
   useEffect(() => {
-    fetchMenuItems().then(() => {
-      fetchActiveKots();
-    });
+    // Skip if store already has both (layout polls KOTs every 10s)
+    const state = usePOSStore.getState();
+    if (state.menuItems.length > 0 && state.kots.length > 0) return;
+    // Otherwise fetch both in parallel — KOT mapping has a fallback for missing menu items
+    const menuFetch = state.menuItems.length > 0 ? Promise.resolve() : fetchMenuItems();
+    menuFetch.then(() => fetchActiveKots());
   }, [fetchActiveKots, fetchMenuItems]);
 
   usePolling(fetchActiveKots, 5000);
