@@ -28,7 +28,7 @@ export default function TablesPage() {
   const confirm = useConfirmStore((state) => state.confirm);
   const showAlert = useConfirmStore((state) => state.alert);
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(tables.length === 0);
 
   // Modal / Form States
   const [isAddTableOpen, setIsAddTableOpen] = useState(false);

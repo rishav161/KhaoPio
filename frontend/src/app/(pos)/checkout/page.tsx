@@ -89,14 +89,19 @@ function CheckoutContent() {
       setLoadingCompleted(true);
     });
 
-    fetchMenuItems().then(() => {
+    // Run in parallel — order mapping has a fallback for missing menu items.
+    // Skip fetchMenuItems if store already has data (navigated from another page).
+    const menuFetch = usePOSStore.getState().menuItems.length > 0
+      ? Promise.resolve()
+      : fetchMenuItems();
+    menuFetch.then(() =>
       fetchActiveOrders(true, completedFilter).finally(() => {
         settled = true;
         cancelAnimationFrame(frame);
         setLoadingActive(false);
         setLoadingCompleted(false);
-      });
-    });
+      })
+    );
 
     return () => {
       settled = true;
