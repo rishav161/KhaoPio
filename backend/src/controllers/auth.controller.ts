@@ -214,7 +214,7 @@ export const initRegister = async (req: Request, res: Response): Promise<void> =
       return;
     }
 
-    const result = await authService.initializeAdminRegistration(email);
+    await authService.initializeAdminRegistration(email);
     res.status(200).json({
       message: 'OTP verification code generated and dispatched.',
     });

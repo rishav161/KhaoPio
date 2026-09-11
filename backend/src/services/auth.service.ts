@@ -131,7 +131,7 @@ export class AuthService {
   /**
    * Initializes Super Admin registration by generating and sending an OTP verification email.
    */
-  async initializeAdminRegistration(email: string): Promise<{ otp: string }> {
+  async initializeAdminRegistration(email: string): Promise<void> {
     const superAdminRole = await prisma.role.findUnique({
       where: { name: RoleName.SUPER_ADMIN },
     });
@@ -172,8 +172,6 @@ export class AuthService {
     emailService.sendOtpEmail(email.toLowerCase(), otp).catch((error) => {
       console.error(`[Background Email Error] Failed to send OTP email to ${email}:`, error.message || error);
     });
-
-    return { otp };
   }
 
   /**
