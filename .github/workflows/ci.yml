@@ -113,7 +113,7 @@ jobs:
           push: true
           tags: jyotiprakashb23/khaopio-frontend:latest
           build-args: |
-            NEXT_PUBLIC_API_URL=http://157.245.105.61:5000/api
+            NEXT_PUBLIC_API_URL=https://khaopio.app/api
 
   migrate:
     name: Apply database migrations
