@@ -16,6 +16,7 @@ import helpRoutes from './routes/help.routes';
 import kotRoutes from './routes/kot.routes';
 
 import searchRoutes from './routes/search.routes';
+import roleRoutes from './routes/role.routes';
 
 // Load environment variables
 dotenv.config();
@@ -46,6 +47,7 @@ app.use(express.json());
 // Routes
 app.use('/api/orders', orderRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/roles', roleRoutes);
 app.use('/api/navigation', navigationRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/dashboard', dashboardRoutes);

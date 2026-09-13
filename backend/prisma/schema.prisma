@@ -1,11 +1,11 @@
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 enum RoleName {
@@ -82,11 +82,17 @@ model User {
 }
 
 model Role {
-  id          String           @id @default(uuid())
-  name        RoleName         @unique
-  permissions RolePermission[]
-  users       User[]
-  invitations Invitation[]
+  id           String           @id @default(uuid())
+  name         String
+  isSystem     Boolean          @default(false)
+  restaurantId String?
+  restaurant   Restaurant?      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  permissions  RolePermission[]
+  users        User[]
+  invitations  Invitation[]
+
+  @@unique([name, restaurantId])
+  @@index([restaurantId])
 }
 
 model Permission {
@@ -201,6 +207,7 @@ model Restaurant {
   name                 String
   qrSlug               String?        @unique
   users                User[]
+  roles                Role[]
   invitations          Invitation[]
   categories           MenuCategory[]
   menuItems            MenuItem[]

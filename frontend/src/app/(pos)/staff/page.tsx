@@ -5,10 +5,13 @@ import { useRouter } from 'next/navigation';
 import { 
   Users, UserPlus, Shield, ToggleLeft, ToggleRight, Trash2, Edit2, 
   Mail, X, Check, Copy, AlertCircle, RefreshCw, ClipboardCheck, 
-  Search, ShieldAlert, Calendar
+  Search, ShieldAlert, Calendar, Sparkles, ChevronDown, Lock
 } from 'lucide-react';
 import { apiFetch } from '@/utils/api';
 import { useAuthStore } from '@/store/useAuthStore';
+import { RoleBadge } from '@/components/staff/RoleBadge';
+import { RoleModal, type RoleItem, type CatalogData } from '@/components/staff/RoleModal';
+import { RoleCard } from '@/components/staff/RoleCard';
 
 interface StaffUser {
   id: string;
@@ -26,20 +29,31 @@ export default function StaffManagement() {
   const router = useRouter();
   const { user, permissions } = useAuthStore();
 
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+
   // Permission checks
   const canView = permissions.includes('view:staff');
   const canInvite = permissions.includes('invite:staff');
   const canUpdate = permissions.includes('update:staff');
   const canDelete = permissions.includes('delete:staff');
 
+  // Navigation tab state: 'members' or 'roles'
+  const [activeTab, setActiveTab] = useState<'members' | 'roles'>('members');
+
   // Page states
   const [staffList, setStaffList] = useState<StaffUser[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [roles, setRoles] = useState<RoleItem[]>([]);
+  const [catalog, setCatalog] = useState<CatalogData | null>(null);
+
+  const [loadingStaff, setLoadingStaff] = useState(true);
+  const [loadingRoles, setLoadingRoles] = useState(true);
+  const [switchingUserId, setSwitchingUserId] = useState<string | null>(null);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Modals
+  // Modals for Staff Members
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [inviteForm, setInviteForm] = useState({ email: '', role: 'WAITER' });
   const [inviteLoading, setInviteLoading] = useState(false);
@@ -54,35 +68,72 @@ export default function StaffManagement() {
   const [userToDelete, setUserToDelete] = useState<StaffUser | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
+  // Modals for Roles
+  const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+  const [roleToEdit, setRoleToEdit] = useState<RoleItem | null>(null);
+  const [isRoleDeleteOpen, setIsRoleDeleteOpen] = useState(false);
+  const [roleToDelete, setRoleToDelete] = useState<RoleItem | null>(null);
+  const [roleDeleteLoading, setRoleDeleteLoading] = useState(false);
+
   // Fetch all staff members
   const fetchStaff = async () => {
-    setLoading(true);
-    setErrorMsg('');
+    setLoadingStaff(true);
     try {
-      const data = await apiFetch('/auth/admin/users');
+      const data = await apiFetch<StaffUser[]>('/auth/admin/users');
       setStaffList(data);
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to load staff list.');
     } finally {
-      setLoading(false);
+      setLoadingStaff(false);
+    }
+  };
+
+  // Fetch all available roles for this restaurant
+  const fetchRoles = async () => {
+    setLoadingRoles(true);
+    try {
+      const data = await apiFetch<RoleItem[]>('/roles');
+      setRoles(data);
+      // If inviteForm.role isn't in roles, set it to the first or WAITER
+      if (data.length > 0 && !data.some((r) => r.name === inviteForm.role)) {
+        const defaultRole = data.find((r) => r.name === 'WAITER') || data[0];
+        setInviteForm((prev) => ({ ...prev, role: defaultRole.name }));
+      }
+    } catch (err: any) {
+      // Non-critical if failed
+      console.error('Failed to fetch roles:', err);
+    } finally {
+      setLoadingRoles(false);
+    }
+  };
+
+  // Fetch permissions catalog for the role editor
+  const fetchCatalog = async () => {
+    try {
+      const data = await apiFetch<CatalogData>('/roles/catalog');
+      setCatalog(data);
+    } catch (err: any) {
+      console.error('Failed to fetch permissions catalog:', err);
     }
   };
 
   useEffect(() => {
     if (canView) {
       fetchStaff();
+      fetchRoles();
+      fetchCatalog();
     }
   }, [canView]);
 
   if (!canView) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-zinc-50 px-4">
-        <div className="max-w-md text-center rounded-2xl border border-zinc-200 bg-white p-8 shadow-xl">
-          <div className="mx-auto mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-red-600">
+      <div className="flex h-full w-full items-center justify-center bg-zinc-50 dark:bg-zinc-950 px-4">
+        <div className="max-w-md text-center rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-8 shadow-xl">
+          <div className="mx-auto mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400">
             <ShieldAlert className="h-8 w-8" />
           </div>
-          <h2 className="text-xl font-black text-zinc-900 tracking-tight">Access Restricted</h2>
-          <p className="mt-2 text-xs font-semibold text-zinc-500 leading-relaxed">
+          <h2 className="text-xl font-black text-zinc-900 dark:text-zinc-50 tracking-tight">Access Restricted</h2>
+          <p className="mt-2 text-xs font-semibold text-zinc-500 dark:text-zinc-400 leading-relaxed">
             You do not have the required permissions (`view:staff`) to view or manage staff accounts. 
             Please contact your system administrator.
           </p>
@@ -116,8 +167,9 @@ export default function StaffManagement() {
         setGeneratedInviteLink(link);
       }
 
-      setInviteForm({ email: '', role: 'WAITER' });
+      setInviteForm((prev) => ({ ...prev, email: '' }));
       fetchStaff();
+      fetchRoles();
       setIsInviteOpen(false);
     } catch (err: any) {
       setErrorMsg(err.message || 'Error sending invitation.');
@@ -151,7 +203,29 @@ export default function StaffManagement() {
     }
   };
 
-  // Handle Edit Action
+  // Fast Inline Switch Role
+  const handleSwitchRole = async (userId: string, targetRoleId: string) => {
+    if (!isSuperAdmin) return;
+    setErrorMsg('');
+    setSuccessMsg('');
+    setSwitchingUserId(userId);
+
+    try {
+      const res = await apiFetch(`/roles/users/${userId}/switch`, {
+        method: 'PATCH',
+        body: { roleId: targetRoleId }
+      });
+      setSuccessMsg(res.message || 'Staff role switched successfully.');
+      fetchStaff();
+      fetchRoles();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to switch staff role.');
+    } finally {
+      setSwitchingUserId(null);
+    }
+  };
+
+  // Handle Edit Staff Action
   const openEditModal = (staff: StaffUser) => {
     setEditForm({
       id: staff.id,
@@ -178,6 +252,7 @@ export default function StaffManagement() {
       setSuccessMsg('Staff member details updated successfully.');
       setIsEditOpen(false);
       fetchStaff();
+      fetchRoles();
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to edit staff member.');
     } finally {
@@ -185,7 +260,7 @@ export default function StaffManagement() {
     }
   };
 
-  // Handle Delete Action
+  // Handle Delete Staff Action
   const openDeleteModal = (staff: StaffUser) => {
     setUserToDelete(staff);
     setIsDeleteOpen(true);
@@ -205,11 +280,40 @@ export default function StaffManagement() {
       setIsDeleteOpen(false);
       setUserToDelete(null);
       fetchStaff();
+      fetchRoles();
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to delete staff member.');
       setIsDeleteOpen(false);
     } finally {
       setDeleteLoading(false);
+    }
+  };
+
+  // Delete Custom Role
+  const openRoleDeleteModal = (role: RoleItem) => {
+    setRoleToDelete(role);
+    setIsRoleDeleteOpen(true);
+  };
+
+  const handleConfirmRoleDelete = async () => {
+    if (!roleToDelete) return;
+    setErrorMsg('');
+    setSuccessMsg('');
+    setRoleDeleteLoading(true);
+
+    try {
+      const res = await apiFetch(`/roles/${roleToDelete.id}`, {
+        method: 'DELETE'
+      });
+      setSuccessMsg(res.message || 'Custom role removed successfully.');
+      setIsRoleDeleteOpen(false);
+      setRoleToDelete(null);
+      fetchRoles();
+      fetchStaff();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to delete role.');
+    } finally {
+      setRoleDeleteLoading(false);
     }
   };
 
@@ -224,88 +328,132 @@ export default function StaffManagement() {
     );
   });
 
-  // Badge mapping colors
-  const getRoleStyle = (role: string) => {
-    switch (role) {
-      case 'SUPER_ADMIN':
-        return 'bg-red-50 text-red-700 border-red-200';
-      case 'STORE_MANAGER':
-        return 'bg-amber-50 text-amber-700 border-amber-200';
-      case 'CASHIER':
-        return 'bg-blue-50 text-blue-700 border-blue-200';
-      case 'WAITER':
-        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-      case 'KITCHEN_CHEF':
-        return 'bg-brand-50 text-brand-700 border-brand-200';
-      default:
-        return 'bg-zinc-50 text-zinc-700 border-zinc-200';
-    }
-  };
-
   const getStatusStyle = (status: string) => {
     switch (status) {
       case 'ACTIVE':
-        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900';
       case 'INVITED':
-        return 'bg-amber-50 text-amber-700 border-amber-200';
+        return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900';
       case 'INACTIVE':
-        return 'bg-zinc-100 text-zinc-500 border-zinc-300';
+        return 'bg-zinc-100 text-zinc-500 border-zinc-300 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-700';
       default:
-        return 'bg-zinc-50 text-zinc-700 border-zinc-200';
+        return 'bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700';
     }
   };
 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-zinc-50 dark:bg-zinc-950 p-4 transition-colors">
       {/* Title Header */}
-      <div className="mb-4 rounded-xl bg-gradient-to-r from-brand-500 to-brand-400 p-4 shadow-md">
+      <div className="mb-4 rounded-2xl bg-gradient-to-r from-brand-600 via-brand-500 to-amber-500 p-5 shadow-lg text-white">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
-            <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-              <Users className="h-6 w-6 text-white" />
-              <span>Staff Administration</span>
-            </h1>
-            <p className="text-xs font-semibold text-brand-100">
-              Provision roles, manage active terminal accounts, and dispatch security invitations.
-            </p>
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-md">
+                <Users className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
+                  <span>Staff & Security Administration</span>
+                </h1>
+                <p className="text-xs font-semibold text-brand-100">
+                  Manage restaurant employees, configure custom roles, and assign terminal permissions.
+                </p>
+              </div>
+            </div>
           </div>
-          {canInvite && (
-            <button
-              onClick={() => {
-                setErrorMsg('');
-                setSuccessMsg('');
-                setGeneratedInviteLink('');
-                setIsInviteOpen(true);
-              }}
-              className="flex items-center gap-1.5 self-start rounded-lg bg-white text-brand-600 px-4 py-2.5 text-xs font-black uppercase tracking-wider shadow-md transition-all cursor-pointer hover:bg-brand-50 active:scale-95"
-            >
-              <UserPlus className="h-4.5 w-4.5" />
-              <span>Invite Staff Member</span>
-            </button>
-          )}
+
+          {/* Action Button depends on Active Tab */}
+          <div className="flex items-center gap-2 self-start sm:self-center">
+            {activeTab === 'members' && canInvite && (
+              <button
+                onClick={() => {
+                  setErrorMsg('');
+                  setSuccessMsg('');
+                  setGeneratedInviteLink('');
+                  setIsInviteOpen(true);
+                }}
+                className="flex items-center gap-1.5 rounded-xl bg-white text-brand-600 px-4 py-2.5 text-xs font-black uppercase tracking-wider shadow-md transition-all cursor-pointer hover:bg-brand-50 active:scale-95"
+              >
+                <UserPlus className="h-4 w-4" />
+                <span>Invite Staff Member</span>
+              </button>
+            )}
+
+            {activeTab === 'roles' && isSuperAdmin && (
+              <button
+                onClick={() => {
+                  setErrorMsg('');
+                  setSuccessMsg('');
+                  setRoleToEdit(null);
+                  setIsRoleModalOpen(true);
+                }}
+                className="flex items-center gap-1.5 rounded-xl bg-white text-violet-700 px-4 py-2.5 text-xs font-black uppercase tracking-wider shadow-md transition-all cursor-pointer hover:bg-violet-50 active:scale-95"
+              >
+                <Sparkles className="h-4 w-4 text-violet-600" />
+                <span>+ Create Custom Role</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Tab Toggle Navigation Bar */}
+        <div className="mt-5 flex items-center gap-2 border-t border-white/20 pt-4">
+          <button
+            onClick={() => setActiveTab('members')}
+            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+              activeTab === 'members'
+                ? 'bg-white text-brand-700 shadow-md'
+                : 'bg-white/10 text-white hover:bg-white/20'
+            }`}
+          >
+            <Users className="h-4 w-4" />
+            <span>Team Members</span>
+            <span className={`rounded-full px-1.5 py-0.2 text-[10px] font-black ${
+              activeTab === 'members' ? 'bg-brand-100 text-brand-800' : 'bg-white/20 text-white'
+            }`}>
+              {staffList.length}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('roles')}
+            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+              activeTab === 'roles'
+                ? 'bg-white text-violet-800 shadow-md'
+                : 'bg-white/10 text-white hover:bg-white/20'
+            }`}
+          >
+            <Shield className="h-4 w-4" />
+            <span>Roles & Permissions</span>
+            <span className={`rounded-full px-1.5 py-0.2 text-[10px] font-black ${
+              activeTab === 'roles' ? 'bg-violet-100 text-violet-800' : 'bg-white/20 text-white'
+            }`}>
+              {roles.length}
+            </span>
+          </button>
         </div>
       </div>
 
-      {/* Banners */}
+      {/* Alert Banners */}
       {errorMsg && (
-        <div className="mb-4 flex items-center justify-between rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/20 p-3.5 text-xs font-bold text-red-600 dark:text-red-400">
+        <div className="mb-4 flex items-center justify-between rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 p-3.5 text-xs font-bold text-red-600 dark:text-red-400">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4.5 w-4.5 shrink-0" />
             <span>{errorMsg}</span>
           </div>
-          <button onClick={() => setErrorMsg('')} className="text-red-400 hover:text-red-700 cursor-pointer">
+          <button onClick={() => setErrorMsg('')} className="cursor-pointer text-red-400 hover:text-red-700">
             <X className="h-4 w-4" />
           </button>
         </div>
       )}
 
       {successMsg && (
-        <div className="mb-4 flex items-center justify-between rounded-lg border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/20 p-3.5 text-xs font-bold text-emerald-700 dark:text-emerald-400">
+        <div className="mb-4 flex items-center justify-between rounded-xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30 p-3.5 text-xs font-bold text-emerald-700 dark:text-emerald-400">
           <div className="flex items-center gap-2">
             <Check className="h-4.5 w-4.5 shrink-0" />
             <span>{successMsg}</span>
           </div>
-          <button onClick={() => setSuccessMsg('')} className="text-emerald-400 hover:text-emerald-700 cursor-pointer">
+          <button onClick={() => setSuccessMsg('')} className="cursor-pointer text-emerald-400 hover:text-emerald-700">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -313,20 +461,20 @@ export default function StaffManagement() {
 
       {/* Manual Invite Link Display Card */}
       {generatedInviteLink && (
-        <div className="mb-4 rounded-lg border border-brand-200 dark:border-brand-900 bg-brand-50/20 dark:bg-brand-950/10 p-4 shadow-sm animate-in fade-in slide-in-from-top-4 duration-200">
-          <h3 className="text-xs font-black uppercase tracking-wider text-brand-750 dark:text-brand-450 mb-1">
+        <div className="mb-4 rounded-xl border border-brand-200 dark:border-brand-900 bg-brand-50/30 dark:bg-brand-950/20 p-4 shadow-sm animate-in fade-in slide-in-from-top-4 duration-200">
+          <h3 className="text-xs font-black uppercase tracking-wider text-brand-700 dark:text-brand-400 mb-1">
             Manual Onboarding Link Generated
           </h3>
           <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mb-2 font-semibold">
             Mailgun is unconfigured. Share the security invitation link below with the user to setup their terminal password and security PIN.
           </p>
-          <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 border border-brand-250 dark:border-brand-900 rounded-lg p-2 overflow-x-auto">
+          <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 border border-brand-200 dark:border-brand-900 rounded-xl p-2.5 overflow-x-auto">
             <span className="text-[11px] font-mono text-zinc-800 dark:text-zinc-100 break-all select-all flex-1 min-w-0 mr-2">
               {generatedInviteLink}
             </span>
             <button
               onClick={handleCopyLink}
-              className="flex items-center gap-1 shrink-0 rounded bg-brand-500 hover:bg-brand-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5 transition-colors cursor-pointer"
+              className="flex items-center gap-1 shrink-0 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-[10px] font-black uppercase tracking-wider px-3 py-1.5 transition-colors cursor-pointer"
             >
               {copiedLink ? <ClipboardCheck className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
               <span>{copiedLink ? 'Copied' : 'Copy'}</span>
@@ -335,141 +483,302 @@ export default function StaffManagement() {
         </div>
       )}
 
-      {/* Search and Control Bar */}
-      <div className="mb-4 flex items-center gap-2 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-2 shadow-sm">
-        <div className="relative flex-1">
-          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-          <input
-            type="text"
-            placeholder="Search staff by name, email, role, or status..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-transparent py-1.5 pr-3 pl-10 text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none"
-          />
-        </div>
-        <button
-          onClick={fetchStaff}
-          disabled={loading}
-          className="rounded-lg p-2 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
-          title="Reload Roster"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-        </button>
-      </div>
-
-      {/* Staff Roster Grid/Table */}
-      <div className="flex-1 overflow-y-auto rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm">
-        {loading ? (
-          <div className="flex h-full w-full flex-col items-center justify-center p-8">
-            <div className="h-8 w-8 animate-spin rounded-full border-3 border-brand-500 border-t-transparent"></div>
-            <p className="mt-3 text-xs font-bold text-zinc-500 dark:text-zinc-400">Querying active staff roster...</p>
-          </div>
-        ) : filteredStaff.length === 0 ? (
-          <div className="flex h-full w-full flex-col items-center justify-center p-8 text-center">
-            <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 mb-3">
-              <Users className="h-6 w-6" />
+      {/* ======================= TAB 1: TEAM MEMBERS ======================= */}
+      {activeTab === 'members' && (
+        <div className="flex flex-1 flex-col overflow-hidden">
+          {/* Search and Control Bar */}
+          <div className="mb-4 flex items-center gap-2 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-2 shadow-xs">
+            <div className="relative flex-1">
+              <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+              <input
+                type="text"
+                placeholder="Search staff by name, email, role, or status..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-transparent py-1.5 pr-3 pl-10 text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none"
+              />
             </div>
-            <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">No Staff Members Found</h3>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-              Try adjusting your search criteria or invite a new staff member.
-            </p>
+            <button
+              onClick={fetchStaff}
+              disabled={loadingStaff}
+              className="rounded-lg p-2 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+              title="Reload Roster"
+            >
+              <RefreshCw className={`h-4 w-4 ${loadingStaff ? 'animate-spin' : ''}`} />
+            </button>
           </div>
-        ) : (
-          <div className="min-w-full inline-block align-middle">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800 text-left text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                <thead className="bg-zinc-50 dark:bg-zinc-950/40 text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  <tr>
-                    <th scope="col" className="px-4 py-3">Name</th>
-                    <th scope="col" className="px-4 py-3">Email</th>
-                    <th scope="col" className="px-4 py-3">System Role</th>
-                    <th scope="col" className="px-4 py-3">Terminal Status</th>
-                    <th scope="col" className="px-4 py-3">Registered On</th>
-                    <th scope="col" className="px-4 py-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800 bg-white dark:bg-zinc-900">
-                  {filteredStaff.map((staff) => (
-                    <tr key={staff.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-950/20 transition-colors">
-                      <td className="whitespace-nowrap px-4 py-3.5">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-950/30 font-black text-brand-600 dark:text-brand-400 uppercase text-xs">
-                            {staff.name.charAt(0)}
-                          </div>
-                          <div>
-                            <div className="font-extrabold text-zinc-900 dark:text-zinc-100">{staff.name}</div>
-                            {staff.id === user?.id && (
-                              <span className="inline-flex items-center text-[9px] font-black uppercase tracking-widest text-brand-600 dark:text-brand-450 bg-brand-50 dark:bg-brand-950/20 px-1.5 py-0.5 rounded border border-brand-200 dark:border-brand-900">
-                                You
+
+          {/* Staff Roster Table */}
+          <div className="flex-1 overflow-y-auto rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs">
+            {loadingStaff ? (
+              <div className="flex h-full w-full flex-col items-center justify-center p-8">
+                <div className="h-8 w-8 animate-spin rounded-full border-3 border-brand-500 border-t-transparent"></div>
+                <p className="mt-3 text-xs font-bold text-zinc-500 dark:text-zinc-400">Querying active staff roster...</p>
+              </div>
+            ) : filteredStaff.length === 0 ? (
+              <div className="flex h-full w-full flex-col items-center justify-center p-8 text-center">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 mb-3">
+                  <Users className="h-6 w-6" />
+                </div>
+                <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">No Staff Members Found</h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                  Try adjusting your search criteria or invite a new staff member.
+                </p>
+              </div>
+            ) : (
+              <div className="min-w-full inline-block align-middle">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800 text-left text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                    <thead className="bg-zinc-50 dark:bg-zinc-950/50 text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                      <tr>
+                        <th scope="col" className="px-4 py-3.5">Name</th>
+                        <th scope="col" className="px-4 py-3.5">Email / Login</th>
+                        <th scope="col" className="px-4 py-3.5">Assigned Role</th>
+                        <th scope="col" className="px-4 py-3.5">Status</th>
+                        <th scope="col" className="px-4 py-3.5">Registered On</th>
+                        <th scope="col" className="px-4 py-3.5 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800 bg-white dark:bg-zinc-900">
+                      {filteredStaff.map((staff) => {
+                        const isCurrentUser = staff.id === user?.id;
+                        const roleObj = roles.find((r) => r.name.toUpperCase() === staff.role.name.toUpperCase());
+                        const isSystemRole = roleObj ? roleObj.isSystem : true;
+
+                        return (
+                          <tr key={staff.id} className="hover:bg-zinc-50/60 dark:hover:bg-zinc-950/30 transition-colors">
+                            <td className="whitespace-nowrap px-4 py-3.5">
+                              <div className="flex items-center gap-3">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-950/40 font-black text-brand-600 dark:text-brand-400 uppercase text-xs">
+                                  {staff.name.charAt(0)}
+                                </div>
+                                <div>
+                                  <div className="font-extrabold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+                                    <span>{staff.name}</span>
+                                    {isCurrentUser && (
+                                      <span className="inline-flex items-center text-[9px] font-black uppercase tracking-widest text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/40 px-1.5 py-0.2 rounded border border-brand-200 dark:border-brand-900">
+                                        You
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="whitespace-nowrap px-4 py-3.5 text-zinc-500 dark:text-zinc-400 font-medium font-mono text-[11px]">
+                              {staff.email || 'PIN-only quick log'}
+                            </td>
+                            <td className="whitespace-nowrap px-4 py-3.5">
+                              <div className="flex items-center gap-2">
+                                <RoleBadge roleName={staff.role.name} isSystem={isSystemRole} />
+
+                                {/* Fast Inline Role Switcher for Super Admin (cannot change own role) */}
+                                {isSuperAdmin && !isCurrentUser && (
+                                  <div className="relative inline-block">
+                                    <select
+                                      value={staff.role.id}
+                                      disabled={switchingUserId === staff.id}
+                                      onChange={(e) => handleSwitchRole(staff.id, e.target.value)}
+                                      className="absolute inset-0 h-full w-full cursor-pointer opacity-0 z-10"
+                                      title="Click to switch role on the fly"
+                                    >
+                                      {roles.map((r) => (
+                                        <option key={r.id} value={r.id}>
+                                          {r.name.replace(/_/g, ' ')} {r.isSystem ? '' : '(Custom)'}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    <button
+                                      type="button"
+                                      className="flex h-5 w-5 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-violet-100 dark:hover:bg-violet-950/60 text-zinc-500 hover:text-violet-600 transition-colors"
+                                      title="Switch role"
+                                    >
+                                      {switchingUserId === staff.id ? (
+                                        <RefreshCw className="h-2.5 w-2.5 animate-spin text-violet-600" />
+                                      ) : (
+                                        <ChevronDown className="h-2.5 w-2.5" />
+                                      )}
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                            <td className="whitespace-nowrap px-4 py-3.5">
+                              <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[9px] font-black tracking-wider uppercase ${getStatusStyle(staff.status)}`}>
+                                {staff.status}
                               </span>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3.5 text-zinc-500 dark:text-zinc-400 font-medium font-mono">
-                        {staff.email || 'PIN-only quick log'}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3.5">
-                        <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-black tracking-wide uppercase ${getRoleStyle(staff.role.name)}`}>
-                          {staff.role.name.replace('_', ' ')}
-                        </span>
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3.5">
-                        <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-black tracking-wide uppercase ${getStatusStyle(staff.status)}`}>
-                          {staff.status}
-                        </span>
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3.5 text-zinc-500 font-medium font-mono">
-                        <div className="flex items-center gap-1.5">
-                          <Calendar className="h-3.5 w-3.5 shrink-0 text-zinc-400" />
-                          <span>{new Date(staff.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3.5 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {canUpdate && staff.id !== user?.id && (
-                            <button
-                              onClick={() => handleToggleStatus(staff)}
-                              className="rounded p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 cursor-pointer transition-colors"
-                              title={staff.status === 'ACTIVE' ? 'Disable Terminal' : 'Enable Terminal'}
-                            >
-                              {staff.status === 'ACTIVE' ? (
-                                <ToggleRight className="h-5 w-5 text-brand-500" />
-                              ) : (
-                                <ToggleLeft className="h-5 w-5 text-zinc-400" />
-                              )}
-                            </button>
-                          )}
-                          {canUpdate && (
-                            <button
-                              onClick={() => openEditModal(staff)}
-                              className="rounded p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-blue-600 cursor-pointer transition-colors"
-                              title="Edit Member"
-                            >
-                              <Edit2 className="h-4.5 w-4.5" />
-                            </button>
-                          )}
-                          {canDelete && staff.id !== user?.id && (
-                            <button
-                              onClick={() => openDeleteModal(staff)}
-                              className="rounded p-1.5 text-zinc-500 hover:bg-red-50 hover:text-red-600 cursor-pointer transition-colors"
-                              title="Remove Member"
-                            >
-                              <Trash2 className="h-4.5 w-4.5" />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                            </td>
+                            <td className="whitespace-nowrap px-4 py-3.5 text-zinc-500 dark:text-zinc-400 font-medium font-mono text-[11px]">
+                              <div className="flex items-center gap-1.5">
+                                <Calendar className="h-3.5 w-3.5 shrink-0 text-zinc-400" />
+                                <span>{new Date(staff.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                              </div>
+                            </td>
+                            <td className="whitespace-nowrap px-4 py-3.5 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
+                                {canUpdate && !isCurrentUser && (
+                                  <button
+                                    onClick={() => handleToggleStatus(staff)}
+                                    className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100 cursor-pointer transition-colors"
+                                    title={staff.status === 'ACTIVE' ? 'Disable Terminal' : 'Enable Terminal'}
+                                  >
+                                    {staff.status === 'ACTIVE' ? (
+                                      <ToggleRight className="h-5 w-5 text-brand-500" />
+                                    ) : (
+                                      <ToggleLeft className="h-5 w-5 text-zinc-400" />
+                                    )}
+                                  </button>
+                                )}
+                                {canUpdate && (
+                                  <button
+                                    onClick={() => openEditModal(staff)}
+                                    className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-blue-600 cursor-pointer transition-colors"
+                                    title="Edit Member"
+                                  >
+                                    <Edit2 className="h-4 w-4" />
+                                  </button>
+                                )}
+                                {canDelete && !isCurrentUser && (
+                                  <button
+                                    onClick={() => openDeleteModal(staff)}
+                                    className="rounded-lg p-1.5 text-zinc-500 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600 cursor-pointer transition-colors"
+                                    title="Remove Member"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* =================== TAB 2: ROLES & PERMISSIONS =================== */}
+      {activeTab === 'roles' && (
+        <div className="flex flex-1 flex-col overflow-hidden">
+          {/* Subheader summary bar */}
+          <div className="mb-4 flex flex-col justify-between gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:flex-row sm:items-center shadow-xs">
+            <div>
+              <h2 className="text-xs font-black uppercase tracking-wider text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                <Shield className="h-4 w-4 text-violet-600" />
+                <span>Configured Roles Overview</span>
+              </h2>
+              <p className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 mt-0.5">
+                Core system blueprints are standard blueprints. Custom roles can be tailored with any combination of the 14 security capabilities.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="rounded-lg bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1 text-[11px] font-bold text-zinc-600 dark:text-zinc-300">
+                {roles.filter((r) => r.isSystem).length} System
+              </span>
+              <span className="rounded-lg bg-violet-100 dark:bg-violet-950/50 px-2.5 py-1 text-[11px] font-bold text-violet-700 dark:text-violet-300">
+                {roles.filter((r) => !r.isSystem).length} Custom
+              </span>
             </div>
           </div>
-        )}
-      </div>
 
-      {/* Invite Modal */}
+          {/* Roles Grid */}
+          <div className="flex-1 overflow-y-auto">
+            {loadingRoles ? (
+              <div className="flex h-full w-full flex-col items-center justify-center p-8">
+                <div className="h-8 w-8 animate-spin rounded-full border-3 border-violet-600 border-t-transparent"></div>
+                <p className="mt-3 text-xs font-bold text-zinc-500 dark:text-zinc-400">Loading restaurant roles & permissions...</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 pb-6">
+                {roles.map((role) => (
+                  <RoleCard
+                    key={role.id}
+                    role={role}
+                    isSuperAdmin={isSuperAdmin}
+                    onEdit={(r) => {
+                      setRoleToEdit(r);
+                      setIsRoleModalOpen(true);
+                    }}
+                    onDelete={(r) => openRoleDeleteModal(r)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ========================= MODALS ========================= */}
+
+      {/* Role Creator / Editor Modal */}
+      <RoleModal
+        isOpen={isRoleModalOpen}
+        onClose={() => {
+          setIsRoleModalOpen(false);
+          setRoleToEdit(null);
+        }}
+        onSaved={() => {
+          setSuccessMsg(roleToEdit ? 'Role updated successfully!' : 'Custom role created successfully!');
+          fetchRoles();
+          fetchStaff();
+        }}
+        roleToEdit={roleToEdit}
+        catalog={catalog}
+      />
+
+      {/* Role Delete Confirmation Modal */}
+      {isRoleDeleteOpen && roleToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-2xl animate-in zoom-in-95 duration-150 text-zinc-900 dark:text-zinc-100">
+            <div className="absolute top-0 left-0 right-0 h-[3px] bg-red-600"></div>
+
+            <h2 className="text-base font-extrabold text-zinc-900 dark:text-zinc-50 flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-red-500" />
+              <span>Delete Custom Role: {roleToDelete.name}?</span>
+            </h2>
+
+            {/* Check if role has assigned users */}
+            {(roleToDelete._count?.users || 0) > 0 ? (
+              <div className="mt-3 rounded-xl border border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/20 p-3 text-xs font-semibold text-amber-800 dark:text-amber-300">
+                <AlertCircle className="h-4 w-4 inline mr-1.5 text-amber-600 shrink-0" />
+                This role currently has <strong>{roleToDelete._count?.users}</strong> active staff members assigned. 
+                Please reassign these team members to another role before deleting.
+              </div>
+            ) : (
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2 leading-relaxed font-semibold">
+                Are you sure you want to permanently delete the <strong className="text-zinc-900 dark:text-zinc-50 font-extrabold">{roleToDelete.name}</strong> role? 
+                This action is irreversible.
+              </p>
+            )}
+
+            <div className="mt-6 flex justify-end gap-2 border-t border-zinc-200 dark:border-zinc-800 pt-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRoleDeleteOpen(false);
+                  setRoleToDelete(null);
+                }}
+                className="rounded-xl border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmRoleDelete}
+                disabled={roleDeleteLoading || (roleToDelete._count?.users || 0) > 0}
+                className="rounded-xl bg-red-600 px-4 py-2 text-xs font-black uppercase tracking-wider text-white hover:bg-red-500 shadow-md transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {roleDeleteLoading ? 'Deleting...' : 'Confirm Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Staff Invite Modal */}
       {isInviteOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-2xl animate-in zoom-in-95 duration-150 text-zinc-900 dark:text-zinc-100">
@@ -477,7 +786,7 @@ export default function StaffManagement() {
             
             <button
               onClick={() => setIsInviteOpen(false)}
-              className="absolute right-4 top-4 rounded p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-800 dark:hover:text-zinc-100 cursor-pointer"
+              className="absolute right-4 top-4 rounded-lg p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-800 dark:hover:text-zinc-100 cursor-pointer"
             >
               <X className="h-5 w-5" />
             </button>
@@ -487,7 +796,7 @@ export default function StaffManagement() {
               <span>Invite Staff Member</span>
             </h2>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 font-semibold">
-              Invite a staff member by setting their email address and assigning their default security role.
+              Invite a staff member by email and assign their security role (System or Custom).
             </p>
 
             <form onSubmit={handleInviteSubmit} className="mt-4 space-y-4">
@@ -499,10 +808,10 @@ export default function StaffManagement() {
                   <Mail className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-400" />
                   <input
                     type="email"
-                    placeholder="e.g. staffmember@khaopio.com"
+                    placeholder="e.g. staffmember@restaurant.com"
                     value={inviteForm.email}
                     onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-brand-400/20"
+                    className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-bold text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-brand-400/20"
                     required
                   />
                 </div>
@@ -510,19 +819,29 @@ export default function StaffManagement() {
 
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
-                  Staff Role
+                  Security Role
                 </label>
                 <div className="relative">
                   <Shield className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-400 pointer-events-none" />
                   <select
                     value={inviteForm.role}
                     onChange={(e) => setInviteForm({ ...inviteForm, role: e.target.value })}
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition-all focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-brand-400/20 appearance-none cursor-pointer"
+                    className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-bold text-zinc-900 dark:text-zinc-100 outline-none transition-all focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-brand-400/20 cursor-pointer"
                   >
-                    <option value="STORE_MANAGER">Store Manager</option>
-                    <option value="CASHIER">Cashier</option>
-                    <option value="WAITER">Waiter</option>
-                    <option value="KITCHEN_CHEF">Kitchen Chef</option>
+                    {roles.length === 0 ? (
+                      <>
+                        <option value="STORE_MANAGER">Store Manager</option>
+                        <option value="CASHIER">Cashier</option>
+                        <option value="WAITER">Waiter</option>
+                        <option value="KITCHEN_CHEF">Kitchen Chef</option>
+                      </>
+                    ) : (
+                      roles.map((r) => (
+                        <option key={r.id} value={r.name}>
+                          {r.name.replace(/_/g, ' ')} {r.isSystem ? '(System)' : '(Custom)'}
+                        </option>
+                      ))
+                    )}
                   </select>
                 </div>
               </div>
@@ -531,14 +850,14 @@ export default function StaffManagement() {
                 <button
                   type="button"
                   onClick={() => setIsInviteOpen(false)}
-                  className="rounded-lg border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                  className="rounded-xl border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={inviteLoading}
-                  className="rounded-lg bg-brand-500 px-4 py-2 text-xs font-black uppercase tracking-wider text-white hover:bg-brand-600 shadow-md transition-all cursor-pointer disabled:opacity-50"
+                  className="rounded-xl bg-brand-500 px-4 py-2 text-xs font-black uppercase tracking-wider text-white hover:bg-brand-600 shadow-md transition-all cursor-pointer disabled:opacity-50"
                 >
                   {inviteLoading ? 'Generating Invitation...' : 'Send Invitation'}
                 </button>
@@ -548,7 +867,7 @@ export default function StaffManagement() {
         </div>
       )}
 
-      {/* Edit Modal */}
+      {/* Staff Edit Modal */}
       {isEditOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-2xl animate-in zoom-in-95 duration-150 text-zinc-900 dark:text-zinc-100">
@@ -556,7 +875,7 @@ export default function StaffManagement() {
 
             <button
               onClick={() => setIsEditOpen(false)}
-              className="absolute right-4 top-4 rounded p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-800 dark:hover:text-zinc-100 cursor-pointer"
+              className="absolute right-4 top-4 rounded-lg p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-800 dark:hover:text-zinc-100 cursor-pointer"
             >
               <X className="h-5 w-5" />
             </button>
@@ -566,7 +885,7 @@ export default function StaffManagement() {
               <span>Edit Staff Details</span>
             </h2>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 font-semibold">
-              Modify the profile details and system privileges for this staff member.
+              Modify the profile details and system role for this staff member.
             </p>
 
             <form onSubmit={handleEditSubmit} className="mt-4 space-y-4">
@@ -578,28 +897,28 @@ export default function StaffManagement() {
                   type="text"
                   value={editForm.name}
                   onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-3 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-brand-400/20"
+                  className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 px-3 text-xs font-bold text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none transition-all focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-brand-400/20"
                   required
                 />
               </div>
 
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
-                  System Role
+                  Security Role
                 </label>
                 <div className="relative">
                   <Shield className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-400 pointer-events-none" />
                   <select
                     value={editForm.role}
                     onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
-                    disabled={editForm.role === 'SUPER_ADMIN'}
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition-all focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-brand-400/20 appearance-none cursor-pointer disabled:opacity-55 disabled:cursor-not-allowed"
+                    disabled={editForm.id === user?.id && editForm.role === 'SUPER_ADMIN'}
+                    className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-bold text-zinc-900 dark:text-zinc-100 outline-none transition-all focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-brand-400/20 cursor-pointer disabled:opacity-55 disabled:cursor-not-allowed"
                   >
-                    {editForm.role === 'SUPER_ADMIN' && <option value="SUPER_ADMIN">Super Admin</option>}
-                    <option value="STORE_MANAGER">Store Manager</option>
-                    <option value="CASHIER">Cashier</option>
-                    <option value="WAITER">Waiter</option>
-                    <option value="KITCHEN_CHEF">Kitchen Chef</option>
+                    {roles.map((r) => (
+                      <option key={r.id} value={r.name}>
+                        {r.name.replace(/_/g, ' ')} {r.isSystem ? '(System)' : '(Custom)'}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -608,14 +927,14 @@ export default function StaffManagement() {
                 <button
                   type="button"
                   onClick={() => setIsEditOpen(false)}
-                  className="rounded-lg border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                  className="rounded-xl border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={editLoading}
-                  className="rounded-lg bg-brand-500 px-4 py-2 text-xs font-black uppercase tracking-wider text-white hover:bg-brand-600 shadow-md transition-all cursor-pointer disabled:opacity-50"
+                  className="rounded-xl bg-brand-500 px-4 py-2 text-xs font-black uppercase tracking-wider text-white hover:bg-brand-600 shadow-md transition-all cursor-pointer disabled:opacity-50"
                 >
                   {editLoading ? 'Updating Profile...' : 'Save Changes'}
                 </button>
@@ -625,7 +944,7 @@ export default function StaffManagement() {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Staff Delete Confirmation Modal */}
       {isDeleteOpen && userToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="relative w-full max-w-sm overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-2xl animate-in zoom-in-95 duration-150 text-zinc-900 dark:text-zinc-100">
@@ -637,7 +956,7 @@ export default function StaffManagement() {
             </h2>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2 leading-relaxed font-semibold">
               Are you sure you want to permanently remove <strong className="text-zinc-900 dark:text-zinc-50 font-extrabold">{userToDelete.name}</strong> from the system?
-              This will revoke all system terminal access privileges. This action is permanent.
+              This will revoke all system terminal access privileges.
             </p>
 
             <div className="mt-6 flex justify-end gap-2 border-t border-zinc-200 dark:border-zinc-800 pt-4">
@@ -647,7 +966,7 @@ export default function StaffManagement() {
                   setIsDeleteOpen(false);
                   setUserToDelete(null);
                 }}
-                className="rounded-lg border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3.5 py-1.5 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                className="rounded-xl border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3.5 py-1.5 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -655,7 +974,7 @@ export default function StaffManagement() {
                 type="button"
                 onClick={handleDeleteConfirm}
                 disabled={deleteLoading}
-                className="rounded-lg bg-red-600 px-3.5 py-1.5 text-xs font-black uppercase tracking-wider text-white hover:bg-red-500 shadow-md transition-all cursor-pointer disabled:opacity-50"
+                className="rounded-xl bg-red-600 px-3.5 py-1.5 text-xs font-black uppercase tracking-wider text-white hover:bg-red-500 shadow-md transition-all cursor-pointer disabled:opacity-50"
               >
                 {deleteLoading ? 'Removing...' : 'Delete Account'}
               </button>

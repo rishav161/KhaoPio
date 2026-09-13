@@ -2,7 +2,6 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import prisma from '../prisma';
-import { RoleName } from '@prisma/client';
 import { emailService } from './email.service';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretposkey';
@@ -132,8 +131,8 @@ export class AuthService {
    * Initializes Super Admin registration by generating and sending an OTP verification email.
    */
   async initializeAdminRegistration(email: string): Promise<void> {
-    const superAdminRole = await prisma.role.findUnique({
-      where: { name: RoleName.SUPER_ADMIN },
+    const superAdminRole = await prisma.role.findFirst({
+      where: { name: 'SUPER_ADMIN' },
     });
 
     if (!superAdminRole) {
@@ -195,8 +194,8 @@ export class AuthService {
     }
 
     // Check if SUPER_ADMIN role exists
-    const superAdminRole = await prisma.role.findUnique({
-      where: { name: RoleName.SUPER_ADMIN },
+    const superAdminRole = await prisma.role.findFirst({
+      where: { name: 'SUPER_ADMIN' },
     });
 
     if (!superAdminRole) {
@@ -280,13 +279,20 @@ export class AuthService {
   /**
    * Creates an invitation token for a new staff member.
    */
-  async createInvitation(email: string, targetRole: RoleName, restaurantId?: string) {
-    const role = await prisma.role.findUnique({
-      where: { name: targetRole },
+  async createInvitation(email: string, targetRole: string, restaurantId?: string) {
+    const role = await prisma.role.findFirst({
+      where: {
+        OR: [
+          { id: targetRole },
+          { name: { equals: targetRole, mode: 'insensitive' } as any, restaurantId },
+          { name: { equals: targetRole, mode: 'insensitive' } as any, isSystem: true },
+          { name: { equals: targetRole, mode: 'insensitive' } as any, restaurantId: null },
+        ],
+      },
     });
 
     if (!role) {
-      throw new Error(`Role ${targetRole} does not exist.`);
+      throw new Error(`Role "${targetRole}" does not exist.`);
     }
 
     // Check if user already exists
@@ -473,7 +479,11 @@ export class AuthService {
   /**
    * Updates user name, status, or role.
    */
-  async updateUserDetail(id: string, data: { name?: string; role?: RoleName; status?: 'ACTIVE' | 'INACTIVE' | 'INVITED' }, restaurantId?: string) {
+  async updateUserDetail(
+    id: string,
+    data: { name?: string; role?: string; roleId?: string; status?: 'ACTIVE' | 'INACTIVE' | 'INVITED' },
+    restaurantId?: string
+  ) {
     if (restaurantId) {
       const existingUser = await prisma.user.findUnique({ where: { id } });
       if (!existingUser || existingUser.restaurantId !== restaurantId) {
@@ -481,13 +491,20 @@ export class AuthService {
       }
     }
 
-    let roleId: string | undefined;
-    if (data.role) {
-      const roleRecord = await prisma.role.findUnique({
-        where: { name: data.role },
+    let roleId = data.roleId;
+    if (!roleId && data.role) {
+      const roleRecord = await prisma.role.findFirst({
+        where: {
+          OR: [
+            { id: data.role },
+            { name: { equals: data.role, mode: 'insensitive' } as any, restaurantId },
+            { name: { equals: data.role, mode: 'insensitive' } as any, isSystem: true },
+            { name: { equals: data.role, mode: 'insensitive' } as any, restaurantId: null },
+          ],
+        },
       });
       if (!roleRecord) {
-        throw new Error(`Role ${data.role} does not exist.`);
+        throw new Error(`Role "${data.role}" does not exist.`);
       }
       roleId = roleRecord.id;
     }
