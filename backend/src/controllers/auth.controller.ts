@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import prisma from '../prisma';
 import authService from '../services/auth.service';
 import emailService from '../services/email.service';
-import { RoleName } from '@prisma/client';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 import { uploadLogoToCloudinary } from '../services/upload.service';
 
@@ -68,15 +67,8 @@ export const inviteStaff = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
-    // Verify role belongs to valid RoleNames
-    const validRoles = Object.values(RoleName);
-    if (!validRoles.includes(role as RoleName)) {
-      res.status(400).json({ error: `Invalid role: ${role}. Choose from: ${validRoles.join(', ')}` });
-      return;
-    }
-
     const restaurantId = (req as AuthenticatedRequest).user?.restaurantId;
-    const invitation = await authService.createInvitation(email, role as RoleName, restaurantId);
+    const invitation = await authService.createInvitation(email, role, restaurantId);
     
     // Automatically trigger email dispatch via Mailgun
     const emailSent = await emailService.sendInvitationEmail(invitation.email, invitation.token, invitation.role.name);
@@ -186,9 +178,9 @@ export const getAllUsers = async (req: Request, res: Response): Promise<void> =>
 export const updateUserByAdmin = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { name, role, status } = req.body;
+    const { name, role, roleId, status } = req.body;
     const restaurantId = (req as AuthenticatedRequest).user?.restaurantId;
-    const updatedUser = await authService.updateUserDetail(id, { name, role, status }, restaurantId);
+    const updatedUser = await authService.updateUserDetail(id, { name, role, roleId, status }, restaurantId);
     res.status(200).json(updatedUser);
   } catch (error: any) {
     res.status(400).json({ error: error.message || 'Error updating user.' });

@@ -59,3 +59,24 @@ export const requirePermission = (permission: string) => {
     next();
   };
 };
+
+/**
+ * Middleware to restrict route access strictly to SUPER_ADMIN role.
+ */
+export const requireSuperAdmin = (req: Request, res: Response, next: NextFunction): void => {
+  const user = (req as AuthenticatedRequest).user;
+
+  if (!user) {
+    res.status(401).json({ error: 'Unauthorized. User context not found.' });
+    return;
+  }
+
+  if (user.role !== 'SUPER_ADMIN') {
+    res.status(403).json({
+      error: 'Forbidden. Only the Super Admin of this restaurant can perform this action.',
+    });
+    return;
+  }
+
+  next();
+};
