@@ -242,19 +242,19 @@ export default function TablesPage() {
         <div className="grid grid-cols-4 divide-x divide-zinc-100 dark:divide-zinc-800 border-b border-zinc-200 dark:border-zinc-800">
           <div className="flex flex-col items-center py-3 px-2 bg-zinc-50 dark:bg-zinc-950">
             <div className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-0.5">Total</div>
-            <div className="text-2xl font-black text-zinc-700 dark:text-zinc-200 leading-none">{stats.total}</div>
+            <div className="text-lg sm:text-2xl font-black text-zinc-700 dark:text-zinc-200 leading-none">{stats.total}</div>
           </div>
           <div className="flex flex-col items-center py-3 px-2 bg-emerald-50 dark:bg-emerald-950/30">
             <div className="text-[9px] font-black text-emerald-500 uppercase tracking-widest mb-0.5">Free</div>
-            <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 leading-none">{stats.available}</div>
+            <div className="text-lg sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 leading-none">{stats.available}</div>
           </div>
           <div className="flex flex-col items-center py-3 px-2 bg-red-50 dark:bg-red-950/30">
             <div className="text-[9px] font-black text-red-500 uppercase tracking-widest mb-0.5">Busy</div>
-            <div className="text-2xl font-black text-red-500 leading-none">{stats.occupied}</div>
+            <div className="text-lg sm:text-2xl font-black text-red-500 leading-none">{stats.occupied}</div>
           </div>
           <div className="flex flex-col items-center py-3 px-2 bg-amber-50 dark:bg-amber-950/30">
             <div className="text-[9px] font-black text-amber-500 uppercase tracking-widest mb-0.5">Reserved</div>
-            <div className="text-2xl font-black text-amber-600 dark:text-amber-400 leading-none">{stats.reserved}</div>
+            <div className="text-lg sm:text-2xl font-black text-amber-600 dark:text-amber-400 leading-none">{stats.reserved}</div>
           </div>
         </div>
 

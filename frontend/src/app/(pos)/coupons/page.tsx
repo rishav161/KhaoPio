@@ -50,6 +50,7 @@ export default function CouponsPage() {
   const [endDate, setEndDate] = useState('');
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
   }, []);
 
@@ -57,7 +58,7 @@ export default function CouponsPage() {
     try {
       const data = await apiFetch<Coupon[]>('/coupons');
       setCoupons(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       setError('Failed to fetch coupons.');
     } finally {
@@ -67,6 +68,7 @@ export default function CouponsPage() {
 
   useEffect(() => {
     if (isMounted) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchCoupons();
     }
   }, [isMounted]);
@@ -85,8 +87,8 @@ export default function CouponsPage() {
       );
       setSuccess(`Coupon status updated successfully!`);
       setTimeout(() => setSuccess(''), 2500);
-    } catch (err: any) {
-      setError(err.message || 'Failed to toggle status.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to toggle status.');
     }
   };
 
@@ -107,8 +109,8 @@ export default function CouponsPage() {
           setCoupons((prev) => prev.filter((c) => c.id !== id));
           setSuccess('Coupon code deleted successfully.');
           setTimeout(() => setSuccess(''), 2500);
-        } catch (err: any) {
-          setError(err.message || 'Failed to delete coupon.');
+        } catch (err: unknown) {
+          setError(err instanceof Error ? err.message : 'Failed to delete coupon.');
         }
       }
     });
@@ -169,8 +171,8 @@ export default function CouponsPage() {
       setStartDate('');
       setEndDate('');
       setIsDrawerOpen(false);
-    } catch (err: any) {
-      setError(err.message || 'Failed to create coupon.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to create coupon.');
     } finally {
       setFormLoading(false);
     }
@@ -182,21 +184,21 @@ export default function CouponsPage() {
 
   return (
     <div className="h-full w-full overflow-y-auto pb-8 pr-1 relative">
-      <div className="flex items-center justify-between rounded-xl bg-gradient-to-r from-brand-500 to-brand-400 p-4 mb-6 shadow-md">
-        <div className="flex items-center gap-3">
-          <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 text-white">
+      <div className="flex items-center justify-between rounded-xl bg-gradient-to-r from-brand-500 to-brand-400 p-4 mb-6 shadow-md gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white">
             <Ticket className="h-5 w-5" />
           </div>
-          <div>
-            <h1 className="text-base font-black uppercase tracking-wider text-white">Coupons & Promo Codes</h1>
-            <p className="text-[10px] font-bold text-brand-100 uppercase tracking-wide">Manage custom restaurant discounts, flat and percentage rates</p>
+          <div className="min-w-0">
+            <h1 className="text-sm sm:text-base font-black uppercase tracking-wider text-white">Coupons & Promo Codes</h1>
+            <p className="hidden sm:block text-[10px] font-bold text-brand-100 uppercase tracking-wide">Manage custom restaurant discounts, flat and percentage rates</p>
           </div>
         </div>
 
         {user?.role === 'SUPER_ADMIN' && (
           <button
             onClick={() => setIsDrawerOpen(true)}
-            className="flex items-center gap-1.5 cursor-pointer rounded-lg bg-white text-brand-600 hover:bg-brand-50 font-black px-4 py-2.5 text-[10px] uppercase shadow-sm tracking-wide transition-all active:scale-[0.98]"
+            className="flex shrink-0 items-center gap-1.5 cursor-pointer rounded-lg bg-white text-brand-600 hover:bg-brand-50 font-black px-4 py-2.5 text-[10px] uppercase shadow-sm tracking-wide transition-all active:scale-[0.98] whitespace-nowrap"
           >
             <Plus className="h-4 w-4" />
             <span>Create Coupon</span>

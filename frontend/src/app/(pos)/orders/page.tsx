@@ -644,25 +644,25 @@ export default function OrdersPage() {
       <div className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm">
 
         {/* Page header */}
-        <div className="flex items-center justify-between border-b border-brand-600 bg-gradient-to-r from-brand-500 to-brand-400 px-4 py-3">
-          <div className="flex items-center gap-2">
-            <Receipt className="h-4 w-4 text-white" />
-            <h2 className="text-xs font-black uppercase tracking-wider text-white">Orders</h2>
-            <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-black text-white">
+        <div className="flex items-center justify-between border-b border-brand-600 bg-gradient-to-r from-brand-500 to-brand-400 px-4 py-3 gap-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <Receipt className="h-4 w-4 text-white shrink-0" />
+            <h2 className="text-xs font-black uppercase tracking-wide text-white shrink-0">Orders</h2>
+            <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-black text-white whitespace-nowrap">
               {ongoingOrders.length} ongoing
             </span>
-          </div>
-          <div className="flex items-center gap-2">
             <button
               onClick={handleRefresh}
-              className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors cursor-pointer"
+              className="flex h-6 w-6 items-center justify-center rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors cursor-pointer shrink-0"
               title="Refresh"
             >
-              <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-3 w-3 ${refreshing ? 'animate-spin' : ''}`} />
             </button>
+          </div>
+          <div className="shrink-0">
             <button
               onClick={openNewOrder}
-              className="flex items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-[11px] font-black text-brand-600 hover:bg-brand-50 shadow-sm transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 rounded-xl bg-white px-3 py-2 text-[11px] font-black text-brand-600 hover:bg-brand-50 shadow-sm transition-colors cursor-pointer whitespace-nowrap"
             >
               <Plus className="h-3.5 w-3.5" />
               NEW ORDER
