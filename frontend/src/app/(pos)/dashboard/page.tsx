@@ -77,7 +77,7 @@ function StatCard({
     <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-sm">
       <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${iconBg} mb-3`}>{icon}</div>
       <p className="text-xs text-zinc-500 dark:text-zinc-400">{label}</p>
-      <p className={`mt-1 text-2xl font-bold text-zinc-900 dark:text-zinc-50 ${mono ? 'font-mono' : ''}`}>{value}</p>
+      <p className={`mt-1 text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-50 ${mono ? 'font-mono' : ''}`}>{value}</p>
       {delta && <p className="mt-1 text-xs font-medium text-brand-600">{delta}</p>}
     </div>
   );
@@ -328,7 +328,7 @@ export default function Dashboard() {
             </div>
           </div>
           <p className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-bold font-mono text-zinc-900 dark:text-zinc-50">
+            <span className="text-xl sm:text-2xl font-bold font-mono text-zinc-900 dark:text-zinc-50">
               {currencySymbol}{metrics.totalSales.toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </span>
             <span className={`text-xs font-semibold ${revenueDelta >= 0 ? 'text-brand-600' : 'text-red-500'}`}>
@@ -396,7 +396,7 @@ export default function Dashboard() {
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="pointer-events-none absolute flex flex-col items-center">
-                  <span className="text-2xl font-bold font-mono text-zinc-900 dark:text-zinc-50">{metrics.ordersCount}</span>
+                  <span className="text-xl sm:text-2xl font-bold font-mono text-zinc-900 dark:text-zinc-50">{metrics.ordersCount}</span>
                   <span className="text-xs text-zinc-400 dark:text-zinc-500">orders</span>
                 </div>
               </div>

@@ -89,7 +89,7 @@ export function AuthLayout({
             <span className="font-display text-lg font-semibold">KhaoPio POS</span>
           </div>
 
-          <h1 className="font-display text-4xl font-bold tracking-tight text-zinc-900">{pageTitle}</h1>
+          <h1 className="font-display text-2xl sm:text-4xl font-bold tracking-tight text-zinc-900">{pageTitle}</h1>
           <p className="mt-2 text-sm text-zinc-500">{pageSubtitle}</p>
 
           <div className="mt-8 rounded-2xl border border-zinc-200 bg-white p-6 shadow-[0_24px_60px_-28px_oklch(0.2_0.04_155_/_0.35)] sm:p-8">

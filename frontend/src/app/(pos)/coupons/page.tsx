@@ -182,21 +182,21 @@ export default function CouponsPage() {
 
   return (
     <div className="h-full w-full overflow-y-auto pb-8 pr-1 relative">
-      <div className="flex items-center justify-between rounded-xl bg-gradient-to-r from-brand-500 to-brand-400 p-4 mb-6 shadow-md">
-        <div className="flex items-center gap-3">
-          <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 text-white">
+      <div className="flex items-center justify-between rounded-xl bg-gradient-to-r from-brand-500 to-brand-400 p-4 mb-6 shadow-md gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white">
             <Ticket className="h-5 w-5" />
           </div>
-          <div>
-            <h1 className="text-base font-black uppercase tracking-wider text-white">Coupons & Promo Codes</h1>
-            <p className="text-[10px] font-bold text-brand-100 uppercase tracking-wide">Manage custom restaurant discounts, flat and percentage rates</p>
+          <div className="min-w-0">
+            <h1 className="text-sm sm:text-base font-black uppercase tracking-wider text-white">Coupons & Promo Codes</h1>
+            <p className="hidden sm:block text-[10px] font-bold text-brand-100 uppercase tracking-wide">Manage custom restaurant discounts, flat and percentage rates</p>
           </div>
         </div>
 
         {user?.role === 'SUPER_ADMIN' && (
           <button
             onClick={() => setIsDrawerOpen(true)}
-            className="flex items-center gap-1.5 cursor-pointer rounded-lg bg-white text-brand-600 hover:bg-brand-50 font-black px-4 py-2.5 text-[10px] uppercase shadow-sm tracking-wide transition-all active:scale-[0.98]"
+            className="flex shrink-0 items-center gap-1.5 cursor-pointer rounded-lg bg-white text-brand-600 hover:bg-brand-50 font-black px-4 py-2.5 text-[10px] uppercase shadow-sm tracking-wide transition-all active:scale-[0.98] whitespace-nowrap"
           >
             <Plus className="h-4 w-4" />
             <span>Create Coupon</span>
