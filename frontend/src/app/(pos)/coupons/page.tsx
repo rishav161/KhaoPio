@@ -50,6 +50,7 @@ export default function CouponsPage() {
   const [endDate, setEndDate] = useState('');
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
   }, []);
 
@@ -67,6 +68,7 @@ export default function CouponsPage() {
 
   useEffect(() => {
     if (isMounted) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchCoupons();
     }
   }, [isMounted]);

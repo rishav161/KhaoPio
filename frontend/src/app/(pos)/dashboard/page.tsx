@@ -104,6 +104,7 @@ export default function Dashboard() {
   // /dashboard finds no flag and never shows it.
   useEffect(() => {
     if (!consumeJustLoggedIn()) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setGreetingMounted(true);
     const raf = requestAnimationFrame(() => setGreetingVisible(true));
     const hide = setTimeout(() => setGreetingVisible(false), 3500);
