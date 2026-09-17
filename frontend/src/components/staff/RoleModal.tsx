@@ -70,11 +70,12 @@ export const RoleModal: React.FC<RoleModalProps> = ({
   useEffect(() => {
     if (!isOpen) return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setErrorMsg('');
     if (roleToEdit) {
       setName(roleToEdit.name);
       const permNames = (roleToEdit.permissions || [])
-        .map((p: any) => p?.permission?.name || p?.name || (typeof p === 'string' ? p : ''))
+        .map((p) => p.permission?.name ?? '')
         .filter(Boolean);
       setSelectedPermissions(new Set(permNames));
     } else {
@@ -177,8 +178,8 @@ export const RoleModal: React.FC<RoleModalProps> = ({
 
       onSaved();
       onClose();
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to save role.');
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to save role.');
     } finally {
       setLoading(false);
     }

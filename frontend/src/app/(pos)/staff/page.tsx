@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { 
+import {
   Users, UserPlus, Shield, ToggleLeft, ToggleRight, Trash2, Edit2, 
   Mail, X, Check, Copy, AlertCircle, RefreshCw, ClipboardCheck, 
   Search, ShieldAlert, Calendar, Sparkles, ChevronDown, Lock
@@ -26,7 +25,6 @@ interface StaffUser {
 }
 
 export default function StaffManagement() {
-  const router = useRouter();
   const { user, permissions } = useAuthStore();
 
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
@@ -81,8 +79,8 @@ export default function StaffManagement() {
     try {
       const data = await apiFetch<StaffUser[]>('/auth/admin/users');
       setStaffList(data);
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to load staff list.');
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to load staff list.');
     } finally {
       setLoadingStaff(false);
     }
@@ -99,7 +97,7 @@ export default function StaffManagement() {
         const defaultRole = data.find((r) => r.name === 'WAITER') || data[0];
         setInviteForm((prev) => ({ ...prev, role: defaultRole.name }));
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Non-critical if failed
       console.error('Failed to fetch roles:', err);
     } finally {
@@ -112,13 +110,14 @@ export default function StaffManagement() {
     try {
       const data = await apiFetch<CatalogData>('/roles/catalog');
       setCatalog(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to fetch permissions catalog:', err);
     }
   };
 
   useEffect(() => {
     if (canView) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchStaff();
       fetchRoles();
       fetchCatalog();
@@ -171,8 +170,8 @@ export default function StaffManagement() {
       fetchStaff();
       fetchRoles();
       setIsInviteOpen(false);
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Error sending invitation.');
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Error sending invitation.');
     } finally {
       setInviteLoading(false);
     }
@@ -198,8 +197,8 @@ export default function StaffManagement() {
       });
       setSuccessMsg(`Successfully toggled ${staff.name}'s status to ${newStatus}.`);
       fetchStaff();
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to update user status.');
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to update user status.');
     }
   };
 
@@ -218,8 +217,8 @@ export default function StaffManagement() {
       setSuccessMsg(res.message || 'Staff role switched successfully.');
       fetchStaff();
       fetchRoles();
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to switch staff role.');
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to switch staff role.');
     } finally {
       setSwitchingUserId(null);
     }
@@ -253,8 +252,8 @@ export default function StaffManagement() {
       setIsEditOpen(false);
       fetchStaff();
       fetchRoles();
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to edit staff member.');
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to edit staff member.');
     } finally {
       setEditLoading(false);
     }
@@ -281,8 +280,8 @@ export default function StaffManagement() {
       setUserToDelete(null);
       fetchStaff();
       fetchRoles();
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to delete staff member.');
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to delete staff member.');
       setIsDeleteOpen(false);
     } finally {
       setDeleteLoading(false);
@@ -310,8 +309,8 @@ export default function StaffManagement() {
       setRoleToDelete(null);
       fetchRoles();
       fetchStaff();
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to delete role.');
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to delete role.');
     } finally {
       setRoleDeleteLoading(false);
     }

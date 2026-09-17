@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  Shield, Users, Edit2, Trash2, Lock, ChevronDown, ChevronUp, Sparkles 
+import {
+  Users, Edit2, Trash2, Lock, ChevronDown, ChevronUp, Sparkles
 } from 'lucide-react';
 import { RoleBadge } from './RoleBadge';
 import { type RoleItem } from './RoleModal';
@@ -24,8 +24,8 @@ export const RoleCard: React.FC<RoleCardProps> = ({
 
   // Safely extract permission definitions (handles both { permission: {...} } and direct permission objects)
   const permissionsList = (role.permissions || [])
-    .map((p: any) => p?.permission || p)
-    .filter((perm: any) => perm && (perm.name || perm.id || typeof perm === 'string'));
+    .map((p) => p.permission)
+    .filter((perm): perm is NonNullable<typeof perm> => !!(perm?.name || perm?.id));
 
   const userCount = role._count?.users || 0;
   const isSystem = role.isSystem;
@@ -82,9 +82,9 @@ export const RoleCard: React.FC<RoleCardProps> = ({
             </p>
           ) : (
             <div className="flex flex-wrap gap-1.5">
-              {visiblePermissions.map((perm: any, idx: number) => {
-                const permName = typeof perm === 'string' ? perm : (perm?.name || '');
-                const permDesc = typeof perm === 'object' ? (perm?.description || permName) : permName;
+              {visiblePermissions.map((perm, idx) => {
+                const permName = perm?.name || '';
+                const permDesc = perm?.description || permName;
                 const permKey = perm?.id || permName || `perm-${idx}`;
 
                 return (
