@@ -137,13 +137,14 @@ export default function Dashboard() {
       setStats(data);
       setPrevStats(prevData);
       setPage(pg);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load dashboard statistics.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load dashboard statistics.');
     } finally {
       setLoading(false);
     }
   };
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchStats(1); fetchTables(); }, [activePreset]);
 
   if (loading && !stats) return (

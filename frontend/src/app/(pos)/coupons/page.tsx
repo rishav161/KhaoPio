@@ -57,7 +57,7 @@ export default function CouponsPage() {
     try {
       const data = await apiFetch<Coupon[]>('/coupons');
       setCoupons(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       setError('Failed to fetch coupons.');
     } finally {
@@ -85,8 +85,8 @@ export default function CouponsPage() {
       );
       setSuccess(`Coupon status updated successfully!`);
       setTimeout(() => setSuccess(''), 2500);
-    } catch (err: any) {
-      setError(err.message || 'Failed to toggle status.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to toggle status.');
     }
   };
 
@@ -107,8 +107,8 @@ export default function CouponsPage() {
           setCoupons((prev) => prev.filter((c) => c.id !== id));
           setSuccess('Coupon code deleted successfully.');
           setTimeout(() => setSuccess(''), 2500);
-        } catch (err: any) {
-          setError(err.message || 'Failed to delete coupon.');
+        } catch (err: unknown) {
+          setError(err instanceof Error ? err.message : 'Failed to delete coupon.');
         }
       }
     });
@@ -169,8 +169,8 @@ export default function CouponsPage() {
       setStartDate('');
       setEndDate('');
       setIsDrawerOpen(false);
-    } catch (err: any) {
-      setError(err.message || 'Failed to create coupon.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to create coupon.');
     } finally {
       setFormLoading(false);
     }
