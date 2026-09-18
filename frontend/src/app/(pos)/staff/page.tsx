@@ -396,18 +396,18 @@ export default function StaffManagement() {
         </div>
 
         {/* Tab Toggle Navigation Bar */}
-        <div className="mt-5 flex items-center gap-2 border-t border-white/20 pt-4">
+        <div className="mt-5 flex items-stretch gap-2 border-t border-white/20 pt-4">
           <button
             onClick={() => setActiveTab('members')}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-black uppercase tracking-wide transition-all cursor-pointer ${
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-normal transition-all cursor-pointer ${
               activeTab === 'members'
                 ? 'bg-white text-brand-700 shadow-md'
                 : 'bg-white/10 text-white hover:bg-white/20'
             }`}
           >
-            <Users className="h-4 w-4 shrink-0" />
-            <span className="whitespace-nowrap">Team Members</span>
-            <span className={`rounded-full px-1.5 py-0.2 text-[10px] font-black shrink-0 ${
+            <Users className="h-3.5 w-3.5 shrink-0" />
+            <span>Team Members</span>
+            <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black shrink-0 ${
               activeTab === 'members' ? 'bg-brand-100 text-brand-800' : 'bg-white/20 text-white'
             }`}>
               {staffList.length}
@@ -416,15 +416,15 @@ export default function StaffManagement() {
 
           <button
             onClick={() => setActiveTab('roles')}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-black uppercase tracking-wide transition-all cursor-pointer ${
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-normal transition-all cursor-pointer ${
               activeTab === 'roles'
                 ? 'bg-white text-violet-800 shadow-md'
                 : 'bg-white/10 text-white hover:bg-white/20'
             }`}
           >
-            <Shield className="h-4 w-4 shrink-0" />
-            <span className="whitespace-nowrap">Roles & Permissions</span>
-            <span className={`rounded-full px-1.5 py-0.2 text-[10px] font-black shrink-0 ${
+            <Shield className="h-3.5 w-3.5 shrink-0" />
+            <span>Roles &amp; Permissions</span>
+            <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black shrink-0 ${
               activeTab === 'roles' ? 'bg-violet-100 text-violet-800' : 'bg-white/20 text-white'
             }`}>
               {roles.length}
