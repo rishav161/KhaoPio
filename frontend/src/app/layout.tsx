@@ -20,6 +20,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "KhaoPio | Restaurant POS",
   description: "Point of sale, kitchen, and order management for restaurants.",
+  icons: {
+    icon: '/favicon.png',
+  },
 };
 
 export default function RootLayout({
