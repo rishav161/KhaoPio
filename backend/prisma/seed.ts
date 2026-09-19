@@ -1,4 +1,6 @@
-import { PrismaClient, RoleName } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
+
+type RoleName = 'SUPER_ADMIN' | 'STORE_MANAGER' | 'CASHIER' | 'WAITER' | 'KITCHEN_CHEF';
 
 const prisma = new PrismaClient();
 
@@ -45,6 +47,9 @@ async function main() {
     // Tables & Bookings
     { name: 'view:tables', description: 'Can view restaurant dining tables and reservations' },
     { name: 'manage:tables', description: 'Can add, remove, or modify dining tables and reservations' },
+
+    // Menu Management
+    { name: 'manage:menu', description: 'Can create, edit, and delete menu items and categories' },
   ];
 
   const permissions: Record<string, any> = {};
@@ -62,11 +67,13 @@ async function main() {
   const roleNames: RoleName[] = ['SUPER_ADMIN', 'STORE_MANAGER', 'CASHIER', 'WAITER', 'KITCHEN_CHEF'];
 
   for (const name of roleNames) {
-    roles[name] = await prisma.role.upsert({
-      where: { name },
-      update: {},
-      create: { name },
-    });
+    let role = await prisma.role.findFirst({ where: { name, restaurantId: null } });
+    if (!role) {
+      role = await prisma.role.create({ data: { name, isSystem: true } });
+    } else if (!role.isSystem) {
+      role = await prisma.role.update({ where: { id: role.id }, data: { isSystem: true } });
+    }
+    roles[name] = role;
   }
   console.log('Roles seeded/updated successfully.');
 
@@ -87,6 +94,7 @@ async function main() {
       'pay:order',
       'view:tables',
       'manage:tables',
+      'manage:menu',
     ],
     STORE_MANAGER: [
       'view:dashboard',
@@ -102,6 +110,7 @@ async function main() {
       'pay:order',
       'view:tables',
       'manage:tables',
+      'manage:menu',
     ],
     CASHIER: [
       'view:orders',
@@ -141,12 +150,12 @@ async function main() {
   // 4. Create Sidebar Items aligned with existing frontend Next.js directory routes
   const sidebarData = [
     { label: 'Dashboard', icon: 'LayoutDashboard', path: '/dashboard', order: 1, permissionName: 'view:dashboard' },
-    { label: 'Orders', icon: 'Receipt', path: '/orders', order: 2, permissionName: 'create:kot' },
+    { label: 'Orders', icon: 'Receipt', path: '/orders', order: 2, permissionName: 'view:orders' },
     { label: 'Tables', icon: 'TableProperties', path: '/tables', order: 3, permissionName: 'view:tables' },
     { label: 'Checkout', icon: 'CreditCard', path: '/checkout', order: 4, permissionName: 'pay:order' },
     { label: 'Kitchen', icon: 'ChefHat', path: '/kitchen', order: 5, permissionName: 'update:order-status' },
     { label: 'Staff', icon: 'Users', path: '/staff', order: 6, permissionName: 'view:staff' },
-    { label: 'Set Menu', icon: 'Layers', path: '/menu', order: 7, permissionName: 'view:staff' },
+    { label: 'Set Menu', icon: 'Layers', path: '/menu', order: 7, permissionName: 'manage:menu' },
     { label: 'Reports', icon: 'BarChart3', path: '/reports', order: 8, permissionName: 'view:sales-reports' },
     { label: 'Help', icon: 'HelpCircle', path: '/help', order: 9, permissionName: null },
   ];

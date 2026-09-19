@@ -2,15 +2,16 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  Users, UserPlus, Shield, ToggleLeft, ToggleRight, Trash2, Edit2, 
-  Mail, X, Check, Copy, AlertCircle, RefreshCw, ClipboardCheck, 
-  Search, ShieldAlert, Calendar, Sparkles, ChevronDown, Lock
+  Users, UserPlus, Shield, ToggleLeft, ToggleRight, Trash2, Edit2,
+  Mail, X, Check, Copy, AlertCircle, RefreshCw, ClipboardCheck,
+  Search, ShieldAlert, Calendar, Sparkles, ChevronDown, Lock, SlidersHorizontal
 } from 'lucide-react';
 import { apiFetch } from '@/utils/api';
 import { useAuthStore } from '@/store/useAuthStore';
 import { RoleBadge } from '@/components/staff/RoleBadge';
 import { RoleModal, type RoleItem, type CatalogData } from '@/components/staff/RoleModal';
 import { RoleCard } from '@/components/staff/RoleCard';
+import { UserPermissionDrawer } from '@/components/staff/UserPermissionDrawer';
 
 interface StaffUser {
   id: string;
@@ -65,6 +66,9 @@ export default function StaffManagement() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<StaffUser | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // Permission override drawer
+  const [permDrawerUser, setPermDrawerUser] = useState<StaffUser | null>(null);
 
   // Modals for Roles
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
@@ -580,7 +584,7 @@ export default function StaffManagement() {
                                       className="absolute inset-0 h-full w-full cursor-pointer opacity-0 z-10"
                                       title="Click to switch role on the fly"
                                     >
-                                      {roles.map((r) => (
+                                      {roles.filter((r) => r.name !== 'SUPER_ADMIN').map((r) => (
                                         <option key={r.id} value={r.id}>
                                           {r.name.replace(/_/g, ' ')} {r.isSystem ? '' : '(Custom)'}
                                         </option>
@@ -614,7 +618,7 @@ export default function StaffManagement() {
                             </td>
                             <td className="whitespace-nowrap px-4 py-3.5 text-right">
                               <div className="flex items-center justify-end gap-1.5">
-                                {canUpdate && !isCurrentUser && (
+                                {canUpdate && !isCurrentUser && staff.role.name !== 'SUPER_ADMIN' && (
                                   <button
                                     onClick={() => handleToggleStatus(staff)}
                                     className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100 cursor-pointer transition-colors"
@@ -627,7 +631,7 @@ export default function StaffManagement() {
                                     )}
                                   </button>
                                 )}
-                                {canUpdate && (
+                                {canUpdate && staff.role.name !== 'SUPER_ADMIN' && (
                                   <button
                                     onClick={() => openEditModal(staff)}
                                     className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-blue-600 cursor-pointer transition-colors"
@@ -636,7 +640,16 @@ export default function StaffManagement() {
                                     <Edit2 className="h-4 w-4" />
                                   </button>
                                 )}
-                                {canDelete && !isCurrentUser && (
+                                {isSuperAdmin && !isCurrentUser && staff.role.name !== 'SUPER_ADMIN' && (
+                                  <button
+                                    onClick={() => setPermDrawerUser(staff)}
+                                    className="rounded-lg p-1.5 text-zinc-500 hover:bg-violet-50 dark:hover:bg-violet-950/30 hover:text-violet-600 cursor-pointer transition-colors"
+                                    title="Customize Permissions"
+                                  >
+                                    <SlidersHorizontal className="h-4 w-4" />
+                                  </button>
+                                )}
+                                {canDelete && !isCurrentUser && staff.role.name !== 'SUPER_ADMIN' && (
                                   <button
                                     onClick={() => openDeleteModal(staff)}
                                     className="rounded-lg p-1.5 text-zinc-500 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600 cursor-pointer transition-colors"
@@ -835,7 +848,7 @@ export default function StaffManagement() {
                         <option value="KITCHEN_CHEF">Kitchen Chef</option>
                       </>
                     ) : (
-                      roles.map((r) => (
+                      roles.filter((r) => r.name !== 'SUPER_ADMIN').map((r) => (
                         <option key={r.id} value={r.name}>
                           {r.name.replace(/_/g, ' ')} {r.isSystem ? '(System)' : '(Custom)'}
                         </option>
@@ -901,26 +914,27 @@ export default function StaffManagement() {
                 />
               </div>
 
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
-                  Security Role
-                </label>
-                <div className="relative">
-                  <Shield className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-400 pointer-events-none" />
-                  <select
-                    value={editForm.role}
-                    onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
-                    disabled={editForm.id === user?.id && editForm.role === 'SUPER_ADMIN'}
-                    className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-bold text-zinc-900 dark:text-zinc-100 outline-none transition-all focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-brand-400/20 cursor-pointer disabled:opacity-55 disabled:cursor-not-allowed"
-                  >
-                    {roles.map((r) => (
-                      <option key={r.id} value={r.name}>
-                        {r.name.replace(/_/g, ' ')} {r.isSystem ? '(System)' : '(Custom)'}
-                      </option>
-                    ))}
-                  </select>
+              {isSuperAdmin && (
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
+                    Security Role
+                  </label>
+                  <div className="relative">
+                    <Shield className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+                    <select
+                      value={editForm.role}
+                      onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+                      className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 py-2.5 pr-3 pl-10 text-xs font-bold text-zinc-900 dark:text-zinc-100 outline-none transition-all focus:border-brand-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-brand-400/20 cursor-pointer"
+                    >
+                      {roles.filter((r) => r.name !== 'SUPER_ADMIN').map((r) => (
+                        <option key={r.id} value={r.name}>
+                          {r.name.replace(/_/g, ' ')} {r.isSystem ? '(System)' : '(Custom)'}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="mt-6 flex justify-end gap-2 border-t border-zinc-200 dark:border-zinc-800 pt-4">
                 <button
@@ -980,6 +994,15 @@ export default function StaffManagement() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Permission Override Drawer */}
+      {permDrawerUser && (
+        <UserPermissionDrawer
+          user={permDrawerUser}
+          catalog={catalog}
+          onClose={() => setPermDrawerUser(null)}
+        />
       )}
     </div>
   );

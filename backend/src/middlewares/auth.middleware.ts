@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import prisma from '../prisma';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretposkey';
 
@@ -9,37 +10,73 @@ export interface AuthenticatedRequest extends Request {
     name: string;
     email: string | null;
     role: string;
+    roleId: string;
     restaurantId?: string;
     permissions: string[];
   };
 }
 
-/**
- * Middleware to authenticate requests via JWT Bearer tokens.
- */
-export const authenticateJWT = (req: Request, res: Response, next: NextFunction): void => {
+export const authenticateJWT = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const authHeader = req.headers.authorization;
 
-  if (authHeader) {
-    const token = authHeader.split(' ')[1]; // Format: Bearer <token>
-
-    jwt.verify(token, JWT_SECRET, (err, decoded) => {
-      if (err) {
-        res.status(403).json({ error: 'Forbidden. Invalid or expired token.' });
-        return;
-      }
-
-      (req as AuthenticatedRequest).user = decoded as AuthenticatedRequest['user'];
-      next();
-    });
-  } else {
+  if (!authHeader) {
     res.status(401).json({ error: 'Unauthorized. Authorization header is missing.' });
+    return;
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  let decoded: any;
+  try {
+    decoded = jwt.verify(token, JWT_SECRET);
+  } catch {
+    res.status(403).json({ error: 'Forbidden. Invalid or expired token.' });
+    return;
+  }
+
+  try {
+    const dbUser = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      include: {
+        role: {
+          include: {
+            permissions: { include: { permission: true } },
+          },
+        },
+        userPermissions: { include: { permission: true } },
+      },
+    });
+
+    if (!dbUser) {
+      res.status(401).json({ error: 'Unauthorized. User not found.' });
+      return;
+    }
+
+    const base = new Set(dbUser.role.permissions.map((rp) => rp.permission.name));
+    for (const up of dbUser.userPermissions) {
+      if (up.granted) {
+        base.add(up.permission.name);
+      } else {
+        base.delete(up.permission.name);
+      }
+    }
+
+    (req as AuthenticatedRequest).user = {
+      id: dbUser.id,
+      name: dbUser.name,
+      email: dbUser.email,
+      role: dbUser.role.name,
+      roleId: dbUser.roleId,
+      restaurantId: dbUser.restaurantId ?? undefined,
+      permissions: [...base],
+    };
+
+    next();
+  } catch {
+    res.status(500).json({ error: 'Internal server error during authentication.' });
   }
 };
 
-/**
- * Middleware to restrict route access based on a required granular permission.
- */
 export const requirePermission = (permission: string) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     const user = (req as AuthenticatedRequest).user;
@@ -60,9 +97,6 @@ export const requirePermission = (permission: string) => {
   };
 };
 
-/**
- * Middleware to restrict route access strictly to SUPER_ADMIN role.
- */
 export const requireSuperAdmin = (req: Request, res: Response, next: NextFunction): void => {
   const user = (req as AuthenticatedRequest).user;
 

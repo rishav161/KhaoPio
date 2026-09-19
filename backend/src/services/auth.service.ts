@@ -295,6 +295,10 @@ export class AuthService {
       throw new Error(`Role "${targetRole}" does not exist.`);
     }
 
+    if (role.name === 'SUPER_ADMIN') {
+      throw new Error('SUPER_ADMIN cannot be assigned through the invitation flow.');
+    }
+
     // Check if user already exists
     const userExists = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
@@ -484,11 +488,17 @@ export class AuthService {
     data: { name?: string; role?: string; roleId?: string; status?: 'ACTIVE' | 'INACTIVE' | 'INVITED' },
     restaurantId?: string
   ) {
+    const existingUser = await prisma.user.findUnique({
+      where: { id },
+      include: { role: true },
+    });
     if (restaurantId) {
-      const existingUser = await prisma.user.findUnique({ where: { id } });
       if (!existingUser || existingUser.restaurantId !== restaurantId) {
         throw new Error('User not found or does not belong to your restaurant.');
       }
+    }
+    if (existingUser?.role.name === 'SUPER_ADMIN') {
+      throw new Error('The SUPER_ADMIN account cannot be modified through the staff interface.');
     }
 
     let roleId = data.roleId;
@@ -506,7 +516,17 @@ export class AuthService {
       if (!roleRecord) {
         throw new Error(`Role "${data.role}" does not exist.`);
       }
+      if (roleRecord.name === 'SUPER_ADMIN') {
+        throw new Error('SUPER_ADMIN cannot be assigned through user update.');
+      }
       roleId = roleRecord.id;
+    }
+
+    if (roleId) {
+      const resolvedRole = await prisma.role.findUnique({ where: { id: roleId } });
+      if (resolvedRole?.name === 'SUPER_ADMIN') {
+        throw new Error('SUPER_ADMIN cannot be assigned through user update.');
+      }
     }
 
     return prisma.user.update({
@@ -529,6 +549,7 @@ export class AuthService {
     const userWithOrders = await prisma.user.findUnique({
       where: { id },
       include: {
+        role: true,
         _count: {
           select: {
             waiterOrders: true,
@@ -546,6 +567,10 @@ export class AuthService {
       throw new Error('User not found or does not belong to your restaurant.');
     }
 
+    if (userWithOrders.role.name === 'SUPER_ADMIN') {
+      throw new Error('The SUPER_ADMIN account cannot be deleted through the staff interface.');
+    }
+
     const orderCount = userWithOrders._count.waiterOrders + userWithOrders._count.payments;
     if (orderCount > 0) {
       throw new Error(`Cannot delete staff member. They have processed ${orderCount} order(s). Please set their status to INACTIVE instead.`);
@@ -560,20 +585,19 @@ export class AuthService {
    * Helper to sign JWT and format return object.
    */
   private generateUserResponse(user: any, permissions: string[]) {
-    // Generate JWT Token
     const token = jwt.sign(
       {
         id: user.id,
         name: user.name,
         email: user.email,
         role: user.role.name,
+        roleId: user.roleId,
         restaurantId: user.restaurantId,
         restaurantName: user.restaurant?.name || '',
         currency: user.restaurant?.currency || 'INR',
-        permissions,
       },
       JWT_SECRET,
-      { expiresIn: '12h' } // Short-lived token for POS environment
+      { expiresIn: '12h' }
     );
 
     return {
