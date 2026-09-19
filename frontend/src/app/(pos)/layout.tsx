@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useSyncExternalStore } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { ArrowLeft, CircleHelp, Clock, LogOut, Menu, Moon, MoreHorizontal, Search, Sun, Ticket, User, UtensilsCrossed, X } from 'lucide-react';
+import { ArrowLeft, ChevronDown, CircleHelp, Clock, LogOut, Menu, Moon, MoreHorizontal, Search, Sun, Ticket, User, UtensilsCrossed, X } from 'lucide-react';
 import { DynamicIcon } from '@/components/DynamicIcon';
 import { usePOSStore } from '@/store/usePOSStore';
 import { useAuthStore, type SidebarItem } from '@/store/useAuthStore';
@@ -57,6 +57,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
 
   // Profile dropdown state
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
 
   // Theme state
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
@@ -172,7 +173,9 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
   const roleLabel = user ? user.role.replace('_', ' ').toLowerCase().replace(/^./, (c) => c.toUpperCase()) : '';
 
   const renderNavItem = (item: (typeof sidebarItems)[number]) => {
-    const isActive = pathname === item.path;
+    const hasSubItems = !!item.subItems?.length;
+    const isExpanded = expandedItems.has(item.path);
+    const isActive = pathname === item.path || (hasSubItems && pathname.startsWith(item.path + '/'));
     let badgeCount: number | null = null;
     let badgeColor = '';
 
@@ -187,10 +190,18 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
       badgeColor = 'bg-brand-100 text-brand-700 font-bold';
     }
 
-    return (
+    const parentBtn = (
       <button
         key={item.id}
         onClick={() => {
+          if (hasSubItems) {
+            setExpandedItems((prev) => {
+              const next = new Set(prev);
+              next.has(item.path) ? next.delete(item.path) : next.add(item.path);
+              return next;
+            });
+            return;
+          }
           if (item.path === '/help') {
             sessionStorage.setItem('help_return_path', pathname);
           }
@@ -212,7 +223,42 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
             {badgeCount}
           </span>
         )}
+        {hasSubItems && (
+          <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''} ${isActive ? 'text-white/80' : 'text-zinc-400'}`} />
+        )}
       </button>
+    );
+
+    if (!hasSubItems) return parentBtn;
+
+    return (
+      <div key={item.id}>
+        {parentBtn}
+        {isExpanded && (
+          <div className="mt-0.5 ml-3 pl-3 border-l border-zinc-200 dark:border-zinc-700 flex flex-col gap-0.5">
+            {item.subItems!.map((sub) => {
+              const isSubActive = pathname === sub.path;
+              return (
+                <button
+                  key={sub.id}
+                  onClick={() => {
+                    router.push(sub.path);
+                    setIsSidebarOpen(false);
+                  }}
+                  className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-all duration-150 cursor-pointer ${
+                    isSubActive
+                      ? 'bg-brand-50 dark:bg-brand-950/30 text-brand-700 dark:text-brand-400 font-bold'
+                      : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100'
+                  }`}
+                >
+                  <DynamicIcon name={sub.icon || 'FileText'} className="h-3.5 w-3.5 shrink-0" />
+                  <span className="flex-1 truncate text-xs font-semibold">{sub.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
     );
   };
 

@@ -6,6 +6,8 @@ import {
   updateRole,
   deleteRole,
   switchUserRole,
+  getUserPermissions,
+  setUserPermissions,
 } from '../controllers/role.controller';
 import { authenticateJWT, requireSuperAdmin } from '../middlewares/auth.middleware';
 
@@ -28,5 +30,9 @@ router.delete('/:id', authenticateJWT, requireSuperAdmin, deleteRole);
 
 // Switch a staff member's role (Super Admin only)
 router.patch('/users/:userId/switch', authenticateJWT, requireSuperAdmin, switchUserRole);
+
+// Get / set per-user permission overrides (Super Admin only)
+router.get('/users/:userId/permissions', authenticateJWT, requireSuperAdmin, getUserPermissions);
+router.put('/users/:userId/permissions', authenticateJWT, requireSuperAdmin, setUserPermissions);
 
 export default router;

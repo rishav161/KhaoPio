@@ -60,26 +60,24 @@ enum BookingStatus {
 
 
 model User {
-  id           String       @id @default(uuid())
-  name         String
-  email        String?      @unique
-  passwordHash String?      // For email/password logins (Super Admin, Store Manager)
-  pin          String?      // Hashed 4-digit PIN for tablet quick-login (Waiters, Cashiers, Chefs)
-  status       UserStatus   @default(INVITED)
-  roleId       String
-  role         Role         @relation(fields: [roleId], references: [id])
-  
+  id              String           @id @default(uuid())
+  name            String
+  email           String?          @unique
+  passwordHash    String?
+  pin             String?
+  status          UserStatus       @default(INVITED)
+  roleId          String
+  role            Role             @relation(fields: [roleId], references: [id])
+  userPermissions UserPermission[]
+
   restaurantId String?
   restaurant   Restaurant?  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  
-  // Orders taken by this user (typically as waiter)
-  waiterOrders Order[]      @relation("WaiterOrders")
-  
-  // Payments processed by this user (typically as cashier)
+
+  waiterOrders Order[]   @relation("WaiterOrders")
   payments     Payment[]
-  
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Role {
@@ -97,11 +95,12 @@ model Role {
 }
 
 model Permission {
-  id           String           @id @default(uuid())
-  name         String           @unique // e.g. "create:kot", "pay:order", "view:reports", "manage:staff"
-  description  String?
-  roles        RolePermission[]
-  sidebarItems SidebarItem[]
+  id            String           @id @default(uuid())
+  name          String           @unique
+  description   String?
+  roles         RolePermission[]
+  sidebarItems  SidebarItem[]
+  userOverrides UserPermission[]
 }
 
 model RolePermission {
@@ -111,6 +110,18 @@ model RolePermission {
   permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
   @@id([roleId, permissionId])
+}
+
+model UserPermission {
+  userId       String
+  permissionId String
+  granted      Boolean    // true = grant on top of role; false = revoke from role
+  setById      String?    // SUPER_ADMIN userId who set this override
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([userId, permissionId])
+  @@index([userId])
 }
 
 model SidebarItem {

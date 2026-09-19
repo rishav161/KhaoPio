@@ -178,9 +178,22 @@ export const getAllUsers = async (req: Request, res: Response): Promise<void> =>
 export const updateUserByAdmin = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { name, role, roleId, status } = req.body;
+    const { name, status } = req.body;
+    const callerRole = (req as AuthenticatedRequest).user?.role;
     const restaurantId = (req as AuthenticatedRequest).user?.restaurantId;
-    const updatedUser = await authService.updateUserDetail(id, { name, role, roleId, status }, restaurantId);
+
+    // Only SUPER_ADMIN can change someone's role
+    const roleFields: { role?: string; roleId?: string } = {};
+    if (req.body.role || req.body.roleId) {
+      if (callerRole !== 'SUPER_ADMIN') {
+        res.status(403).json({ error: 'Only SUPER_ADMIN can change a user\'s role.' });
+        return;
+      }
+      roleFields.role = req.body.role;
+      roleFields.roleId = req.body.roleId;
+    }
+
+    const updatedUser = await authService.updateUserDetail(id, { name, ...roleFields, status }, restaurantId);
     res.status(200).json(updatedUser);
   } catch (error: any) {
     res.status(400).json({ error: error.message || 'Error updating user.' });

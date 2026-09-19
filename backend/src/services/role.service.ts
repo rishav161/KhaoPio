@@ -367,6 +367,10 @@ export class RoleService {
       throw new Error('Target role does not exist or is not available for your restaurant.');
     }
 
+    if (targetRole.name === 'SUPER_ADMIN') {
+      throw new Error('SUPER_ADMIN cannot be assigned through the staff interface.');
+    }
+
     // Prevent demoting the only active super admin of the restaurant
     if (user.role.name === 'SUPER_ADMIN' && targetRole.name !== 'SUPER_ADMIN') {
       const superAdminCount = await prisma.user.count({
@@ -406,6 +410,88 @@ export class RoleService {
       permissions: targetRole.permissions.map((rp) => rp.permission.name),
       message: `Successfully updated ${updatedUser.name}'s role to "${targetRole.name}".`,
     };
+  }
+
+  async getUserPermissions(restaurantId: string, userId: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        role: {
+          include: { permissions: { include: { permission: true } } },
+        },
+        userPermissions: { include: { permission: true } },
+      },
+    });
+
+    if (!user || user.restaurantId !== restaurantId) {
+      throw new Error('User not found or does not belong to your restaurant.');
+    }
+
+    const rolePermissions = user.role.permissions.map((rp) => ({
+      permissionId: rp.permissionId,
+      permissionName: rp.permission.name,
+      description: rp.permission.description,
+    }));
+
+    const overrides = user.userPermissions.map((up) => ({
+      permissionId: up.permissionId,
+      permissionName: up.permission.name,
+      description: up.permission.description,
+      granted: up.granted,
+    }));
+
+    const base = new Set(rolePermissions.map((p) => p.permissionName));
+    for (const up of user.userPermissions) {
+      if (up.granted) {
+        base.add(up.permission.name);
+      } else {
+        base.delete(up.permission.name);
+      }
+    }
+
+    return {
+      rolePermissions,
+      overrides,
+      effectivePermissions: [...base],
+    };
+  }
+
+  async setUserPermissions(
+    restaurantId: string,
+    userId: string,
+    overrides: { permissionId: string; granted: boolean }[],
+    setById: string
+  ) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { role: true },
+    });
+
+    if (!user || user.restaurantId !== restaurantId) {
+      throw new Error('User not found or does not belong to your restaurant.');
+    }
+
+    if (user.role.name === 'SUPER_ADMIN') {
+      throw new Error('Cannot override permissions for SUPER_ADMIN.');
+    }
+
+    await prisma.$transaction([
+      prisma.userPermission.deleteMany({ where: { userId } }),
+      ...(overrides.length > 0
+        ? [
+            prisma.userPermission.createMany({
+              data: overrides.map((o) => ({
+                userId,
+                permissionId: o.permissionId,
+                granted: o.granted,
+                setById,
+              })),
+            }),
+          ]
+        : []),
+    ]);
+
+    return this.getUserPermissions(restaurantId, userId);
   }
 }
 

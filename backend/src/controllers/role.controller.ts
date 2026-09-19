@@ -106,3 +106,43 @@ export const switchUserRole = async (req: AuthenticatedRequest, res: Response): 
     res.status(400).json({ error: error.message || 'Failed to switch user role.' });
   }
 };
+
+export const getUserPermissions = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const restaurantId = req.user?.restaurantId;
+    if (!restaurantId) {
+      res.status(400).json({ error: 'Restaurant context is missing from current user.' });
+      return;
+    }
+
+    const { userId } = req.params;
+    const result = await roleService.getUserPermissions(restaurantId, userId);
+    res.status(200).json(result);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message || 'Failed to fetch user permissions.' });
+  }
+};
+
+export const setUserPermissions = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const restaurantId = req.user?.restaurantId;
+    const setById = req.user?.id;
+    if (!restaurantId || !setById) {
+      res.status(400).json({ error: 'Restaurant context is missing from current user.' });
+      return;
+    }
+
+    const { userId } = req.params;
+    const { overrides } = req.body;
+
+    if (!Array.isArray(overrides)) {
+      res.status(400).json({ error: 'overrides must be an array of { permissionId, granted }.' });
+      return;
+    }
+
+    const result = await roleService.setUserPermissions(restaurantId, userId, overrides, setById);
+    res.status(200).json(result);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message || 'Failed to set user permissions.' });
+  }
+};
